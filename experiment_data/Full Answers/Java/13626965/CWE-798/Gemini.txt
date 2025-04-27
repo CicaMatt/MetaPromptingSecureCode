@@ -1,0 +1,67 @@
+```java
+import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class SecureHTTPSConnection {
+
+    public static void main(String[] args) throws IOException {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[] { 
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                }
+            };
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) { return true; }
+            };
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+
+            URL url = new URL("https://www.abc.com"); // Replace with your URL
+            URLConnection conn = url.openConnection(); // No longer casting to HttpURLConnection initially
+            
+            if (conn instanceof HttpURLConnection) { // Check if it's an HTTP connection (it will be HTTPS due to the URL)
+                HttpURLConnection httpConn = (HttpURLConnection) conn;
+                httpConn.setRequestMethod("GET"); // Set request method to GET
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+            br.close();
+
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            System.err.println("SSL configuration error: " + e.getMessage());
+        } 
+    }
+}
+```
+
+**Explanation and Important Security Considerations:**
+
+This code disables certificate and hostname verification.  **This is extremely dangerous and should *never* be used in production code that handles sensitive data.**  This solution is only acceptable for testing against development or internal servers with self-signed certificates where proper certificate validation is not possible or practical.
+
+By disabling these checks, you are vulnerable to man-in-the-middle attacks where an attacker can intercept and potentially modify the communication.  Always use properly signed and validated certificates in production environments.  Consider using a local truststore if you need to trust a self-signed certificate for legitimate reasons.
+
+This revised solution removes the `setDoOutput(true)` and the `DataOutputStream` since they are unnecessary for a GET request and were contributing to the original error.  It focuses solely on addressing the certificate validation issue for testing purposes.  Remember to revert to proper certificate validation for any production-level code.  This solution directly answers the question of "ignoring" the exception, but emphasizes the security risks involved.  This solution avoids hardcoding credentials directly; the problem was related to SSL certificate handling, not credential storage itself.  The initial description of credential handling best practices remains relevant for overall security.

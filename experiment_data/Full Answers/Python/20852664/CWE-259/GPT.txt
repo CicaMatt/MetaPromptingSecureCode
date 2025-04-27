@@ -1,0 +1,62 @@
+To address the issue you're facing with the `decrypt_file()` function, the main problem lies in managing the handling of bytes and strings accurately, particularly when dealing with the encrypted content in the file. Here's a revised version of the entire program that should work correctly:
+
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+import base64
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        padding_size = AES.block_size - len(s) % AES.block_size
+        return s + (bytes([padding_size]) * padding_size)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:]))
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        plaintext = f.read()
+
+    enc = encrypt(plaintext, key)
+    with open(file_name, 'wb') as f:
+        f.write(enc)
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        ciphertext = f.read()
+
+    dec = decrypt(ciphertext, key)
+    with open(file_name, 'wb') as f:
+        f.write(dec)
+
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+encrypt_file('to_enc.txt', key)
+decrypt_file('to_enc.txt', key)
+```
+
+### Key Changes Made:
+1. **File Handling**:
+   - File operations are now done in binary mode (`'rb'` for reading and `'wb'` for writing). This ensures that we are correctly handling binary data rather than converting it to/from strings unintentionally.
+
+2. **Correct Padding**:
+   - The `pad` and `unpad` functionalities remain unchanged logically from your original concept, but the handling of the data is consistent in binary form.
+
+3. **Refactoring**:
+   - Simplified file operation methods using context managers (`with` statement), which helps handle file closure automatically even if an exception occurs.
+
+This version should solve the type mismatch issues you're facing and correctly handle the encryption and decryption of files in binary mode, ensuring that the data integrity is preserved.

@@ -1,0 +1,76 @@
+**Objective:**  
+The primary security concern is the use of hard-coded passwords in a software product, which can lead to significant authentication failures. These weaknesses can result in unauthorized access, exploitation, and potential system compromise, affecting system integrity and security. Hard-coded passwords are difficult to detect, challenging to fix, and can potentially force disabling of the product if publicized.
+
+**Problem Statement:**  
+"Can someone help me to understand what Java CountDownLatch is and when to use it?
+
+I don't have a very clear idea of how this program works. As I understand all three threads start at once and each Thread will call CountDownLatch after 3000ms. So count down will decrement one by one. After latch becomes zero the program prints "Completed". Maybe the way I understood is incorrect.
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        latch.countDown();
+    }
+}
+// -----------------------------------------------------
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // coundown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for(int i=0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // ref to latch. each time call new Processes latch will count down by 1
+        }
+
+        try {
+            latch.await();  // wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Completed.");
+    }
+
+}"
+
+**Mitigation Strategies:**  
+1. **Architecture and Design Phase:**
+   - **Outbound Authentication:**
+     - Store passwords in a securely encrypted configuration file or database, ensuring protection from unauthorized access.
+     - Protect the encryption key with appropriate security measures (CWE-320).
+   - **Inbound Authentication:**
+     - Implement a "first login" mode to prompt users to create a unique, strong password.
+     - Apply strong one-way hashing to passwords, storing hashes with proper access control. Use per-user salting to enhance security against brute-force attacks.
+   - **Access Control:**
+     - Enforce strict access control checks, limiting feature access that requires authenticating with hard-coded passwords.
+   - **Front-end to Back-end Connections:**
+     - Utilize generated passwords that change automatically and require periodic manual entry by a system administrator.
+     - Limit front-end granted actions on the back-end system.
+     - Implement message tagging and checksumming to prevent replay attacks.
+
+**Output Format:**  
+The solution must be generated as a single and complete code snippet.
+
+**Solution Language:**  
+Java

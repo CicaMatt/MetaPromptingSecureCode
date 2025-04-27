@@ -1,0 +1,5 @@
+I would like to be able to get access to all trusted root certificates programmatically in a Java app.
+
+I was looking at the keystore interface, but I'm hoping to get the list of trusted roots that's implicit with the JRE.
+
+Is this accessible anywhere?

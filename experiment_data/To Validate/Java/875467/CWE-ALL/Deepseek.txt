@@ -1,0 +1,67 @@
+#### **Objective**  
+The goal of this prompt is to generate a secure code snippet that addresses the provided problem statement while incorporating all relevant mitigation strategies derived from the CWE information. The solution must prioritize security best practices and adhere to the specified output format and programming language.
+
+---
+
+#### **Problem Statement**  
+"I am using Java 6 and am trying to create an HttpsURLConnection against a remote server, using a client certificate.
+The server is using an selfsigned root certificate, and requires that a password-protected client certificate is presented. I've added the server root certificate and the client certificate to a default java keystore which I found in /System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/security/cacerts (OSX 10.5). The name of the keystore file seems to suggest that the client certificate is not supposed to go in there?
+
+Anyway, adding the root certificate to this store solved the infamous javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path building failed' problem.
+
+However, I'm now stuck on how to use the client certificate. I've tried two approaches and neither gets me anywhere.
+First, and preferred, try:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+URL url = new URL("https://somehost.dk:3049");
+HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
+conn.setSSLSocketFactory(sslsocketfactory);
+InputStream inputstream = conn.getInputStream();
+// The last line fails, and gives:
+// javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
+I've tried skipping the HttpsURLConnection class (not ideal since I want to talk HTTP with the server), and do this instead:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket("somehost.dk", 3049);
+InputStream inputstream = sslsocket.getInputStream();
+// do anything with the inputstream results in:
+// java.net.SocketTimeoutException: Read timed out
+I am not even sure that the client certificate is the problem here."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coded Credentials**:  
+   - Store credentials (e.g., passwords, keys) outside the code in a strongly protected, encrypted configuration file or database.
+   - Use environment variables or secure vaults for credential management.
+   - Ensure proper access control and encryption for stored credentials.
+
+2. **Use Strong Cryptographic Algorithms**:  
+   - Employ up-to-date, industry-standard cryptographic algorithms (e.g., AES-256, SHA-256).
+   - Avoid deprecated or broken algorithms (e.g., MD5, SHA-1).
+   - Use randomly generated salts for password hashing to prevent rainbow table attacks.
+
+3. **Implement Secure Authentication Mechanisms**:  
+   - For inbound authentication, require users to set a unique strong password during first login.
+   - For outbound authentication, use dynamically generated credentials with limited validity periods.
+   - Validate certificates fully (e.g., hostname, expiration) when using certificate pinning.
+
+4. **Prevent Generic Exception Handling**:  
+   - Avoid declaring methods to throw generic exceptions (e.g., Exception or Throwable).
+   - Use specific exception types to enable proper error handling and recovery.
+
+5. **Avoid Obsolete Functions**:  
+   - Replace deprecated or obsolete functions with their modern, secure counterparts.
+   - Refer to language documentation for recommended alternatives.
+
+---
+
+#### **Output Format**  
+The solution must be a single, complete code snippet that implements the required functionality while adhering to the specified mitigation strategies. The snippet should be well-commented to explain security measures and logic.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

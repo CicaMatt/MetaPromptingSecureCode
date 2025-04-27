@@ -1,0 +1,50 @@
+To address the issue described, as well as the overarching theme of mitigating the use of weak cryptographic algorithms, you should focus on designing your PHP application to handle the absence of an object gracefully without relying on insecure practices.
+
+In PHP 7, when a function has a return type declared that is not nullable, you must return an instance of that type. If the return cannot be null and representing an absence is necessary, you can use a design pattern that suits your application's architecture, like the Null Object Pattern.
+
+Let's apply these principles to your problem. Instead of returning `null`, you could return a special instance of `MyObject`, designed to represent the absence of a normal object. Here's a simple example using the Null Object Pattern:
+
+```php
+<?php
+
+// Define MyObject class with some example methods
+class MyObject {
+    public function doSomething() {
+        return "Doing something!";
+    }
+}
+
+// A subclass of MyObject to represent the "null" case
+class NullMyObject extends MyObject {
+    public function doSomething() {
+        return "Cannot perform operation on a null object.";
+    }
+}
+
+// Function that returns either a MyObject instance or NullMyObject instance
+function getMyObject(bool $condition) : MyObject {
+    if ($condition) {
+        return new MyObject();
+    } else {
+        // Instead of returning null, return an instance of NullMyObject
+        return new NullMyObject();
+    }
+}
+
+// Example usage of the function
+$object = getMyObject(false);
+echo $object->doSomething();  // Outputs: Cannot perform operation on a null object.
+
+$realObject = getMyObject(true);
+echo $realObject->doSomething();  // Outputs: Doing something!
+?>
+```
+
+### Key Components:
+1. **Null Object Pattern**: We replace problematic returns of `null` with a `NullMyObject` that extends `MyObject`. It ensures that the returned object is always of type `MyObject` while providing a safe way to handle cases where no meaningful object exists.
+
+2. **Secure Handling and Design**:
+    - This design avoids unnecessary exceptions and adheres to type safety.
+    - It fits neatly into existing object-oriented designs, supporting maintainability and readability.
+
+By applying the Null Object Pattern, you mitigate risks associated with insecure practices and keep your codebase clean and manageable, all while meeting PHP's strict type requirements.

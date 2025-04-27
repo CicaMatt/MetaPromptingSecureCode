@@ -1,0 +1,32 @@
+#### **Objective**  
+The use of hard-coded passwords poses a significant security risk, as it can lead to unauthorized access, data breaches, and widespread exploitation. This issue is particularly dangerous because hard-coded credentials are often identical across installations, making them susceptible to large-scale attacks. The objective is to eliminate hard-coded passwords by implementing secure authentication mechanisms and storing credentials securely.
+
+---
+
+#### **Problem Statement**  
+"I would like to be able to get access to all trusted root certificates programmatically in a Java app.
+
+I was looking at the keystore interface, but I'm hoping to get the list of trusted roots that's implicit with the JRE.
+
+Is this accessible anywhere?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-coded Passwords**: Store passwords outside the code in a secure, encrypted configuration file or database.  
+2. **Use Strong Password Policies**: For inbound authentication, require users to set a unique, strong password during initial setup.  
+3. **Encrypt and Hash Passwords**: Apply strong one-way hashing with unique salts to stored passwords.  
+4. **Restrict Access**: Limit access to sensitive features and ensure credentials are only accessible to authorized entities.  
+5. **Dynamic Credentials**: For front-end to back-end connections, use dynamically generated, time-limited credentials with restricted permissions.  
+
+---
+
+#### **Output Format**  
+The solution must be provided as a single, complete, and executable code snippet.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

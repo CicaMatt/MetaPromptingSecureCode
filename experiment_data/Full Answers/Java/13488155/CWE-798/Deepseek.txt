@@ -1,0 +1,112 @@
+To address the problem of securely accessing and updating encrypted HTML files in a Java Swing application, we can implement a solution that avoids hard-coded credentials and ensures secure encryption and decryption of the files. Below is a complete Java code snippet that demonstrates how to achieve this:
+
+```java
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+
+public class SecureHTMLAccess {
+
+    private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES";
+    private static final String ENCRYPTED_FOLDER = "encrypted_html";
+    private static final String DECRYPTED_FOLDER = "decrypted_html";
+
+    // Generate a secret key (this should be securely stored and not hard-coded)
+    private static Key generateKey() throws NoSuchAlgorithmException {
+        KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
+        keyGen.init(128); // 128-bit key
+        return keyGen.generateKey();
+    }
+
+    // Encrypt a file
+    private static void encryptFile(File inputFile, File outputFile, Key secretKey) throws Exception {
+        doCrypto(Cipher.ENCRYPT_MODE, inputFile, outputFile, secretKey);
+    }
+
+    // Decrypt a file
+    private static void decryptFile(File inputFile, File outputFile, Key secretKey) throws Exception {
+        doCrypto(Cipher.DECRYPT_MODE, inputFile, outputFile, secretKey);
+    }
+
+    private static void doCrypto(int cipherMode, File inputFile, File outputFile, Key secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(cipherMode, secretKey);
+
+        try (FileInputStream inputStream = new FileInputStream(inputFile);
+             FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+            byte[] inputBytes = new byte[(int) inputFile.length()];
+            inputStream.read(inputBytes);
+
+            byte[] outputBytes = cipher.doFinal(inputBytes);
+            outputStream.write(outputBytes);
+        }
+    }
+
+    // Encrypt all HTML files in a folder
+    public static void encryptFolder(String folderPath, Key secretKey) throws Exception {
+        File folder = new File(folderPath);
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".html"));
+
+        if (files != null) {
+            for (File file : files) {
+                File encryptedFile = new File(ENCRYPTED_FOLDER, file.getName());
+                encryptFile(file, encryptedFile, secretKey);
+            }
+        }
+    }
+
+    // Decrypt all HTML files in the encrypted folder
+    public static void decryptFolder(Key secretKey) throws Exception {
+        File folder = new File(ENCRYPTED_FOLDER);
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".html"));
+
+        if (files != null) {
+            for (File file : files) {
+                File decryptedFile = new File(DECRYPTED_FOLDER, file.getName());
+                decryptFile(file, decryptedFile, secretKey);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Generate a secret key (in a real-world scenario, this should be securely stored)
+            Key secretKey = generateKey();
+
+            // Encrypt the HTML files in the specified folder
+            encryptFolder("html_files", secretKey);
+
+            // Decrypt the HTML files for client access
+            decryptFolder(secretKey);
+
+            System.out.println("Encryption and decryption completed successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+1. **Key Generation**: The `generateKey()` method generates a secret key using the AES algorithm. In a real-world scenario, this key should be securely stored and not hard-coded.
+
+2. **Encryption and Decryption**: The `encryptFile()` and `decryptFile()` methods handle the encryption and decryption of individual files using the AES algorithm.
+
+3. **Folder Encryption and Decryption**: The `encryptFolder()` and `decryptFolder()` methods encrypt and decrypt all HTML files in a specified folder.
+
+4. **Main Method**: The `main` method demonstrates how to use the above methods to encrypt and decrypt HTML files.
+
+### Security Considerations:
+- **Key Management**: The secret key should be securely managed and not hard-coded. Consider using a secure key management service or environment variables.
+- **File Permissions**: Ensure that the encrypted files have restricted permissions to prevent unauthorized access.
+- **Secure Storage**: Store the encrypted files in a secure location and ensure that only authorized users can access them.
+
+This solution provides a secure way to encrypt and decrypt HTML files, ensuring that clients cannot access the files directly without proper decryption.

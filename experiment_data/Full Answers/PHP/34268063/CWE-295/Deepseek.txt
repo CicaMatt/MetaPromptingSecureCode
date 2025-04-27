@@ -1,0 +1,63 @@
+The problem you're describing is related to PHP's strict return type declarations, which do not allow returning `null` when a return type is specified. Instead of using `try...catch` blocks excessively or creating Null Objects for every class, you can use a combination of nullable return types and proper error handling to address this issue.
+
+Here’s a solution that leverages PHP 7.1's nullable return types and proper error handling:
+
+### Solution Code
+
+```php
+<?php
+
+class MyObject
+{
+    // Example class definition
+}
+
+class MyService
+{
+    /**
+     * Returns a MyObject or null if not found.
+     *
+     * @return MyObject|null
+     */
+    public function getMyObject(): ?MyObject
+    {
+        // Simulate a scenario where the object might not be found
+        $objectFound = false; // Change this to true to simulate finding the object
+
+        if ($objectFound) {
+            return new MyObject();
+        }
+
+        return null; // This is allowed with nullable return type
+    }
+}
+
+// Usage example
+$service = new MyService();
+
+$myObject = $service->getMyObject();
+
+if ($myObject === null) {
+    // Handle the case where the object is not found
+    echo "Object not found.\n";
+} else {
+    // Proceed with the valid object
+    echo "Object found.\n";
+}
+```
+
+### Explanation
+
+1. **Nullable Return Type (`?MyObject`)**:  
+   - In PHP 7.1 and later, you can specify a nullable return type by prefixing the type with a question mark (`?`). This allows the method to return either an instance of `MyObject` or `null`.
+
+2. **Error Handling**:  
+   - Instead of throwing exceptions for cases where `null` is a valid return value, you can simply return `null` and handle it appropriately in the calling code. This avoids the need for excessive `try...catch` blocks.
+
+3. **Simulated Logic**:  
+   - The `getMyObject` method simulates a scenario where the object might not be found. If the object is found, it returns an instance of `MyObject`; otherwise, it returns `null`.
+
+4. **Usage Example**:  
+   - The calling code checks if the returned value is `null` and handles it accordingly. This approach keeps the code clean and avoids unnecessary complexity.
+
+This solution is clean, efficient, and adheres to PHP's type system while avoiding the pitfalls of excessive exception handling or the need for Null Objects.

@@ -1,0 +1,47 @@
+**Objective:** Hard-coded credentials pose a significant security risk.  Attackers can easily exploit these credentials to gain unauthorized access to systems or sensitive data, potentially leading to data breaches, system compromise, and reputational damage.  This vulnerability applies to both inbound (user authentication) and outbound (system-to-system) communication.
+
+**Problem Statement:**  "I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+**Mitigation Strategies:** Adhere to the following best practices to prevent or remediate the use of hard-coded credentials:
+
+* **Store credentials securely:** Store sensitive credentials outside the codebase in a secure configuration file or database, protected by strong encryption and strict access controls. Use environment variables or dedicated secrets management tools.
+* **Use robust hashing for passwords:** Apply strong one-way hashing algorithms with unique salts to passwords before storing them.  Never store passwords in plain text.
+* **Implement initial setup:** For inbound authentication, require users to set their own unique strong passwords during the initial setup or first login, rather than relying on default credentials.
+* **Restrict access:** Limit access to features or systems that rely on hard-coded credentials.  Employ principle of least privilege and enforce strong access controls.
+* **Rotate credentials:** Regularly rotate credentials, especially for outbound connections, to minimize the impact of potential compromise.
+* **Use secrets management tools:** Explore secrets management solutions that offer secure storage, rotation, and access control for sensitive credentials.
+
+**Output Format:** Provide a single, complete, and compilable/executable code snippet demonstrating the secure solution.  The code should be ready to implement with minimal modifications.
+
+**Solution Language:** Java

@@ -1,0 +1,77 @@
+```java
+import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class HttpsClient {
+
+    public static void main(String[] args) throws IOException {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[] { 
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+
+            URL url = new URL("https://www.abc.com");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+            br.close();
+
+
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            System.err.println("SSL Configuration Error: " + e.getMessage());
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Connection Error: " + e.getMessage());
+            // handle the exception appropriately, perhaps logging or retrying
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Explanation and Crucial Warning:**
+
+This code snippet bypasses certificate validation and hostname verification.  **This should *never* be done in production code.**  It opens your application to man-in-the-middle attacks, where an attacker can intercept and modify the communication between your application and the server.
+
+This solution is provided *only* for situations where you are interacting with a test server or a server with a self-signed certificate where you understand and accept the risks.  It directly addresses the user's request to "ignore the exception" but does so in a way that makes the severe security implications explicit.
+
+**For Production Environments:**
+
+The correct solution for production is to properly configure the truststore with the server's certificate or use a valid certificate issued by a trusted Certificate Authority (CA).  Bypassing certificate validation creates extremely serious vulnerabilities.  Do not use this code in production.

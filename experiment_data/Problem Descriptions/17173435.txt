@@ -1,0 +1,42 @@
+I'm trying to send an image to a website using Java HTTP POST requests.
+
+I'm using the base code used here Upload files from Java client to a HTTP server:
+
+This is my modification:
+
+String urlToConnect = "http://localhost:9000/upload";
+File fileToUpload = new File("C:\\Users\\joao\\Pictures\\bla.jpg");
+String boundary = Long.toHexString(System.currentTimeMillis()); // Just generate some unique random value.
+
+URLConnection connection = new URL(urlToConnect).openConnection();
+connection.setDoOutput(true); // This sets request method to POST.
+connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+PrintWriter writer = null;
+try {
+    writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream()));
+    writer.println("--" + boundary);
+    writer.println("Content-Disposition: form-data; name=\"picture\"; filename=\"bla.jpg\"");
+    writer.println("Content-Type: image/jpeg");
+    writer.println();
+    BufferedReader reader = null;
+    try {
+        reader = new BufferedReader(new InputStreamReader(new FileInputStream(fileToUpload)));
+        for (String line; (line = reader.readLine()) != null;) {
+            writer.println(line);
+        }
+    } finally {
+        if (reader != null) try { reader.close(); } catch (IOException logOrIgnore) {}
+    }
+    writer.println("--" + boundary + "--");
+} finally {
+    if (writer != null) writer.close();
+}
+
+// Connection is lazily executed whenever you request any status.
+int responseCode = ((HttpURLConnection) connection).getResponseCode();
+System.out.println(responseCode); // Should be 200
+I get a 200 response code in the end, but the image is buggy, as in, random colors, which make me think it's an error in character encoding. I tried using UTF-8 as in the original example, but that just creates a corrupt image.
+
+I am also 100% sure it's not a serverside problem, because I can use rest clients such as Advanced Rest Client/Postman and they can send an image with no problems.
+
+Can you help me pinpoint what's wrong? Thank you.

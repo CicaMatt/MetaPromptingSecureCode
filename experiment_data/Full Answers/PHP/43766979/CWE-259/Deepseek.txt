@@ -1,0 +1,78 @@
+To address the issue of hard-coded passwords and improve the error handling in your PHP script, we can make several improvements. Below is a revised version of your code that avoids hard-coded passwords, uses environment variables for sensitive information, and provides more specific error messages for different types of connection failures.
+
+### Revised PHP Code
+
+```php
+<?php
+// Load environment variables from a .env file or the server environment
+$hostname = getenv('DB_HOST') ?: 'localhost';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASS') ?: '';
+$database = getenv('DB_NAME') ?: 'php_thenewboston';
+
+// Custom exception classes
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Attempt to connect to the MySQL server
+    $conn = mysqli_connect($hostname, $username, $password);
+    
+    if (!$conn) {
+        throw new ServerException('Could not connect to server: ' . mysqli_connect_error());
+    }
+
+    // Attempt to select the database
+    if (!mysqli_select_db($conn, $database)) {
+        throw new DatabaseException('Could not connect to database: ' . mysqli_error($conn));
+    }
+
+    echo "Connected successfully.";
+} catch (ServerException $ex) {
+    echo "Server Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    echo "Database Error: " . $ex->getMessage();
+} catch (Exception $ex) {
+    echo "An unexpected error occurred: " . $ex->getMessage();
+}
+?>
+```
+
+### Explanation
+
+1. **Environment Variables**: 
+   - Sensitive information like database credentials are loaded from environment variables. This avoids hard-coding them directly in the script.
+   - You can set these variables in a `.env` file or directly in your server environment.
+
+2. **Error Handling**:
+   - The `mysqli_connect_error()` function provides detailed error information if the server connection fails.
+   - The `mysqli_error($conn)` function provides detailed error information if the database selection fails.
+
+3. **Custom Exceptions**:
+   - `ServerException` is thrown when there is an issue connecting to the MySQL server.
+   - `DatabaseException` is thrown when there is an issue selecting the database.
+
+4. **Security**:
+   - By using environment variables, you avoid exposing sensitive information in your codebase.
+   - Ensure your `.env` file is not accessible via the web server and is included in your `.gitignore` file if using version control.
+
+### Setting Up Environment Variables
+
+Create a `.env` file in your project root:
+
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=
+DB_NAME=php_thenewboston
+```
+
+Make sure to load this file at the start of your script using a library like `vlucas/phpdotenv` if you are not setting these variables directly in your server environment.
+
+### Additional Security Measures
+
+- **Encryption**: Ensure that your database credentials are stored securely and encrypted if necessary.
+- **Access Control**: Restrict access to your database to only those IPs that need it.
+- **Regular Audits**: Regularly review and update your security practices and credentials.
+
+This approach not only secures your application but also makes it more maintainable and scalable.

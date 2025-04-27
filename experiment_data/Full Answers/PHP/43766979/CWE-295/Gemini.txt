@@ -1,0 +1,73 @@
+```php
+<?php
+   $hostname = "localhost";
+   $username = "root1";
+   $password = "";
+   $database = "php_thenewboston";
+
+   class ServerException extends Exception{}  
+   class DatabaseException extends Exception{}
+   class UsernameException extends Exception{} // New exception for incorrect username
+
+   try{
+       $conn = mysqli_connect($hostname,$username,$password);
+       if(!$conn){
+           throw new ServerException('Could not connect to server.');
+       }
+
+       $conn_db = mysqli_select_db($conn,$database); 
+       if(!$conn_db){
+           throw new DatabaseException('Could not connect to database: ' . mysqli_error($conn)); // Show MySQL error
+       }
+
+       // Check if the connection was successful and username is valid.
+       //  We do a dummy query to provoke a username error if it exists.
+       $result = mysqli_query($conn, "SELECT 1");  // Simple query
+       if(!$result){
+           if (mysqli_errno($conn) == 1045) { // Access denied for user
+             throw new UsernameException('Could not connect to database: Invalid username or password.');
+           } else {
+               throw new DatabaseException('Database error: ' . mysqli_error($conn)); // Other database errors
+           }
+       }
+
+
+       echo "Connected.";
+
+
+   }catch(ServerException $ex){
+       echo "Error :".$ex->getMessage();        
+   }catch(DatabaseException $ex){
+       echo "Error :".$ex->getMessage();
+   } catch(UsernameException $ex){
+       echo "Error :".$ex->getMessage();
+   } finally { // Good practice to close the connection in a finally block
+       if (isset($conn)) {
+           mysqli_close($conn);
+       }
+   }
+?>
+```
+
+
+**Explanation of Changes and Improvements:**
+
+1. **Separate Username Exception:**  A new `UsernameException` is introduced to handle incorrect username errors specifically.
+
+2. **Improved Error Handling with `mysqli_error()`:**  The code now uses `mysqli_error($conn)` to get the actual MySQL error message, providing more informative error messages, especially for database issues.
+
+3. **Username Validation via Dummy Query:** A simple `SELECT 1` query is executed after connecting to the database.  If the username or password are incorrect, this query will fail with a specific error code (1045 - access denied).  This allows us to distinguish username/password errors from other database connection problems.
+
+4. **`finally` block for Connection Closing:** A `finally` block ensures that the database connection is always closed, even if an exception occurs. This is crucial for preventing resource leaks.
+
+
+**How to Test:**
+
+1. **Incorrect Database:**  Change `$database` to a non-existent database name. You should see "Error :Could not connect to database: ..." with the MySQL error.
+
+2. **Incorrect Username:** Change `$username` to a non-existent username or use the correct username with an incorrect password.  You should see "Error :Could not connect to database: Invalid username or password."
+
+3. **Server Connection Error:** Change `$hostname` to a non-existent server.  You should see "Error :Could not connect to server."
+
+
+This revised code provides more robust error handling and clearly distinguishes between different connection problems, making it much easier to debug and troubleshoot.  It also follows better practices by closing the database connection reliably.

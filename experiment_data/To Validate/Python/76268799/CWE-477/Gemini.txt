@@ -1,0 +1,46 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I am trying to use Enums in SQLAlchemy 2.0 with mapped_column. So far I have the following code (taken from another question):
+
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+CampaignStatusType: pgEnum = pgEnum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatusType] = mapped_column(nullable=False)
+However, that gives the following error upon the construction of the Campaign class itself.
+
+Traceback (most recent call last):
+  File "<stdin>", line 27, in <module>
+    class Campaign(Base):
+...
+AttributeError: 'ENUM' object has no attribute '__mro__'
+Any hint about how to make this work?
+
+The response from ENUM type in SQLAlchemy with PostgreSQL does not apply as I am using version 2 of SQLAlchemy and those answers did not use mapped_column or Mapped types. Also, removing str from CampaignStatus does not help."
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  Python

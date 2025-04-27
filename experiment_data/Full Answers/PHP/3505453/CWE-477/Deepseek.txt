@@ -1,0 +1,61 @@
+To address the problem of encrypting and decrypting data in PHP to match the C# implementation, we need to ensure that the PHP code uses modern and secure alternatives to the deprecated `mcrypt` functions. The `mcrypt` extension has been deprecated as of PHP 7.1.0 and removed as of PHP 7.2.0. Instead, we should use the `openssl` extension, which is actively maintained and supports modern cryptographic standards.
+
+Here is the updated PHP code that uses `openssl` for encryption and decryption, ensuring compatibility with the C# implementation:
+
+```php
+<?php
+
+/*
+ * DEFINE CONSTANTS
+ */
+$HashPassPhrase = "passpharse";
+$HashSalt = "saltvalue";
+$HashAlgorithm = "SHA1";
+$HashIterations = 2;
+$InitVector = "1a2b3c4d5e6f7g8h";        // Must be 16 bytes
+$keySize = 256;
+
+class Cipher {
+    private $securekey, $iv;
+
+    function __construct($textkey, $salt, $hashAlgorithm, $iterations, $initVector, $keySize) {
+        $this->securekey = $this->generateKey($textkey, $salt, $hashAlgorithm, $iterations, $keySize);
+        $this->iv = $initVector;
+    }
+
+    private function generateKey($passPhrase, $salt, $hashAlgorithm, $iterations, $keySize) {
+        $hashLength = 20; // SHA1 produces a 20-byte hash
+        $key = '';
+        for ($i = 0; $i < $iterations; $i++) {
+            $key .= hash($hashAlgorithm, $passPhrase . $salt . $key, true);
+        }
+        return substr($key, 0, $keySize / 8);
+    }
+
+    function encrypt($input) {
+        return base64_encode(openssl_encrypt($input, 'AES-256-CBC', $this->securekey, OPENSSL_RAW_DATA, $this->iv));
+    }
+
+    function decrypt($input) {
+        return trim(openssl_decrypt(base64_decode($input), 'AES-256-CBC', $this->securekey, OPENSSL_RAW_DATA, $this->iv));
+    }
+}
+
+$cipher = new Cipher($HashPassPhrase, $HashSalt, $HashAlgorithm, $HashIterations, $InitVector, $keySize);
+
+$encryptedtext = $cipher->encrypt("Text To Encrypt");
+echo "->encrypt = $encryptedtext<br />";
+
+$decryptedtext = $cipher->decrypt($encryptedtext);
+echo "->decrypt = $decryptedtext<br />";
+
+var_dump($cipher);
+```
+
+### Explanation:
+1. **Key Generation**: The `generateKey` method mimics the `PasswordDeriveBytes` functionality in C#. It uses the specified passphrase, salt, hash algorithm, and iterations to generate a key of the required size.
+2. **Encryption and Decryption**: The `openssl_encrypt` and `openssl_decrypt` functions are used with the `AES-256-CBC` cipher, which matches the `RijndaelManaged` with a 256-bit key and CBC mode in C#.
+3. **Initialization Vector (IV)**: The IV is set to the same value as in the C# code to ensure compatibility.
+4. **Base64 Encoding**: The encrypted data is encoded in Base64 for easy transmission, matching the C# implementation.
+
+This PHP code should produce the same encrypted output as the C# code, allowing for seamless encryption and decryption between the two languages.

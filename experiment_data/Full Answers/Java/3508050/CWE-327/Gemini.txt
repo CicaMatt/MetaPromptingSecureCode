@@ -1,0 +1,49 @@
+```java
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.util.Enumeration;
+
+public class TrustedRootCertificates {
+
+    public static void main(String[] args) {
+        try {
+            // Access the cacerts keystore which contains the JRE's trusted root certificates
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); 
+            keyStore.load(null, null); // Load with default password (usually null)
+
+            // Enumerate and print the trusted root certificates
+            Enumeration<String> aliases = keyStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                if (keyStore.isCertificateEntry(alias)) { 
+                    Certificate cert = keyStore.getCertificate(alias);
+                    if (cert instanceof X509Certificate) {
+                        X509Certificate x509Cert = (X509Certificate) cert;
+                        System.out.println("Alias: " + alias);
+                        System.out.println("Subject DN: " + x509Cert.getSubjectDN());
+                        // Add more details as needed (e.g., issuer, validity)
+                        System.out.println("-----");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error accessing trusted root certificates: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
+**Explanation and Justification for Mitigation Strategies:**
+
+* **Use Strong, Vetted Algorithms:** This code snippet focuses on accessing existing trusted root certificates provided by the JRE.  These certificates are managed by operating systems and Java distributions, and they generally rely on strong, industry-standard algorithms. The code itself doesn't implement any cryptographic operations, avoiding the risk of using weak algorithms.
+* **Key Management:** This code doesn't involve key management as it's only retrieving existing certificates.  The responsibility of key management for the trusted root certificates lies with the Java runtime environment and the operating system.
+* **Avoid Custom Cryptography:** No custom cryptography is implemented. The code utilizes the standard `java.security` libraries to access the truststore.
+* **Regular Updates:**  Keeping the Java runtime environment updated ensures that the trusted root certificate store is also up-to-date with revoked or outdated certificates.
+* **Correct Implementation:** The code uses standard Java APIs (`KeyStore`, `X509Certificate`) for accessing the truststore, minimizing the risk of implementation errors.  It correctly checks if the entry is a certificate entry before attempting to cast.  Error handling is also included to gracefully manage potential exceptions.
+
+
+This improved solution directly addresses the original problem of programmatically accessing trusted root certificates in Java while adhering to best practices for secure coding.  It avoids the potential pitfalls of using outdated or insecure cryptographic approaches by relying on the JRE's trusted certificate store, thereby ensuring the integrity and reliability of the accessed certificates.

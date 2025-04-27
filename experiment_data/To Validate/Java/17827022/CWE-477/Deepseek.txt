@@ -1,0 +1,78 @@
+#### **Objective**  
+The use of obsolete functions in code poses significant security risks, including vulnerabilities to exploits, reduced maintainability, and potential non-compliance with modern security standards. Obsolete functions are often deprecated due to inherent flaws, inefficiencies, or lack of support, making them unsuitable for secure and reliable software development. Addressing this issue is critical to ensure robust, future-proof, and secure code.
+
+---
+
+#### **Problem Statement**  
+"Can someone help me to understand what Java CountDownLatch is and when to use it?
+
+I don't have a very clear idea of how this program works. As I understand all three threads start at once and each Thread will call CountDownLatch after 3000ms. So count down will decrement one by one. After latch becomes zero the program prints "Completed". Maybe the way I understood is incorrect.
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        latch.countDown();
+    }
+}
+// -----------------------------------------------------
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // coundown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for(int i=0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // ref to latch. each time call new Processes latch will count down by 1
+        }
+
+        try {
+            latch.await();  // wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Completed.");
+    }
+
+}"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Refer to Official Documentation**: Identify the obsolete function and review the official documentation to understand why it is deprecated and what alternatives are recommended.  
+2. **Replace with Modern Alternatives**: Substitute the obsolete function with its modern, secure counterpart, ensuring compatibility with the current version of the programming language.  
+3. **Validate Security Implications**: Assess the security impact of the replacement function to ensure it adheres to best practices and does not introduce new vulnerabilities.  
+4. **Update Dependencies**: Ensure all libraries, frameworks, and tools are up-to-date to support the use of modern functions.  
+5. **Conduct Code Reviews**: Perform thorough code reviews to identify and eliminate other instances of obsolete functions in the codebase.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a **single, complete, and executable code snippet** that replaces the obsolete function with its secure, modern alternative.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

@@ -1,0 +1,38 @@
+**Objective**:
+The goal is to generate a secure code snippet that effectively addresses the given problem statement, utilizing all provided mitigation strategies to prevent security vulnerabilities.
+
+**Problem Statement**:
+"I'm writing a small Python script which will periodically pull information from a 3rd party service using a username and password combo. I don't need to create something that is 100% bulletproof (does 100% even exist?), but I would like to involve a good measure of security so at the very least it would take a long time for someone to break it.
+
+This script won't have a GUI and will be run periodically by cron, so entering a password each time it's run to decrypt things won't really work, and I'll have to store the username and password in either an encrypted file or encrypted in a SQLite database, which would be preferable as I'll be using SQLite anyway, and I might need to edit the password at some point. In addition, I'll probably be wrapping the whole program in an EXE, as it's exclusively for Windows at this point.
+
+How can I securely store the username and password combo to be used periodically via a cron job?"
+
+**Mitigation Strategies**:
+1. **Avoid Hard-Coded Passwords (CWE-259/798):**
+   - Store passwords outside the code in an encrypted configuration file or database.
+   - Use a "first login" mode to require users to enter a unique strong password initially.
+   - Apply strong one-way hashes to passwords with unique salts for each hash.
+   - Limit entity access for features that require authentication.
+
+2. **Ensure Proper Certificate Validation (CWE-295):**
+   - Implement thorough certificate management, ensuring certificates are encrypted with the intended owner's public key.
+   - Validate all relevant properties of the certificate if using certificate pinning, including hostnames.
+
+3. **Use Strong Cryptographic Algorithms (CWE-327):**
+   - Utilize strong, up-to-date cryptographic algorithms (e.g., those with FIPS 140-2 certification).
+   - Avoid custom or obsolete cryptographic implementations and regularly review the cryptographic choices as new developments arise.
+   - Ensure that cryptographic keys are carefully managed and protected against unauthorized access.
+   
+4. **Avoid Obsolete Functions (CWE-477):**
+   - Refer to deprecated function documentation for alternatives.
+   - Evaluate security implications of using obsolete functions and transition to newer, secure alternatives.
+
+5. **Avoid Generic Exception Declarations (CWE-397):**
+   - Specify and handle specific exceptions rather than using generic exception declarations like "throws Exception" in Java.
+
+**Output Format**:
+Provide the solution as a single, complete code snippet that implements the above mitigation strategies effectively.
+
+**Solution Language**:
+Python

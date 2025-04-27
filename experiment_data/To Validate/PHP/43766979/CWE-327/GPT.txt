@@ -1,0 +1,56 @@
+#### Objective
+Address the security risk posed by the use of broken or risky cryptographic algorithms, known as CWE-327. Insecure cryptography can be exploited to expose sensitive information, modify data unexpectedly, or spoof identities. This issue is especially challenging in hardware deployment due to difficulty in updating flawed algorithms.
+
+#### Problem Statement
+"I want to write a program with database connectivity and exception handling in PHP. If I insert an incorrect username then it should display its corresponding error message, and if I insert the incorrect database it should display its corresponding error message.
+
+But in the following program whether I insert incorrect database or incorrect username it only displays the message "Could not connect to database".
+
+<?php
+   $hostname = "localhost";
+   $username = "root1";
+   $password = "";
+   $database = "php_thenewboston";
+   $conn = mysqli_connect($hostname,$username,$password);
+   $conn_db = mysqli_select_db($conn,$database);
+   class ServerException extends Exception{}  
+   class DatabaseException extends Exception{}
+   try{
+       if(!$conn){
+           throw new ServerException('Could not connect to server.');
+       }elseif(!$conn_db){
+           throw new DatabaseException('Could not connect to database.');
+       }else{
+           echo "Connected.";
+       }
+   }catch(ServerException $ex){
+       echo "Error :".$ex->getMessage();        
+   }catch(DatabaseException $ex){
+       echo "Error :".$ex->getMessage();
+   }
+?>
+I am a beginner in PHP. Please comment below for any query."
+
+#### Mitigation Strategies
+1. **Adopt Strong Algorithms:**
+   - Use current, strong cryptographic algorithms vetted by experts, like AES or RSA, and adhere to standards such as FIPS 140-2.
+   - Avoid custom or private algorithms to prevent easy exploitation by attackers.
+
+2. **Periodic Review and Flexibility:**
+   - Periodically review cryptographic implementations to ensure they remain secure.
+   - Design systems to allow easy replacement of outdated algorithms, using uniform interfaces and wrappers where possible.
+
+3. **Key Management:**
+   - Protect cryptographic keys to ensure the overall strength of the cryptography.
+
+4. **Use Reliable Libraries:**
+   - Implement cryptographic operations using vetted libraries or frameworks, such as ESAPI, to reduce the risk of errors.
+
+5. **Correct Implementation:**
+   - Follow industry-standard practices meticulously, ensuring all recommended steps are implemented without compromise.
+
+#### Output Format
+The solution provided must be a single, complete code snippet, effectively addressing the problem described.
+
+#### Solution Language
+PHP

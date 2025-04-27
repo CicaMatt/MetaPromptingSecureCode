@@ -1,0 +1,79 @@
+```java
+import javax.net.ssl.*;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+public class HttpsClient {
+
+    public static void main(String[] args) throws Exception {
+        // Keystore containing the client certificate and private key
+        KeyStore clientKeyStore = KeyStore.getInstance("PKCS12"); // Or "JKS" if not PKCS12
+        clientKeyStore.load(HttpsClient.class.getResourceAsStream("client.p12"), "clientPassword".toCharArray()); // Replace with your client keystore path and password
+
+        // Truststore containing the server's root certificate
+        KeyStore trustStore = KeyStore.getInstance("JKS"); // Or the appropriate type for your truststore
+        trustStore.load(HttpsClient.class.getResourceAsStream("truststore.jks"), "truststorePassword".toCharArray()); // Replace with your truststore path and password
+
+
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(clientKeyStore, "clientPassword".toCharArray()); // Password for the client private key
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(trustStore);
+
+
+        SSLContext sslContext = SSLContext.getInstance("TLS"); // Or "SSL" if necessary, but TLS is preferred
+        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+        SSLSocketFactory sslsocketfactory = sslContext.getSocketFactory();
+
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setSSLSocketFactory(sslsocketfactory);
+
+
+        // Set Hostname verification (CRITICAL for security)
+        // Java 6 does not have the SNI extension.  This workaround helps to mitigate
+        // the issue but isn't a full solution. Upgrading to a newer Java version is
+        // strongly recommended for proper SNI support and overall security.
+        conn.setHostnameVerifier(new HostnameVerifier() {
+            @Override
+            public boolean verify(String hostname, SSLSession session) {
+                try {
+                    X509Certificate[] certs = (X509Certificate[]) session.getPeerCertificates();
+                    X509Certificate serverCert = certs[0];
+                    return hostname.equalsIgnoreCase(serverCert.getSubjectDN().getName());
+                    // OR
+                    // return true; //  Disable hostname verification (Highly Discouraged)
+                } catch (CertificateException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+        });
+
+        InputStream inputstream = conn.getInputStream();
+
+
+        // Process the inputstream
+        // ...
+
+    }
+}
+```
+
+
+**Key Improvements:**
+
+* **Uses `SSLContext`:** This is the standard and recommended way to configure SSL connections in Java.  It allows for proper initialization of key managers and trust managers.
+* **Separate Keystore and Truststore:**  Separates the client certificate (and key) from the trusted server certificates.  This is a security best practice.
+* **Hostname Verification (Crucially Important):** Included logic for hostname verification.  **Disabling hostname verification is extremely dangerous and should never be done in production.** The provided example code includes a very basic hostname verification mechanism.  This is suitable only for demonstration purposes. For production code, use a more robust method.  Upgrading to Java 7 or later allows for proper handling of the Server Name Indication (SNI) extension, greatly simplifying hostname verification.
+* **Resource Loading:** Keystore and truststore files are loaded as resources, which is generally a better approach for managing these files within your application.  Adapt the paths as needed for your project structure.
+* **PKCS12 Support:** Uses PKCS12 as the assumed keystore format, which is more common for client certificates. Adjust to "JKS" if necessary.
+* **Clearer Error Handling:**  The code can be expanded to include more robust error handling to provide informative messages in case of failures.
+
+
+**Critical Note on Java 6:** Java 6 is extremely outdated and poses significant security risks.  It is strongly recommended to upgrade to a supported LTS version of Java (e.g., Java 17 or Java 21) as soon as possible.  The provided code addresses the immediate problem but using Java 6 makes your system vulnerable.  Modern Java versions offer better security features and performance.  This example includes a workaround for hostname verification because of the limitations of Java 6, but upgrading to a newer Java version is essential for proper SNI support and security.

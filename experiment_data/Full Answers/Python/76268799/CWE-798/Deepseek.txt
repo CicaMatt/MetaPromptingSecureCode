@@ -1,0 +1,64 @@
+To address the issue of using Enums in SQLAlchemy 2.0 with `mapped_column`, we need to ensure that the `CampaignStatusType` is correctly defined and used within the `Campaign` class. The error you're encountering (`AttributeError: 'ENUM' object has no attribute '__mro__'`) suggests that the `pgEnum` type is not being used correctly in the context of SQLAlchemy's ORM.
+
+Here’s a complete solution that demonstrates how to properly use Enums with `mapped_column` in SQLAlchemy 2.0:
+
+```python
+from sqlalchemy import create_engine, Column, Enum
+from sqlalchemy.orm import declarative_base, mapped_column, Mapped
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+import datetime as dt
+from uuid import uuid4
+
+# Define the Base class for SQLAlchemy models
+Base = declarative_base()
+
+# Define the Enum class
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+# Define the ENUM type for PostgreSQL
+CampaignStatusType = pgEnum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+# Define the Campaign model
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatus] = mapped_column(CampaignStatusType, nullable=False)
+
+# Create an engine and bind it to the Base metadata
+engine = create_engine('postgresql://user:password@localhost/dbname')
+Base.metadata.create_all(engine)
+```
+
+### Explanation:
+
+1. **Enum Definition**:
+   - The `CampaignStatus` class is defined as a subclass of `str` and `enum.Enum`. This allows the enum values to be treated as strings.
+
+2. **ENUM Type for PostgreSQL**:
+   - The `CampaignStatusType` is defined using `pgEnum` from SQLAlchemy's PostgreSQL dialect. This ensures that the enum is correctly mapped to a PostgreSQL ENUM type.
+
+3. **Model Definition**:
+   - The `Campaign` class is defined with `mapped_column` for each field. The `status` field uses the `CampaignStatusType` ENUM type.
+
+4. **Database Engine and Metadata**:
+   - An engine is created to connect to the PostgreSQL database, and the metadata is bound to this engine. The `Base.metadata.create_all(engine)` call ensures that the table is created in the database.
+
+### Mitigation Strategies Applied:
+
+- **Avoid Hard-Coding Credentials**: The database connection string (`postgresql://user:password@localhost/dbname`) should be stored in environment variables or a secure configuration file.
+- **Secure Storage**: Ensure that the database credentials are stored securely and not hard-coded in the source code.
+- **Access Control**: Restrict access to the database to only those users and applications that require it.
+
+This solution should resolve the issue and allow you to use Enums with `mapped_column` in SQLAlchemy 2.0.

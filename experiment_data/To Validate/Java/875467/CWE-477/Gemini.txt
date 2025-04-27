@@ -1,0 +1,36 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I am using Java 6 and am trying to create an HttpsURLConnection against a remote server, using a client certificate.
+The server is using an selfsigned root certificate, and requires that a password-protected client certificate is presented. I've added the server root certificate and the client certificate to a default java keystore which I found in /System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/security/cacerts (OSX 10.5). The name of the keystore file seems to suggest that the client certificate is not supposed to go in there?
+
+Anyway, adding the root certificate to this store solved the infamous javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path building failed' problem.
+
+However, I'm now stuck on how to use the client certificate. I've tried two approaches and neither gets me anywhere.
+First, and preferred, try:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+URL url = new URL("https://somehost.dk:3049");
+HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
+conn.setSSLSocketFactory(sslsocketfactory);
+InputStream inputstream = conn.getInputStream();
+// The last line fails, and gives:
+// javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
+I've tried skipping the HttpsURLConnection class (not ideal since I want to talk HTTP with the server), and do this instead:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket("somehost.dk", 3049);
+InputStream inputstream = sslsocket.getInputStream();
+// do anything with the inputstream results in:
+// java.net.SocketTimeoutException: Read timed out
+I am not even sure that the client certificate is the problem here."
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  Java

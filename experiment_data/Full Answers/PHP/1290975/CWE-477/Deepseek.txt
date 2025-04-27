@@ -1,0 +1,87 @@
+Certainly! Below is a **secure, modern PHP code snippet** that replaces the obsolete `mysql_*` functions with **prepared statements using `mysqli`**. This approach mitigates SQL injection risks and improves code maintainability.
+
+### **Secure PHP Code Using Prepared Statements**
+
+```php
+<?php
+// Database connection parameters
+$host = 'localhost';
+$user = 'your_username';
+$password = 'your_password';
+$database = 'your_database';
+
+// Create a new mysqli object for database connection
+$mysqli = new mysqli($host, $user, $password, $database);
+
+// Check for connection errors
+if ($mysqli->connect_error) {
+    die("Connection failed: " . $mysqli->connect_error);
+}
+
+// Prepare the SQL statement with placeholders
+$sql = "SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC";
+
+// Prepare the statement
+if ($stmt = $mysqli->prepare($sql)) {
+    // Bind the URL parameters to the placeholders
+    $stmt->bind_param("ss", $_GET['userid'], $_GET['category']);
+
+    // Execute the prepared statement
+    $stmt->execute();
+
+    // Get the result set
+    $result = $stmt->get_result();
+
+    // Fetch and display the results
+    while ($row = $result->fetch_assoc()) {
+        echo "ID: " . $row['id'] . " - UserID: " . $row['userid'] . " - Category: " . $row['category'] . "<br>";
+    }
+
+    // Close the statement
+    $stmt->close();
+} else {
+    die("Error in prepared statement: " . $mysqli->error);
+}
+
+// Close the database connection
+$mysqli->close();
+?>
+```
+
+---
+
+### **Explanation of the Code**
+
+1. **Database Connection**:
+   - The `mysqli` object is used to establish a secure connection to the MySQL database.
+
+2. **Prepared Statement**:
+   - The SQL query uses placeholders (`?`) for user input, which prevents SQL injection.
+
+3. **Binding Parameters**:
+   - The `bind_param` method binds the URL parameters (`$_GET['userid']` and `$_GET['category']`) to the placeholders. The `"ss"` indicates that both parameters are strings.
+
+4. **Execution and Fetching Results**:
+   - The `execute` method runs the prepared statement, and `get_result` retrieves the result set.
+   - The `fetch_assoc` method fetches each row as an associative array for display.
+
+5. **Error Handling**:
+   - Proper error handling ensures that any issues with the database connection or query execution are caught and reported.
+
+6. **Closing Resources**:
+   - The statement and database connection are explicitly closed to free up resources.
+
+---
+
+### **Performance Consideration**
+- **Prepared Statements and Speed**: Prepared statements can improve performance when the same query is executed multiple times with different parameters. This is because the SQL statement is parsed and compiled only once, and subsequent executions reuse the compiled form.
+- **For 3-4 Executions**: While the performance gain might not be significant for just 3-4 executions, the primary benefit is **security** and **code maintainability**.
+
+---
+
+### **Key Benefits**
+- **Security**: Protects against SQL injection by using parameterized queries.
+- **Maintainability**: Modern `mysqli` functions are actively supported and recommended.
+- **Performance**: Reusing prepared statements can improve efficiency for repeated queries.
+
+Let me know if you need further clarification!

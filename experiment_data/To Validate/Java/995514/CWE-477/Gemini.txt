@@ -1,0 +1,14 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I am doing a https post and I'm getting an exception of ssl exception Not trusted server certificate. If i do normal http it is working perfectly fine. Do I have to accept the server certificate somehow?"
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  Java

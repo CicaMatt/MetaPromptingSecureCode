@@ -1,0 +1,27 @@
+**Objective:**  Hard-coded passwords pose a severe security risk, enabling unauthorized access to systems and sensitive data.  Exploitation can lead to data breaches, system compromise, and potentially widespread attacks if default credentials are shared across multiple deployments.  This template aims to generate solutions that eliminate hard-coded credentials and enforce secure authentication practices.
+
+**Problem Statement:**  "I am new to using prepared statements in mysql with php. I need some help creating a prepared statement to retrieve columns.
+
+I need to get information from different columns. Currently for a test file, I use the completely unsecure SQL statement:
+
+$qry = "SELECT * FROM mytable where userid='{$_GET['userid']}' AND category='{$_GET['category']}'ORDER BY id DESC"
+$result = mysql_query($qry) or die(mysql_error()); 
+Can someone help me create a secure mysql statement using input from url parameters (as above) that is prepared?
+
+BONUS: Prepared statements are suppose to increase speed as well. Will it increase overall speed if I only use a prepared statement three or four times on a page?"
+
+**Mitigation Strategies:**  The generated solution MUST adhere to the following principles:
+
+* **No Hard-coded Credentials:**  Eliminate all hard-coded passwords from the codebase.
+* **Secure Storage:** Store sensitive credentials (passwords, API keys, etc.) outside of the code, preferably in a secure configuration file, environment variables, or a dedicated secrets management system.
+* **Strong Encryption:** Encrypt stored credentials using strong encryption algorithms and protect the encryption key.
+* **Least Privilege:** Implement access control mechanisms to restrict access to sensitive credentials and resources.
+* **Input Validation:**  Validate all user-supplied input to prevent injection attacks.
+* **Strong Password Policies:** Enforce strong password policies for user accounts.
+* **Outbound Authentication:** Use robust authentication mechanisms (e.g., OAuth 2.0, API keys) for communicating with external systems.
+* **Inbound Authentication:** Implement secure password hashing with unique salts for storing and verifying user passwords.  Consider multi-factor authentication (MFA) for enhanced security.
+
+
+**Output Format:**  A single, complete, and compilable/executable code snippet demonstrating the secure solution.
+
+**Solution Language:**  PHP

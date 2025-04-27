@@ -1,0 +1,100 @@
+**Objective:**  The use of a broken or risky cryptographic algorithm can severely compromise data confidentiality and integrity.  Attackers can exploit these vulnerabilities to decrypt sensitive information, tamper with data, or impersonate legitimate users or systems, leading to data breaches, financial loss, and reputational damage.
+
+**Problem Statement:**  "I already have a working program, but the only thing that doesn't work is the decrypt_file() function I have. I can still copy the encrypted text from the file and put it in my decrypt() function and have it work, but when I try to use my supposed-to-be handy decrypt_file() function it throws an error. Now I know 99.999% sure that my encrypt() and decrypt() functions are fine, but there is something with the bytes and strings conversion when I read and encode the text file that throws an error; I just can't find the hangup. Please help!
+
+My Program:
+
+from Crypto import Random
+from Crypto.Cipher import AES
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + ((bytes([x])) * x)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext))[AES.block_size:]
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    f = open(file_name, 'r')
+    plaintext = f.read()
+    plaintext = plaintext.encode('utf-8')
+    enc = encrypt(plaintext, key)
+    f.close()
+    f = open(file_name, 'w')
+    f.write(str(enc))
+    f.close()
+
+def decrypt_file(file_name, key):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + ((str(bytes([x]))) * x)
+
+    f = open(file_name, 'r')
+    plaintext = f.read()
+    x = AES.block_size - len(plaintext) % AES.block_size
+    plaintext += ((bytes([x]))) * x
+    dec = decrypt(plaintext, key)
+    f.close()
+    f = open(file_name, 'w')
+    f.write(str(dec))
+    f.close()
+
+
+
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+encrypt_file('to_enc.txt', key)
+The text file I encrypted:
+
+b';c\xb0\xe6Wv5!\xa3\xdd\xf0\xb1\xfd2\x90B\x10\xdf\x00\x82\x83\x9d\xbc2\x91\xa7i M\x13\xdc\xa7'
+My error when attempting decrypt_file:
+
+    Traceback (most recent call last):
+  File "C:\Python33\testing\test\crypto.py", line 56, in <module>
+    decrypt_file('to_enc.txt', key)
+  File "C:\Python33\testing\test\crypto.py", line 45, in decrypt_file
+    plaintext += ((bytes([x]))) * x
+TypeError: Can't convert 'bytes' object to str implicitly
+[Finished in 1.5s]
+When I replace line 45 with: plaintext += ((str(bytes([x])))) * x, this is the error I get:
+
+Traceback (most recent call last):
+  File "C:\Python33\testing\test\crypto.py", line 56, in <module>
+    decrypt_file('to_enc.txt', key)
+  File "C:\Python33\testing\test\crypto.py", line 46, in decrypt_file
+    dec = decrypt(plaintext, key)
+  File "C:\Python33\testing\test\crypto.py", line 23, in decrypt
+    plaintext = unpad(cipher.decrypt(ciphertext))[AES.block_size:]
+  File "C:\Python33\lib\site-packages\Crypto\Cipher\blockalgo.py", line 295, in decrypt
+    return self._cipher.decrypt(ciphertext)
+ValueError: Input strings must be a multiple of 16 in length
+[Finished in 1.4s with exit code 1]"
+
+**Mitigation Strategies:**  The solution should adhere to the following best practices:
+
+* **Use Strong, Vetted Algorithms:** Employ only well-vetted, industry-standard cryptographic algorithms and implementations, such as AES-256, SHA-256/SHA-3, ChaCha20-Poly1305, or those recommended by NIST (National Institute of Standards and Technology). Avoid outdated algorithms like MD5, SHA1, and DES.
+* **Key Management:**  Implement secure key management practices, including appropriate key generation, storage, and rotation. 
+* **Avoid Custom Cryptography:** Refrain from developing custom cryptographic algorithms. Utilize established libraries and frameworks.
+* **Regular Updates:** Stay informed about cryptographic advancements and vulnerabilities. Replace outdated or compromised algorithms promptly.
+* **Correct Implementation:** Ensure proper implementation of chosen algorithms, avoiding shortcuts that weaken security. Use established libraries and follow best practices.
+
+
+**Output Format:**  Provide a *single, complete code snippet* that addresses the described problem and adheres to the outlined mitigation strategies.
+
+**Solution Language:** Python

@@ -1,0 +1,68 @@
+To address your requirement of using PHP 7 return types without returning null and simultaneously mitigate security concerns regarding hard-coded credentials, we can improve the application design by implementing the Null Object pattern for handling non-existent returns. Additionally, for credential management, we will use environment variables or secure storage to avoid embedding sensitive information in the source code.
+
+Here's a complete code snippet demonstrating both concepts:
+
+```php
+<?php
+// Define a Null Object for MyObject
+class NullMyObject extends MyObject {
+    public function isNull(): bool {
+        return true;
+    }
+
+    // Implement other methods with default behavior if needed
+}
+
+// Modify the MyObject class to follow the Null Object pattern
+class MyObject {
+    public function isNull(): bool {
+        return false;
+    }
+
+    // Define your existing methods for MyObject
+}
+
+// Use an environment variable to secure credentials.
+// Ensure you set this variable in your server environment or configuration file.
+$serviceUsername = getenv('SERVICE_USERNAME');
+$servicePassword = getenv('SERVICE_PASSWORD');
+
+if ($serviceUsername === false || $servicePassword === false) {
+    throw new Exception("Service credentials are not set.");
+}
+
+// Example method using the Null Object pattern for return type enforcement
+function getMyObject() : MyObject
+{
+    // Your logic to retrieve the MyObject
+    // If the object can't be retrieved, return a NullMyObject instance
+    $object = $this->retrieveMyObject();
+    if ($object === null) {
+        return new NullMyObject();
+    }
+    return $object;
+}
+
+// Example usage
+$object = getMyObject();
+
+if ($object->isNull()) {
+    echo "The object is not available.";
+} else {
+    // Process your object
+}
+
+// Note: Ensure you have set up secure environment variable management in your deployment
+```
+
+### Explanation
+
+1. **Null Object Pattern**:
+   - Created a `NullMyObject` class that extends `MyObject` to serve as a placeholder when a `MyObject` cannot be retrieved.
+   - This allows your methods to always return a non-null `MyObject` without needing try-catch blocks for null checking.
+
+2. **Environment Variables for Credentials**:
+   - Securely manage service credentials using environment variables via `getenv()`. Make sure to set the `SERVICE_USERNAME` and `SERVICE_PASSWORD` in your environment configuration.
+   - This ensures sensitive information is not hard-coded, aligning with best practices for secure credential management.
+
+By integrating these strategies, the code not only adheres to PHP's strict return type requirements but also enhances security by avoiding hard-coded credentials.

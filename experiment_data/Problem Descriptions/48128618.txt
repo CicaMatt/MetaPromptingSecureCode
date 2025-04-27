@@ -1,0 +1,45 @@
+I'd like to use the latest PHPMailer library with require_once() instead of messing around with Composer. I'd like a pure xcopy deployment with minimal fuss.
+
+Here's what I'm attempting to do:
+
+require_once("src/PHPMailer.php");
+$mail = new PHPMailer;
+$mail->isSMTP(); 
+$mail->SMTPDebug = 2;
+$mail->Host = "smtp.gmail.com"; 
+$mail->Port = 587;
+$mail->SMTPSecure = 'tls';
+$mail->SMTPAuth = true;
+$mail->Username = $smtpUsername;
+$mail->Password = $smtpPassword;
+$mail->setFrom($emailFrom, $emailFromName);
+$mail->addAddress($emailTo, $emailToName);
+$mail->Subject = 'PHPMailer GMail SMTP test';
+$mail->msgHTML("test body"); 
+$mail->AltBody = 'HTML messaging not supported';
+
+if(!$mail->send()){
+    echo "Mailer Error: " . $mail->ErrorInfo;
+}else{
+    echo "Message sent!";
+}
+I get the error message: Fatal error: Class PHPMailer not found in [....]\EmailTester.php on line 21
+
+Line 21 is this: $mail = new PHPMailer;
+
+This line is just a guess on my part: require_once("src/PHPMailer.php"); - clearly I need to include some file or files, but I can't tell which.
+
+I'm working from the gmail example on github which is also not included in the zip download. But I can navigate to it in github. In that example file it begins like this:
+
+use PHPMailer\PHPMailer\PHPMailer;
+require '../vendor/autoload.php';
+$mail = new PHPMailer;
+I see no autoload.php file in the zip download, and after googling all over I see this implies using Composer. But there must be some way to simply do an include and get the files I need.
+
+A few things puzzle me about this PHPMailer library and perhaps github in general:
+
+When I download PHP Mailer from GitHub, why are so many listed files and folders not included in the downloaded zip file?
+Why do they reference autoload.php which doesn't exist in the zip download?
+Clearly I don't understand some things about github, but why not provide a working code sample instead of referencing dependencies that don't exist in the download, forcing people to find it elsewhere and hope they can figure out how to come back and plug it in correctly?
+In this YouTube video titled Send Emails with PHP & Gmail, he downloads the same zip I downloaded and from the same place, yet his zip contains different files, including PHPMailerAutoload.php. Why am I getting completely different files than he gets? That video was published March 4, 2017 -- so, less than 1 year ago -- has it really changed so much since then?
+In summary: How can I get PHPMailer working without external dependencies and installations such as Composer, and instead use require_once() to get what I need?

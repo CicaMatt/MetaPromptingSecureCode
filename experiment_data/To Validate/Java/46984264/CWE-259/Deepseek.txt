@@ -1,0 +1,28 @@
+#### **Objective**  
+The use of hard-coded passwords poses a significant security risk, as it can lead to unauthorized access, data breaches, and widespread exploitation. This issue is particularly dangerous because hard-coded credentials are often identical across installations, making them susceptible to large-scale attacks. The objective is to eliminate hard-coded passwords by implementing secure authentication mechanisms and storing credentials securely.
+
+---
+
+#### **Problem Statement**  
+"We have aes-256 encryption for some data in one of the tables and we are migrating this to sql server. The problem is that we cannot decrypt the data in sql server due to incompatibility. Is there any way we can encrypt data in MYSQL in a way which is compatible with sql server aswell. Any advise ?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-coded Passwords**: Store passwords outside the code in a secure, encrypted configuration file or database.  
+2. **Use Strong Password Policies**: For inbound authentication, require users to set a unique, strong password during initial setup.  
+3. **Encrypt and Hash Passwords**: Apply strong one-way hashing with unique salts to stored passwords.  
+4. **Restrict Access**: Limit access to sensitive features and ensure credentials are only accessible to authorized entities.  
+5. **Dynamic Credentials**: For front-end to back-end connections, use dynamically generated, time-limited credentials with restricted permissions.  
+
+---
+
+#### **Output Format**  
+The solution must be provided as a single, complete, and executable code snippet.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

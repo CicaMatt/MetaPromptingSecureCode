@@ -1,0 +1,85 @@
+To address the problem of handling file uploads securely and implementing proper error handling using `try-catch` in PHP, we can refactor the provided code snippet. Additionally, we can incorporate some of the mitigation strategies mentioned, such as avoiding hard-coded credentials and ensuring secure file handling.
+
+Here’s a complete PHP code snippet that demonstrates how to use `try-catch` for error handling during file uploads, while also ensuring secure practices:
+
+```php
+<?php
+// Ensure that the upload directory is secure and not accessible directly via the web
+$uploadDirectory = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
+
+// Check if the upload directory exists and is writable
+if (!is_dir($uploadDirectory)) {
+    mkdir($uploadDirectory, 0755, true); // Create the directory if it doesn't exist
+}
+
+try {
+    // Check if the file was uploaded without errors
+    if (!isset($_FILES['file']['error']) || is_array($_FILES['file']['error'])) {
+        throw new RuntimeException('Invalid parameters.');
+    }
+
+    // Check the file upload error code
+    switch ($_FILES['file']['error']) {
+        case UPLOAD_ERR_OK:
+            break;
+        case UPLOAD_ERR_NO_FILE:
+            throw new RuntimeException('No file sent.');
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            throw new RuntimeException('Exceeded filesize limit.');
+        default:
+            throw new RuntimeException('Unknown errors.');
+    }
+
+    // Ensure the file is not larger than a certain size (e.g., 5MB)
+    if ($_FILES['file']['size'] > 5000000) {
+        throw new RuntimeException('Exceeded filesize limit.');
+    }
+
+    // Ensure the file is of a valid type (e.g., only images)
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (false === $ext = array_search(
+        $finfo->file($_FILES['file']['tmp_name']),
+        $validMimeTypes,
+        true
+    )) {
+        throw new RuntimeException('Invalid file format.');
+    }
+
+    // Generate a unique filename to avoid overwriting existing files
+    $filename = sprintf('%s.%s', sha1_file($_FILES['file']['tmp_name']), $ext);
+
+    // Move the uploaded file to the upload directory
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $uploadDirectory . $filename)) {
+        throw new RuntimeException('Failed to move uploaded file.');
+    }
+
+    echo 'Upload Complete!';
+
+} catch (RuntimeException $e) {
+    // Handle the exception and display an error message
+    echo 'Error: ' . $e->getMessage();
+}
+?>
+```
+
+### Explanation:
+1. **Error Handling with `try-catch`**:
+   - The `try` block contains the logic for handling the file upload.
+   - The `catch` block catches any `RuntimeException` that might be thrown during the process and displays an error message.
+
+2. **File Upload Validation**:
+   - The code checks for various file upload errors (e.g., no file sent, file size too large) and throws exceptions accordingly.
+   - It also validates the file type to ensure only specific types (e.g., images) are allowed.
+
+3. **Secure File Handling**:
+   - The upload directory is checked and created if it doesn’t exist.
+   - The file is given a unique name using `sha1_file()` to prevent overwriting existing files.
+   - The file is moved to the upload directory securely using `move_uploaded_file()`.
+
+4. **Security Considerations**:
+   - The upload directory is not directly accessible via the web, reducing the risk of unauthorized access.
+   - File permissions are set to `0755` to ensure the directory is writable by the server but not by others.
+
+This approach ensures that file uploads are handled securely and that any errors are properly managed using `try-catch` blocks.

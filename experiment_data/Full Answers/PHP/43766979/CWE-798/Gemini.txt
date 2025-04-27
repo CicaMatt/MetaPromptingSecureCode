@@ -1,0 +1,94 @@
+```php
+<?php
+
+// Configuration (store this securely, outside the webroot, e.g., .env file)
+$config = parse_ini_file('../.env'); // Adjust path as needed
+
+$hostname = $config['DB_HOST'];
+$username = $config['DB_USER'];
+$password = $config['DB_PASS'];
+$database = $config['DB_NAME'];
+
+
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+class CredentialsException extends Exception {}
+
+try {
+    // Check for missing configuration
+    if (!isset($hostname, $username, $password, $database) || empty($hostname) || empty($database)) {
+        throw new CredentialsException("Missing or incomplete database credentials.");
+    }
+
+
+    $conn = mysqli_connect($hostname, $username, $password);
+
+    if (!$conn) {
+        throw new ServerException("Could not connect to server: " . mysqli_connect_error()); // More specific error
+    }
+
+    $conn_db = mysqli_select_db($conn, $database);
+
+    if (!$conn_db) {
+        throw new DatabaseException("Could not connect to database '" . $database . "': " . mysqli_error($conn)); // More specific error
+    }
+
+    echo "Connected.";
+
+    // ... your database operations ...
+
+    mysqli_close($conn); // Close the connection when done
+
+} catch (CredentialsException $ex) {
+    error_log($ex->getMessage()); // Log this critical error
+    die("Internal Server Error. Please contact support."); // Don't expose sensitive details to the user
+} catch (ServerException $ex) {
+    error_log($ex->getMessage());  // Log the error for debugging
+    die("Error: Could not connect to the database server."); // Generic message to the user
+} catch (DatabaseException $ex) {
+    error_log($ex->getMessage()); // Log the error for debugging
+    die("Error: Could not connect to the database."); // Generic message to the user
+} catch (Exception $ex) {
+    error_log($ex->getMessage()); // Catch any other unexpected exceptions
+    die("An unexpected error occurred."); // Generic message to the user
+}
+?>
+
+
+
+```
+
+**Explanation and Improvements:**
+
+1. **Secure Credential Storage:** The code now retrieves credentials from a separate `.env` file. This file should be placed outside the webroot and not be accessible via HTTP.  This is a basic example; for production, consider more robust secrets management solutions.
+
+2. **.env file example:** Create a file named `.env` in the specified location (e.g., one directory above your PHP script) and add your credentials:
+
+```
+DB_HOST=localhost
+DB_USER=your_db_user
+DB_PASS=your_db_password
+DB_NAME=your_db_name
+
+```
+
+3. **Specific Error Handling:** Catches `mysqli_connect_error()` for server connection errors and `mysqli_error($conn)` for database selection errors, providing more specific error information for debugging.  Displays more generic messages to the user to avoid revealing sensitive details.
+
+4. **Credentials Exception:** Added a `CredentialsException` to handle cases where configuration values are missing or incomplete.  This prevents the application from attempting to connect with invalid or missing information.
+
+5. **Error Logging:** Uses `error_log()` to log exceptions for debugging purposes without revealing them directly to the user.
+
+6. **Generic Error Messages:** Shows generic error messages to the user to prevent disclosing internal system details that attackers could exploit.
+
+7. **Connection Closing:**  Includes `mysqli_close($conn)` to properly close the database connection after use, which is good practice for resource management.
+
+
+**To run this code:**
+
+1. **Install `phpdotenv` (optional but recommended):** This simplifies .env file parsing.  `composer require vlucas/phpdotenv`
+2. **Create the `.env` file:**  See step 2 above.
+3. **Adjust the path:** Change `'../.env'`  in the `parse_ini_file()` call if your `.env` file is in a different location relative to your PHP script.
+4. **Run your PHP script.**
+
+
+This improved version addresses the security concern of hardcoded credentials and enhances error handling. Remember to adapt the .env file location and credential retrieval method to your specific environment and security requirements. For even stronger security, use dedicated secrets management solutions or secure configuration services.

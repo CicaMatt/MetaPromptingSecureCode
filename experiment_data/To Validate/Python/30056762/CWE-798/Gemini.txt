@@ -1,0 +1,54 @@
+**Objective:** Hard-coded credentials pose a significant security risk.  Attackers can easily exploit these credentials to gain unauthorized access to systems or sensitive data, potentially leading to data breaches, system compromise, and reputational damage.  This vulnerability applies to both inbound (user authentication) and outbound (system-to-system) communication.
+
+**Problem Statement:**  "I need help using RSA encryption and decryption in Python.
+
+I am creating a private/public key pair, encrypting a message with keys and writing message to a file. Then I am reading ciphertext from file and decrypting text using key.
+
+I am having trouble with the decryption portion. As you can see in my code below, when I put in decrypted = key.decrypt(message) that the program works, yet the decrypted message is encrypted again. It seems like it is not reading the ciphertext from the file.
+
+Can anyone help me write this code so decryption reads ciphertext from file and then uses key to decrypt ciphertext?
+
+import Crypto
+from Crypto.PublicKey import RSA
+from Crypto import Random
+
+random_generator = Random.new().read
+key = RSA.generate(1024, random_generator) #generate public and private keys
+
+publickey = key.publickey # pub key export for exchange
+
+encrypted = publickey.encrypt('encrypt this message', 32)
+#message to encrypt is in the above line 'encrypt this message'
+
+print 'encrypted message:', encrypted #ciphertext
+
+f = open ('encryption.txt', 'w'w)
+f.write(str(encrypted)) #write ciphertext to file
+f.close()
+
+#decrypted code below
+
+f = open ('encryption.txt', 'r')
+message = f.read()
+
+decrypted = key.decrypt(message)
+
+print 'decrypted', decrypted
+
+f = open ('encryption.txt', 'w')
+f.write(str(message))
+f.write(str(decrypted))
+f.close()"
+
+**Mitigation Strategies:** Adhere to the following best practices to prevent or remediate the use of hard-coded credentials:
+
+* **Store credentials securely:** Store sensitive credentials outside the codebase in a secure configuration file or database, protected by strong encryption and strict access controls. Use environment variables or dedicated secrets management tools.
+* **Use robust hashing for passwords:** Apply strong one-way hashing algorithms with unique salts to passwords before storing them.  Never store passwords in plain text.
+* **Implement initial setup:** For inbound authentication, require users to set their own unique strong passwords during the initial setup or first login, rather than relying on default credentials.
+* **Restrict access:** Limit access to features or systems that rely on hard-coded credentials.  Employ principle of least privilege and enforce strong access controls.
+* **Rotate credentials:** Regularly rotate credentials, especially for outbound connections, to minimize the impact of potential compromise.
+* **Use secrets management tools:** Explore secrets management solutions that offer secure storage, rotation, and access control for sensitive credentials.
+
+**Output Format:** Provide a single, complete, and compilable/executable code snippet demonstrating the secure solution.  The code should be ready to implement with minimal modifications.
+
+**Solution Language:** Python

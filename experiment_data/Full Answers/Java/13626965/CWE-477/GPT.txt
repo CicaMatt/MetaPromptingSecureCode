@@ -1,0 +1,62 @@
+The problem you are encountering, specifically the `SSLHandshakeException`, indicates that the Java environment cannot validate the SSL certificate chain presented by the server. This is often due to the server using a self-signed certificate or an untrusted certificate authority.
+
+While there's a way to bypass this validation (which can introduce security vulnerabilities), the recommended solution is to ensure that the certificate chain is trusted by your Java runtime. However, if you absolutely must bypass this validation for a specific use case (e.g., testing environment with self-signed certificates), here's a way to do it using a custom TrustManager that accepts all certificates:
+
+```java
+import java.io.*;
+import java.net.*;
+import javax.net.ssl.*;
+
+public class HTTPSSkipTLSValidation {
+
+    public static void main(String[] args) {
+        try {
+            // Trust all certificates
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create an instance of URL to access a specific URL
+            URL url = new URL("https://www.abc.com");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("GET");
+            conn.setDoOutput(true);
+
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            // If you have parameters, uncomment the next line
+            // wr.writeBytes(params);
+            wr.flush();
+            wr.close();
+
+            // Reading the response
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+            br.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Important Considerations:
+- **Security Risk**: The above code ignores SSL certificate validation, making the connection insecure and vulnerable to Man-In-The-Middle (MITM) attacks. This is generally not recommended for production use.
+- **Environment Configuration**: It is better to import the server's certificate into your Java environment's trusted key store when working with a known server or internal network.
+- **Production Code**: If this code is intended for production, ensure that all certificates are validated to preserve secure communication. This solution might be more suitable for troubleshooting or in controlled environments.

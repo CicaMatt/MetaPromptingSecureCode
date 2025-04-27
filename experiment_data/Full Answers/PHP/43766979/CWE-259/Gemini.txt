@@ -1,0 +1,110 @@
+```php
+<?php
+
+// Configuration file (config.php) - store this outside the webroot
+// Example using environment variables for credentials.  In production, use a more robust secrets management system.
+$db_config = [
+    'host' => getenv('DB_HOST') ?: 'localhost', // Default to localhost if env var not set
+    'user' => getenv('DB_USER') ?: null,
+    'password' => getenv('DB_PASSWORD') ?: null,
+    'database' => getenv('DB_NAME') ?: null
+];
+
+
+
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+class CredentialException extends Exception {}
+
+
+try {
+    // Check if credentials are configured
+    if (empty($db_config['user']) || empty($db_config['password']) || empty($db_config['database'])) {
+        throw new CredentialException("Database credentials not configured.");
+    }
+
+
+
+    // Establish database connection with error handling
+    $conn = mysqli_connect(
+        $db_config['host'],
+        $db_config['user'],
+        $db_config['password']
+    );
+
+
+
+    if (!$conn) {
+        throw new ServerException("Could not connect to server: " . mysqli_connect_error()); // Provide detailed error
+    }
+
+
+
+    $conn_db = mysqli_select_db($conn, $db_config['database']);
+    if (!$conn_db) {
+        throw new DatabaseException("Could not connect to database: " . mysqli_error($conn));  // Provide detailed error
+    }
+
+
+    echo "Connected.";
+
+
+
+    // Example prepared statement to prevent SQL injection (always use prepared statements)
+    $stmt = mysqli_prepare($conn, "SELECT * FROM users WHERE username = ?");
+    if ($stmt) {
+        $username = "testuser";  // Example: Get username from user input (sanitize/validate it!)
+        mysqli_stmt_bind_param($stmt, "s", $username); 
+        mysqli_stmt_execute($stmt);
+        // ... process results ...
+        mysqli_stmt_close($stmt);
+
+
+    } else {
+        echo "Error preparing statement: " . mysqli_error($conn);
+    }
+
+
+
+} catch (CredentialException $ex) {
+    // Log the error and display a generic message to the user (don't reveal credential details)
+    error_log($ex->getMessage()); // Log the actual error for debugging
+    echo "Error: Database configuration issue. Please contact support.";
+
+} catch (ServerException $ex) {
+
+    error_log($ex->getMessage());
+    echo "Error: Could not connect to the server. Please try again later.";
+
+} catch (DatabaseException $ex) {
+    error_log($ex->getMessage()); // Log the actual error for debugging
+    echo "Error: Could not connect to the database. Please try again later."; // Generic message
+} catch (Exception $ex) {
+    error_log($ex->getMessage());
+    echo "Error: An unexpected error occurred.";
+} finally {
+    if (isset($conn)) {
+        mysqli_close($conn);
+    }
+}
+
+
+?>
+```
+
+
+**Explanation and Key Improvements:**
+
+* **Credentials Moved to Configuration:** Database credentials are now stored in a separate `config.php` file (or environment variables, which is preferred). This file should be placed outside the webroot directory for security.
+* **Error Handling Enhanced:**  More specific error messages are logged for debugging, while generic messages are displayed to the user to avoid information disclosure.  The `mysqli_connect_error()` and `mysqli_error()` functions provide more detailed error information.
+* **Prepared Statement:**  The example uses a prepared statement to prevent SQL injection vulnerabilities.  This is absolutely crucial when handling user-supplied input.
+* **Credential Exception:** A `CredentialException` is added to handle cases where credentials are missing, promoting better error management and preventing accidental exposure of configuration issues.
+* **Finally Block:** Ensures the database connection is closed even if errors occur, preventing resource leaks.
+* **Generic Error Messages for Users:** Error messages displayed to the user are made more generic to avoid leaking internal system details.  Detailed error information is logged for debugging purposes.
+
+**Setting Environment Variables (Recommended):**
+
+You'll need to set the environment variables (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`) on your server.  The exact method depends on your operating system and web server configuration (Apache, Nginx, etc.).  Consult your server's documentation for specific instructions.
+
+
+This revised code addresses the security vulnerabilities of hard-coded credentials and provides more robust error handling and SQL injection prevention.  Remember to adapt the configuration method to your specific environment and security requirements.  Using a dedicated secrets management system is highly recommended for production applications.

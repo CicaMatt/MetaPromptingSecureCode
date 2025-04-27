@@ -1,0 +1,47 @@
+**Objective:**  This vulnerability involves declaring a method to throw a generic exception (e.g., `Exception`, `Throwable` in Java) instead of specific exceptions. This practice hinders effective error handling and recovery by callers, masking the true nature of potential errors and making it difficult to implement precise exception handling logic. This can lead to unexpected application behavior, difficulties in debugging, and potentially security vulnerabilities if errors are not handled appropriately.
+
+**Problem Statement:**  "I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+**Mitigation Strategies:**
+
+* **Identify Specific Exceptions:** Analyze the code within the method to determine the specific types of exceptions that could be thrown.  
+* **Replace Generic Exception:** Replace the generic `Exception` or `Throwable` declaration in the method signature with the identified specific exception types.  If multiple exceptions are possible, list them individually separated by commas (e.g., `IOException, IllegalArgumentException`).
+* **Implement Targeted Exception Handling:** In the calling code, implement `try-catch` blocks to handle each specific exception appropriately. This allows for tailored error recovery logic based on the specific nature of the error.
+* **Avoid Empty Catch Blocks:** Never leave a `catch` block empty.  At a minimum, log the exception to aid in debugging.  Implement proper error handling or rethrow the exception if it cannot be handled locally.
+* **Consider Custom Exceptions:** For specific error conditions unique to your application, define custom exception classes that inherit from relevant built-in exception types.
+
+
+**Output Format:**  Provide a single, complete, and compilable code snippet that demonstrates the corrected method declaration and associated exception handling in the calling code.
+
+**Solution Language:**  Java

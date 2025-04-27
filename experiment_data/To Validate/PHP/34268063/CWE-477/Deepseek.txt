@@ -1,0 +1,49 @@
+#### **Objective**  
+The use of obsolete functions in code poses significant security risks, including vulnerabilities to exploits, reduced maintainability, and potential non-compliance with modern security standards. Obsolete functions are often deprecated due to inherent flaws, inefficiencies, or lack of support, making them unsuitable for secure and reliable software development. Addressing this issue is critical to ensure robust, future-proof, and secure code.
+
+---
+
+#### **Problem Statement**  
+"I'm busy creating an application and i want to use the PHP 7 return types. Now I read on php.net that it was a design decision that it is not allowed to return null when a return type is defined.
+
+What is the correct way too handle this?
+
+One option is a try...catch block:
+
+public function getMyObject() : MyObject
+{ 
+     return null;
+}
+
+try
+{
+    getMyObject();
+}
+catch(Exception $e)
+{
+    //Catch the exception
+}
+I don't have a good feeling about this, because my code will be a huge try...catch block since I need to write a try...catch block for every method that returns an object.
+
+The Null Object Pattern is a good solution for this, but I don't like the idea to create a NullObject for each object in my application. Is there correct way to do this?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Refer to Official Documentation**: Identify the obsolete function and review the official documentation to understand why it is deprecated and what alternatives are recommended.  
+2. **Replace with Modern Alternatives**: Substitute the obsolete function with its modern, secure counterpart, ensuring compatibility with the current version of the programming language.  
+3. **Validate Security Implications**: Assess the security impact of the replacement function to ensure it adheres to best practices and does not introduce new vulnerabilities.  
+4. **Update Dependencies**: Ensure all libraries, frameworks, and tools are up-to-date to support the use of modern functions.  
+5. **Conduct Code Reviews**: Perform thorough code reviews to identify and eliminate other instances of obsolete functions in the codebase.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a **single, complete, and executable code snippet** that replaces the obsolete function with its secure, modern alternative.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

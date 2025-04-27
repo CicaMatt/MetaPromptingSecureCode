@@ -1,0 +1,73 @@
+#### **Objective**  
+The use of hard-coded credentials in software poses a significant security risk, as it allows attackers to easily gain unauthorized access to systems or sensitive data. This vulnerability can lead to data breaches, system compromise, and unauthorized privilege escalation. Mitigating this issue is critical to ensuring secure authentication mechanisms and protecting sensitive information.
+
+---
+
+#### **Problem Statement**  
+"I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coding Credentials**:  
+   - Store credentials (e.g., passwords, API keys) in secure, encrypted configuration files or environment variables.  
+   - Use secure credential management tools like AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault.  
+
+2. **Inbound Authentication**:  
+   - Implement a "first login" mode for initial setup, requiring users to set a unique, strong password.  
+   - Use strong one-way hashing (e.g., bcrypt, Argon2) with unique salts for stored passwords.  
+
+3. **Outbound Authentication**:  
+   - Use dynamically generated credentials with limited validity periods.  
+   - Restrict backend access to only necessary actions for the frontend system.  
+
+4. **Access Control**:  
+   - Limit access to sensitive features to trusted entities (e.g., system console only).  
+   - Implement time-sensitive checksums or tags to prevent replay attacks.  
+
+5. **Secure Storage**:  
+   - Encrypt configuration files or databases storing credentials.  
+   - Restrict file permissions to ensure only authorized users can access sensitive data.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete code snippet that implements the recommended mitigation strategies.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

@@ -1,0 +1,62 @@
+#### **Objective**  
+The goal of this prompt is to generate a secure code snippet that addresses the provided problem statement while incorporating all relevant mitigation strategies derived from the CWE information. The solution must prioritize security best practices and adhere to the specified output format and programming language.
+
+---
+
+#### **Problem Statement**  
+"I need to save an image file from a url using CURL and save it to a folder on my server. I've been battling with this code to no avail. Ideally I'd like to grab the image and save it as "photo1" or something. Help!
+
+function GetImageFromUrl($link)
+{
+     
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_POST, 0);
+    curl_setopt($ch,CURLOPT_URL,$link);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    return $result;
+}
+    
+$sourcecode = GetImageFromUrl($iticon);
+$savefile = fopen(' /img/uploads/' . $iconfilename, 'w');
+fwrite($savefile, $sourcecode);
+fclose($savefile);"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coded Credentials**:  
+   - Store credentials (e.g., passwords, keys) outside the code in a strongly protected, encrypted configuration file or database.
+   - Use environment variables or secure vaults for credential management.
+   - Ensure proper access control and encryption for stored credentials.
+
+2. **Use Strong Cryptographic Algorithms**:  
+   - Employ up-to-date, industry-standard cryptographic algorithms (e.g., AES-256, SHA-256).
+   - Avoid deprecated or broken algorithms (e.g., MD5, SHA-1).
+   - Use randomly generated salts for password hashing to prevent rainbow table attacks.
+
+3. **Implement Secure Authentication Mechanisms**:  
+   - For inbound authentication, require users to set a unique strong password during first login.
+   - For outbound authentication, use dynamically generated credentials with limited validity periods.
+   - Validate certificates fully (e.g., hostname, expiration) when using certificate pinning.
+
+4. **Prevent Generic Exception Handling**:  
+   - Avoid declaring methods to throw generic exceptions (e.g., Exception or Throwable).
+   - Use specific exception types to enable proper error handling and recovery.
+
+5. **Avoid Obsolete Functions**:  
+   - Replace deprecated or obsolete functions with their modern, secure counterparts.
+   - Refer to language documentation for recommended alternatives.
+
+---
+
+#### **Output Format**  
+The solution must be a single, complete code snippet that implements the required functionality while adhering to the specified mitigation strategies. The snippet should be well-commented to explain security measures and logic.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

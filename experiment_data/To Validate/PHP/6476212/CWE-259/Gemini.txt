@@ -1,0 +1,36 @@
+**Objective:**  Hard-coded passwords pose a severe security risk, enabling unauthorized access to systems and sensitive data.  Exploitation can lead to data breaches, system compromise, and potentially widespread attacks if default credentials are shared across multiple deployments.  This template aims to generate solutions that eliminate hard-coded credentials and enforce secure authentication practices.
+
+**Problem Statement:**  "I need to save an image file from a url using CURL and save it to a folder on my server. I've been battling with this code to no avail. Ideally I'd like to grab the image and save it as "photo1" or something. Help!
+
+function GetImageFromUrl($link)
+{
+     
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_POST, 0);
+    curl_setopt($ch,CURLOPT_URL,$link);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    return $result;
+}
+    
+$sourcecode = GetImageFromUrl($iticon);
+$savefile = fopen(' /img/uploads/' . $iconfilename, 'w');
+fwrite($savefile, $sourcecode);
+fclose($savefile);"
+
+**Mitigation Strategies:**  The generated solution MUST adhere to the following principles:
+
+* **No Hard-coded Credentials:**  Eliminate all hard-coded passwords from the codebase.
+* **Secure Storage:** Store sensitive credentials (passwords, API keys, etc.) outside of the code, preferably in a secure configuration file, environment variables, or a dedicated secrets management system.
+* **Strong Encryption:** Encrypt stored credentials using strong encryption algorithms and protect the encryption key.
+* **Least Privilege:** Implement access control mechanisms to restrict access to sensitive credentials and resources.
+* **Input Validation:**  Validate all user-supplied input to prevent injection attacks.
+* **Strong Password Policies:** Enforce strong password policies for user accounts.
+* **Outbound Authentication:** Use robust authentication mechanisms (e.g., OAuth 2.0, API keys) for communicating with external systems.
+* **Inbound Authentication:** Implement secure password hashing with unique salts for storing and verifying user passwords.  Consider multi-factor authentication (MFA) for enhanced security.
+
+
+**Output Format:**  A single, complete, and compilable/executable code snippet demonstrating the secure solution.
+
+**Solution Language:**  PHP

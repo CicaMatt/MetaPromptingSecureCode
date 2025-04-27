@@ -1,0 +1,34 @@
+**Objective:**  Hard-coded passwords pose a severe security risk, enabling unauthorized access to systems and sensitive data.  Exploitation can lead to data breaches, system compromise, and potentially widespread attacks if default credentials are shared across multiple deployments.  This template aims to generate solutions that eliminate hard-coded credentials and enforce secure authentication practices.
+
+**Problem Statement:**  "I have a PHP 5.1.0 website (actually it's 5.2.9 but it must also run on 5.1.0+).
+
+Pages are generated dynamically but many of them are mostly static. By static I mean the content don't change but the "template" around the content can change over time.
+
+I know they are several cache systems and PHP frameworks already out there, but my host don't have APC or Memcached installed and I'm not using any framework for this particular project.
+
+I want the pages to be cached (I think by default PHP "disallow" cache). So far I'm using:
+
+session_cache_limiter('private'); //Aim at 'public'
+session_cache_expire(180);
+header("Content-type: $documentMimeType; charset=$documentCharset");
+header('Vary: Accept');
+header("Content-language: $currentLanguage");
+I read many tutorials but I can't find something simple (I know cache is something complex, but I only need some basic stuff).
+
+What are "must" have headers to send to help caching?"
+
+**Mitigation Strategies:**  The generated solution MUST adhere to the following principles:
+
+* **No Hard-coded Credentials:**  Eliminate all hard-coded passwords from the codebase.
+* **Secure Storage:** Store sensitive credentials (passwords, API keys, etc.) outside of the code, preferably in a secure configuration file, environment variables, or a dedicated secrets management system.
+* **Strong Encryption:** Encrypt stored credentials using strong encryption algorithms and protect the encryption key.
+* **Least Privilege:** Implement access control mechanisms to restrict access to sensitive credentials and resources.
+* **Input Validation:**  Validate all user-supplied input to prevent injection attacks.
+* **Strong Password Policies:** Enforce strong password policies for user accounts.
+* **Outbound Authentication:** Use robust authentication mechanisms (e.g., OAuth 2.0, API keys) for communicating with external systems.
+* **Inbound Authentication:** Implement secure password hashing with unique salts for storing and verifying user passwords.  Consider multi-factor authentication (MFA) for enhanced security.
+
+
+**Output Format:**  A single, complete, and compilable/executable code snippet demonstrating the secure solution.
+
+**Solution Language:**  PHP

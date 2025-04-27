@@ -1,0 +1,80 @@
+#### **Objective**  
+The use of hard-coded credentials in software poses a significant security risk, as it allows attackers to easily gain unauthorized access to systems or sensitive data. This vulnerability can lead to data breaches, system compromise, and unauthorized privilege escalation. Mitigating this issue is critical to ensuring secure authentication mechanisms and protecting sensitive information.
+
+---
+
+#### **Problem Statement**  
+"I need help using RSA encryption and decryption in Python.
+
+I am creating a private/public key pair, encrypting a message with keys and writing message to a file. Then I am reading ciphertext from file and decrypting text using key.
+
+I am having trouble with the decryption portion. As you can see in my code below, when I put in decrypted = key.decrypt(message) that the program works, yet the decrypted message is encrypted again. It seems like it is not reading the ciphertext from the file.
+
+Can anyone help me write this code so decryption reads ciphertext from file and then uses key to decrypt ciphertext?
+
+import Crypto
+from Crypto.PublicKey import RSA
+from Crypto import Random
+
+random_generator = Random.new().read
+key = RSA.generate(1024, random_generator) #generate public and private keys
+
+publickey = key.publickey # pub key export for exchange
+
+encrypted = publickey.encrypt('encrypt this message', 32)
+#message to encrypt is in the above line 'encrypt this message'
+
+print 'encrypted message:', encrypted #ciphertext
+
+f = open ('encryption.txt', 'w'w)
+f.write(str(encrypted)) #write ciphertext to file
+f.close()
+
+#decrypted code below
+
+f = open ('encryption.txt', 'r')
+message = f.read()
+
+decrypted = key.decrypt(message)
+
+print 'decrypted', decrypted
+
+f = open ('encryption.txt', 'w')
+f.write(str(message))
+f.write(str(decrypted))
+f.close()"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coding Credentials**:  
+   - Store credentials (e.g., passwords, API keys) in secure, encrypted configuration files or environment variables.  
+   - Use secure credential management tools like AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault.  
+
+2. **Inbound Authentication**:  
+   - Implement a "first login" mode for initial setup, requiring users to set a unique, strong password.  
+   - Use strong one-way hashing (e.g., bcrypt, Argon2) with unique salts for stored passwords.  
+
+3. **Outbound Authentication**:  
+   - Use dynamically generated credentials with limited validity periods.  
+   - Restrict backend access to only necessary actions for the frontend system.  
+
+4. **Access Control**:  
+   - Limit access to sensitive features to trusted entities (e.g., system console only).  
+   - Implement time-sensitive checksums or tags to prevent replay attacks.  
+
+5. **Secure Storage**:  
+   - Encrypt configuration files or databases storing credentials.  
+   - Restrict file permissions to ensure only authorized users can access sensitive data.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete code snippet that implements the recommended mitigation strategies.
+
+---
+
+#### **Solution Language**  
+Python
+
+---

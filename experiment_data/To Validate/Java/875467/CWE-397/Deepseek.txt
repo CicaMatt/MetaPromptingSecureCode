@@ -1,0 +1,50 @@
+#### **Objective**  
+The security concern revolves around declaring methods to throw generic exceptions (e.g., `Exception` or `Throwable`), which undermines proper error handling and recovery. This practice makes it difficult for callers to anticipate specific exceptional circumstances, leading to inadequate error management, potential security vulnerabilities, and reduced code maintainability. The impact includes increased risk of unhandled exceptions, poor debugging, and potential exploitation of unanticipated error states.
+
+---
+
+#### **Problem Statement**  
+"I am using Java 6 and am trying to create an HttpsURLConnection against a remote server, using a client certificate.
+The server is using an selfsigned root certificate, and requires that a password-protected client certificate is presented. I've added the server root certificate and the client certificate to a default java keystore which I found in /System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/security/cacerts (OSX 10.5). The name of the keystore file seems to suggest that the client certificate is not supposed to go in there?
+
+Anyway, adding the root certificate to this store solved the infamous javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path building failed' problem.
+
+However, I'm now stuck on how to use the client certificate. I've tried two approaches and neither gets me anywhere.
+First, and preferred, try:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+URL url = new URL("https://somehost.dk:3049");
+HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
+conn.setSSLSocketFactory(sslsocketfactory);
+InputStream inputstream = conn.getInputStream();
+// The last line fails, and gives:
+// javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
+I've tried skipping the HttpsURLConnection class (not ideal since I want to talk HTTP with the server), and do this instead:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket("somehost.dk", 3049);
+InputStream inputstream = sslsocket.getInputStream();
+// do anything with the inputstream results in:
+// java.net.SocketTimeoutException: Read timed out
+I am not even sure that the client certificate is the problem here."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Generic Exceptions**: Declare specific exceptions that a method can throw, enabling callers to handle each exception appropriately.  
+2. **Custom Exceptions**: Define custom exceptions for specific error scenarios to improve clarity and maintainability.  
+3. **Exception Hierarchy**: Use existing exception classes in the language (e.g., `IOException`, `NullPointerException`) to provide meaningful context.  
+4. **Documentation**: Clearly document the exceptions a method can throw to guide callers in implementing proper error handling.  
+5. **Code Reviews**: Regularly review code to ensure compliance with exception-handling best practices.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the issue described in the Problem Statement.
+
+---
+
+#### **Solution Language**  
+Java  
+
+--- 

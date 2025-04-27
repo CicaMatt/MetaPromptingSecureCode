@@ -1,0 +1,77 @@
+To address the problem of securely encrypting and decrypting messages using PyCrypto (or its successor, PyCryptodome), we need to ensure the following:
+
+1. **Use a Strong Algorithm**: We'll use AES-256, which is a widely accepted and secure symmetric encryption algorithm.
+2. **Key Management**: We'll ensure the key is of the correct length by hashing it using SHA-256.
+3. **Mode of Operation**: We'll use CBC (Cipher Block Chaining) mode, which is commonly recommended for secure encryption.
+4. **Initialization Vector (IV)**: The IV is a random value used to ensure that the same plaintext encrypted with the same key produces different ciphertexts. It must be the same for both encryption and decryption.
+
+Here is a complete and executable Python code snippet that addresses these requirements:
+
+```python
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+import base64
+
+def encrypt_message(message, key):
+    # Hash the key to ensure it is 32 bytes (AES-256)
+    key_hash = SHA256.new(key.encode()).digest()
+    
+    # Generate a random 16-byte IV
+    iv = get_random_bytes(16)
+    
+    # Create AES cipher in CBC mode
+    cipher = AES.new(key_hash, AES.MODE_CBC, iv)
+    
+    # Pad the message to be a multiple of 16 bytes
+    padded_message = pad(message.encode(), AES.block_size)
+    
+    # Encrypt the message
+    ciphertext = cipher.encrypt(padded_message)
+    
+    # Combine IV and ciphertext for storage/transmission
+    encrypted_message = base64.b64encode(iv + ciphertext).decode()
+    
+    return encrypted_message
+
+def decrypt_message(encrypted_message, key):
+    # Hash the key to ensure it is 32 bytes (AES-256)
+    key_hash = SHA256.new(key.encode()).digest()
+    
+    # Decode the base64 encoded message
+    decoded_message = base64.b64decode(encrypted_message)
+    
+    # Extract the IV (first 16 bytes) and the ciphertext
+    iv = decoded_message[:16]
+    ciphertext = decoded_message[16:]
+    
+    # Create AES cipher in CBC mode
+    cipher = AES.new(key_hash, AES.MODE_CBC, iv)
+    
+    # Decrypt the ciphertext
+    padded_message = cipher.decrypt(ciphertext)
+    
+    # Unpad the message
+    message = unpad(padded_message, AES.block_size).decode()
+    
+    return message
+
+# Example usage
+key = "my_secret_key"
+message = "This is a secret message."
+
+encrypted = encrypt_message(message, key)
+print(f"Encrypted: {encrypted}")
+
+decrypted = decrypt_message(encrypted, key)
+print(f"Decrypted: {decrypted}")
+```
+
+### Explanation:
+1. **Key Hashing**: The key is hashed using SHA-256 to ensure it is exactly 32 bytes long, which is required for AES-256.
+2. **IV Generation**: A random 16-byte IV is generated for each encryption operation. This IV is prepended to the ciphertext and is required for decryption.
+3. **Padding**: The message is padded to ensure its length is a multiple of the block size (16 bytes for AES).
+4. **Encryption/Decryption**: The message is encrypted using AES-256 in CBC mode. The IV and ciphertext are combined and base64-encoded for easy storage/transmission. During decryption, the IV is extracted, and the ciphertext is decrypted and unpadded to retrieve the original message.
+
+This implementation ensures secure encryption and decryption using modern cryptographic practices.

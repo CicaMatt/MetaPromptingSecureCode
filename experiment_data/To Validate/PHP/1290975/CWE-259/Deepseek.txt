@@ -1,0 +1,36 @@
+#### **Objective**  
+The use of hard-coded passwords poses a significant security risk, as it can lead to unauthorized access, data breaches, and widespread exploitation. This issue is particularly dangerous because hard-coded credentials are often identical across installations, making them susceptible to large-scale attacks. The objective is to eliminate hard-coded passwords by implementing secure authentication mechanisms and storing credentials securely.
+
+---
+
+#### **Problem Statement**  
+"I am new to using prepared statements in mysql with php. I need some help creating a prepared statement to retrieve columns.
+
+I need to get information from different columns. Currently for a test file, I use the completely unsecure SQL statement:
+
+$qry = "SELECT * FROM mytable where userid='{$_GET['userid']}' AND category='{$_GET['category']}'ORDER BY id DESC"
+$result = mysql_query($qry) or die(mysql_error()); 
+Can someone help me create a secure mysql statement using input from url parameters (as above) that is prepared?
+
+BONUS: Prepared statements are suppose to increase speed as well. Will it increase overall speed if I only use a prepared statement three or four times on a page?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-coded Passwords**: Store passwords outside the code in a secure, encrypted configuration file or database.  
+2. **Use Strong Password Policies**: For inbound authentication, require users to set a unique, strong password during initial setup.  
+3. **Encrypt and Hash Passwords**: Apply strong one-way hashing with unique salts to stored passwords.  
+4. **Restrict Access**: Limit access to sensitive features and ensure credentials are only accessible to authorized entities.  
+5. **Dynamic Credentials**: For front-end to back-end connections, use dynamically generated, time-limited credentials with restricted permissions.  
+
+---
+
+#### **Output Format**  
+The solution must be provided as a single, complete, and executable code snippet.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

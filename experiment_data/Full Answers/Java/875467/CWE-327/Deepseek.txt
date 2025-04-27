@@ -1,0 +1,75 @@
+To address the issue of using a client certificate with `HttpsURLConnection` in Java 6, we need to ensure that the client certificate is properly loaded and used during the SSL handshake. The default `SSLSocketFactory` does not automatically use the client certificate from the keystore. Instead, we need to create a custom `SSLSocketFactory` that uses a `KeyManager` to provide the client certificate.
+
+Below is a complete and executable Java code snippet that demonstrates how to achieve this:
+
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+public class HttpsClientCertificateExample {
+
+    public static void main(String[] args) throws Exception {
+        // Load the server's root certificate
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        InputStream serverCertInputStream = new FileInputStream("path/to/server-root-cert.crt");
+        X509Certificate serverCert = (X509Certificate) cf.generateCertificate(serverCertInputStream);
+        serverCertInputStream.close();
+
+        // Load the client certificate and private key
+        KeyStore clientKeyStore = KeyStore.getInstance("PKCS12");
+        InputStream clientCertInputStream = new FileInputStream("path/to/client-cert.p12");
+        clientKeyStore.load(clientCertInputStream, "client-cert-password".toCharArray());
+        clientCertInputStream.close();
+
+        // Initialize the KeyManagerFactory with the client keystore
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(clientKeyStore, "client-cert-password".toCharArray());
+
+        // Initialize the TrustManagerFactory with the server's root certificate
+        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        trustStore.load(null, null);
+        trustStore.setCertificateEntry("serverCert", serverCert);
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(trustStore);
+
+        // Create and initialize the SSLContext
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+        // Set the custom SSLSocketFactory to HttpsURLConnection
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+        // Create the URL connection
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        // Read the response
+        InputStream inputstream = conn.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+        }
+        reader.close();
+    }
+}
+```
+
+### Explanation:
+1. **Loading the Server's Root Certificate**: The server's root certificate is loaded into a `KeyStore` to be used by the `TrustManager`.
+2. **Loading the Client Certificate**: The client certificate (in PKCS12 format) is loaded into a `KeyStore` and used to initialize the `KeyManager`.
+3. **Initializing SSLContext**: The `SSLContext` is initialized with the `KeyManager` and `TrustManager`.
+4. **Setting the Custom SSLSocketFactory**: The custom `SSLSocketFactory` is set as the default for `HttpsURLConnection`.
+5. **Making the HTTPS Request**: The `HttpsURLConnection` is used to make the HTTPS request, and the response is read and printed.
+
+### Notes:
+- Replace `"path/to/server-root-cert.crt"` and `"path/to/client-cert.p12"` with the actual paths to your server's root certificate and client certificate files.
+- Replace `"client-cert-password"` with the actual password for your client certificate.
+- Ensure that the client certificate is in PKCS12 format (`.p12` or `.pfx`).
+
+This solution ensures that the client certificate is properly presented during the SSL handshake, resolving the `handshake_failure` issue.

@@ -1,0 +1,51 @@
+#### **Objective**  
+The use of hard-coded credentials in software poses a significant security risk, as it allows attackers to easily gain unauthorized access to systems or sensitive data. This vulnerability can lead to data breaches, system compromise, and unauthorized privilege escalation. Mitigating this issue is critical to ensuring secure authentication mechanisms and protecting sensitive information.
+
+---
+
+#### **Problem Statement**  
+"I was passing sensitive information (between my app and backend) like password in String format. Later on I realized that password can be easily read from heap memory dump as it is stored in text format.
+
+String password = "super_password";
+So I decided to use Char array,
+
+Char[] passChar = password.toCharArray();
+but I am worried that password can still be read from memory dump character by character. Then I thought of using byte array instead.
+
+byte[] passByte = password.getBytes();
+My question: Is it safe to use byte array for passing sensitive information like password ? OR can anyone recommend anything secure ?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coding Credentials**:  
+   - Store credentials (e.g., passwords, API keys) in secure, encrypted configuration files or environment variables.  
+   - Use secure credential management tools like AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault.  
+
+2. **Inbound Authentication**:  
+   - Implement a "first login" mode for initial setup, requiring users to set a unique, strong password.  
+   - Use strong one-way hashing (e.g., bcrypt, Argon2) with unique salts for stored passwords.  
+
+3. **Outbound Authentication**:  
+   - Use dynamically generated credentials with limited validity periods.  
+   - Restrict backend access to only necessary actions for the frontend system.  
+
+4. **Access Control**:  
+   - Limit access to sensitive features to trusted entities (e.g., system console only).  
+   - Implement time-sensitive checksums or tags to prevent replay attacks.  
+
+5. **Secure Storage**:  
+   - Encrypt configuration files or databases storing credentials.  
+   - Restrict file permissions to ensure only authorized users can access sensitive data.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete code snippet that implements the recommended mitigation strategies.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

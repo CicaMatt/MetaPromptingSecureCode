@@ -1,0 +1,41 @@
+#### **Objective**  
+The security concern revolves around declaring methods to throw generic exceptions (e.g., `Exception` or `Throwable`), which undermines proper error handling and recovery. This practice makes it difficult for callers to anticipate specific exceptional circumstances, leading to inadequate error management, potential security vulnerabilities, and reduced code maintainability. The impact includes increased risk of unhandled exceptions, poor debugging, and potential exploitation of unanticipated error states.
+
+---
+
+#### **Problem Statement**  
+"I'm working on a web app where users will be able to supply strings that the server will then substitute variables into.
+
+Preferably I'd like to use PEP 3101 format() syntax and I'm looking at the feasibility of overriding methods in Formatter to make it secure for untrusted input.
+
+Here are the risks I can see with .format() as it stands:
+
+Padding lets you specify arbitrary lengths, so '{:>9999999999}'.format(..) could run the server out of memory and be a DOS. I'd need to disable this.
+Format lets you access the fields inside objects, which is useful, but it's creepy that you can access dunder variables and start drilling into bits of the standard library. There's no telling where there might be a getattr() that has side effects or returns something secret. I would whitelist attribute/index access by overriding get_field().
+I'd need to catch some exceptions, naturally.
+My assumptions are:
+
+None of the traditional C format string exploits apply to Python, because specifying a parameter is a bounds-checked access into a collection, rather than directly popping off the thread's stack.
+The web framework I'm using escapes every variable that's substituted into a page template, and so long as it's the last stop before output, I'm safe from cross-site scripting attacks emerging from de-escaping.
+What are your thoughts? Possible? Impossible? Merely unwise?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Generic Exceptions**: Declare specific exceptions that a method can throw, enabling callers to handle each exception appropriately.  
+2. **Custom Exceptions**: Define custom exceptions for specific error scenarios to improve clarity and maintainability.  
+3. **Exception Hierarchy**: Use existing exception classes in the language (e.g., `IOException`, `NullPointerException`) to provide meaningful context.  
+4. **Documentation**: Clearly document the exceptions a method can throw to guide callers in implementing proper error handling.  
+5. **Code Reviews**: Regularly review code to ensure compliance with exception-handling best practices.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the issue described in the Problem Statement.
+
+---
+
+#### **Solution Language**  
+Python  
+
+--- 

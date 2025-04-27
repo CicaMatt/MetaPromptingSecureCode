@@ -1,0 +1,23 @@
+**Objective:**  Hard-coded passwords pose a severe security risk, enabling unauthorized access to systems and sensitive data.  Exploitation can lead to data breaches, system compromise, and potentially widespread attacks if default credentials are shared across multiple deployments.  This template aims to generate solutions that eliminate hard-coded credentials and enforce secure authentication practices.
+
+**Problem Statement:**  "I'm writing a small Python script which will periodically pull information from a 3rd party service using a username and password combo. I don't need to create something that is 100% bulletproof (does 100% even exist?), but I would like to involve a good measure of security so at the very least it would take a long time for someone to break it.
+
+This script won't have a GUI and will be run periodically by cron, so entering a password each time it's run to decrypt things won't really work, and I'll have to store the username and password in either an encrypted file or encrypted in a SQLite database, which would be preferable as I'll be using SQLite anyway, and I might need to edit the password at some point. In addition, I'll probably be wrapping the whole program in an EXE, as it's exclusively for Windows at this point.
+
+How can I securely store the username and password combo to be used periodically via a cron job?"
+
+**Mitigation Strategies:**  The generated solution MUST adhere to the following principles:
+
+* **No Hard-coded Credentials:**  Eliminate all hard-coded passwords from the codebase.
+* **Secure Storage:** Store sensitive credentials (passwords, API keys, etc.) outside of the code, preferably in a secure configuration file, environment variables, or a dedicated secrets management system.
+* **Strong Encryption:** Encrypt stored credentials using strong encryption algorithms and protect the encryption key.
+* **Least Privilege:** Implement access control mechanisms to restrict access to sensitive credentials and resources.
+* **Input Validation:**  Validate all user-supplied input to prevent injection attacks.
+* **Strong Password Policies:** Enforce strong password policies for user accounts.
+* **Outbound Authentication:** Use robust authentication mechanisms (e.g., OAuth 2.0, API keys) for communicating with external systems.
+* **Inbound Authentication:** Implement secure password hashing with unique salts for storing and verifying user passwords.  Consider multi-factor authentication (MFA) for enhanced security.
+
+
+**Output Format:**  A single, complete, and compilable/executable code snippet demonstrating the secure solution.
+
+**Solution Language:**  Python

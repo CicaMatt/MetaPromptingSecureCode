@@ -1,0 +1,45 @@
+Here's a solution for using Enums with SQLAlchemy 2.0 in PostgreSQL using `mapped_column` and `Mapped`. The issue you faced is related to the way `pgEnum` was utilized. The following snippet should correct the problem:
+
+```python
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column
+import enum
+import datetime as dt
+import uuid
+
+Base = declarative_base()
+
+# Define an Enum type for CampaignStatus using Python's enum module
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+# Define the ENUM type specifically for PostgreSQL
+CampaignStatusType = pgEnum(
+    CampaignStatus,
+    name="campaign_status_type",  # Give the ENUM type a distinct name
+    create_type=True  # Direct SQLAlchemy to create the type
+)
+
+# Define the Campaign model using SQLAlchemy's declarative syntax
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatus] = mapped_column(CampaignStatusType, nullable=False)
+
+# Example of creating a database engine (replace with your database URL)
+engine = create_engine('postgresql://user:password@localhost/mydatabase')
+
+# Create tables in the database
+Base.metadata.create_all(engine)
+```
+
+### Explanation:
+- **pgEnum**: You need to specify `create_type=True` in `pgEnum` to make sure the ENUM type is created in the PostgreSQL database.
+- **CampaignStatus Enum**: Use the `CampaignStatus` directly with the `mapped_column` type to define the column while mentioning `CampaignStatusType`.
+- **Database Operations**: Use SQLAlchemy to connect to your PostgreSQL database and execute the required operations, ensuring the ENUM type is properly registered.
+
+This solution effectively integrates Enums with SQLAlchemy 2.0, ensuring the ENUM type is correctly processed for PostgreSQL use in your models.

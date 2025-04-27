@@ -1,0 +1,1 @@
+I need to get the public keys of a secured website programmatically through java. I have read this, this, this and this and others as well. But I haven't found a solution of getting it through java.

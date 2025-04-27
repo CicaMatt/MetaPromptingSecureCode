@@ -1,0 +1,37 @@
+**Objective:**  The use of a broken or risky cryptographic algorithm can severely compromise data confidentiality and integrity.  Attackers can exploit these vulnerabilities to decrypt sensitive information, tamper with data, or impersonate legitimate users or systems, leading to data breaches, financial loss, and reputational damage.
+
+**Problem Statement:**  "I'm busy creating an application and i want to use the PHP 7 return types. Now I read on php.net that it was a design decision that it is not allowed to return null when a return type is defined.
+
+What is the correct way too handle this?
+
+One option is a try...catch block:
+
+public function getMyObject() : MyObject
+{ 
+     return null;
+}
+
+try
+{
+    getMyObject();
+}
+catch(Exception $e)
+{
+    //Catch the exception
+}
+I don't have a good feeling about this, because my code will be a huge try...catch block since I need to write a try...catch block for every method that returns an object.
+
+The Null Object Pattern is a good solution for this, but I don't like the idea to create a NullObject for each object in my application. Is there correct way to do this?"
+
+**Mitigation Strategies:**  The solution should adhere to the following best practices:
+
+* **Use Strong, Vetted Algorithms:** Employ only well-vetted, industry-standard cryptographic algorithms and implementations, such as AES-256, SHA-256/SHA-3, ChaCha20-Poly1305, or those recommended by NIST (National Institute of Standards and Technology). Avoid outdated algorithms like MD5, SHA1, and DES.
+* **Key Management:**  Implement secure key management practices, including appropriate key generation, storage, and rotation. 
+* **Avoid Custom Cryptography:** Refrain from developing custom cryptographic algorithms. Utilize established libraries and frameworks.
+* **Regular Updates:** Stay informed about cryptographic advancements and vulnerabilities. Replace outdated or compromised algorithms promptly.
+* **Correct Implementation:** Ensure proper implementation of chosen algorithms, avoiding shortcuts that weaken security. Use established libraries and follow best practices.
+
+
+**Output Format:**  Provide a *single, complete code snippet* that addresses the described problem and adheres to the outlined mitigation strategies.
+
+**Solution Language:** PHP

@@ -1,0 +1,82 @@
+```java
+import javax.net.ssl.*;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+
+public class HttpsClientAuth {
+
+    public static void main(String[] args) throws Exception {
+        // Keystore containing the client certificate and private key
+        String clientKeyStorePath = "client.jks"; // Replace with your client keystore path
+        String clientKeyStorePassword = "clientPassword"; // Replace with your client keystore password
+        String clientKeyPassword = "clientKeyPassword"; // Replace with your client key password (if different)
+
+        // Truststore containing the server's root certificate
+        String trustStorePath = "server_truststore.jks"; // Replace with your truststore path
+        String trustStorePassword = "trustStorePassword"; // Replace with your truststore password
+
+        // Load the client keystore
+        KeyStore clientKeyStore = KeyStore.getInstance("JKS");
+        clientKeyStore.load(HttpsClientAuth.class.getResourceAsStream(clientKeyStorePath), clientKeyStorePassword.toCharArray());
+
+        // Load the truststore
+        KeyStore trustStore = KeyStore.getInstance("JKS");
+        trustStore.load(HttpsClientAuth.class.getResourceAsStream(trustStorePath), trustStorePassword.toCharArray());
+
+
+        // Create a KeyManagerFactory for the client certificate
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(clientKeyStore, clientKeyPassword.toCharArray());
+
+        // Create a TrustManagerFactory for the server certificate
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(trustStore);
+
+        // Create an SSLContext
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+
+        // Create an SSLSocketFactory
+        SSLSocketFactory sslsocketfactory = sslContext.getSocketFactory();
+
+
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setSSLSocketFactory(sslsocketfactory);
+
+        InputStream inputstream = conn.getInputStream();
+
+        // Read the response (example)
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = inputstream.read(buffer)) != -1) {
+            System.out.write(buffer, 0, bytesRead);
+        }
+
+        inputstream.close();
+
+    }
+}
+
+
+```
+
+
+**Explanation and Improvements:**
+
+1. **Separate Keystores:** The primary issue was mixing the client certificate and server's root CA certificate in the same keystore (`cacerts`).  This solution uses separate keystores: one for the client's private key and certificate (`client.jks`) and another for the server's trusted CA certificate (`server_truststore.jks`).  This is crucial for proper client certificate authentication.  These keystore files need to be created beforehand using the `keytool` utility.
+
+2. **KeyManager and TrustManager:**  The code explicitly creates `KeyManagerFactory` and `TrustManagerFactory` instances. The `KeyManager` is initialized with the client's keystore (containing the private key and certificate), enabling the client to present its certificate during the handshake. The `TrustManager` is initialized with the truststore containing the server's CA certificate, allowing the client to verify the server's identity.
+
+3. **SSLContext:**  An `SSLContext` is created and initialized with the `KeyManager` and `TrustManager`, establishing the security context for the connection.
+
+4. **HttpsURLConnection:**  `HttpsURLConnection` is the preferred way to handle HTTPS connections in Java, providing higher-level HTTP functionality.
+
+5. **Error Handling:**  Production code should include robust error handling (e.g., try-catch blocks) to handle potential exceptions during keystore loading, certificate retrieval, and network operations.
+
+6. **Resource Loading:**  The example uses `getResourceAsStream` to load keystores, making it easier to package the keystores with the application.
+
+
+This revised code directly addresses the client certificate authentication issue while adhering to best practices for secure HTTPS communication in Java.  Remember to replace the placeholder keystore paths and passwords with your actual values.

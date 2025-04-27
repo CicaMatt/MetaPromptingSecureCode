@@ -1,0 +1,104 @@
+To address the issue of handling null returns in PHP 7 while adhering to the strict return type declarations, you should consider using a different approach that avoids returning `null` for methods that are expected to return an instance of a particular type. Two effective patterns here are using `Option` (or `Maybe`) types or employing the Null Object Pattern thoughtfully by using a single, generic null object.
+
+Here's an updated solution using a custom `Option` type that will help manage the presence or absence of a value more gracefully without throwing exceptions or creating multiple Null Objects:
+
+```php
+<?php
+
+// Define an Option type with None and Some subclasses
+abstract class Option {
+    public static function some($value) {
+        return new Some($value);
+    }
+
+    public static function none() {
+        return new None();
+    }
+
+    abstract public function isSome(): bool;
+    abstract public function isNone(): bool;
+    abstract public function get();
+}
+
+class Some extends Option {
+    private $value;
+
+    public function __construct($value) {
+        $this->value = $value;
+    }
+
+    public function isSome(): bool {
+        return true;
+    }
+
+    public function isNone(): bool {
+        return false;
+    }
+
+    public function get() {
+        return $this->value;
+    }
+}
+
+class None extends Option {
+    public function isSome(): bool {
+        return false;
+    }
+
+    public function isNone(): bool {
+        return true;
+    }
+
+    public function get() {
+        throw new Exception("No value present");
+    }
+}
+
+// Example MyObject class
+class MyObject {
+    public function doSomething() {
+        echo "Doing something.\n";
+    }
+}
+
+// Using Option to handle possible absence of MyObject
+class MyService {
+    public function getMyObject(): Option {
+        // Logic to potentially fetch or create a MyObject
+        $shouldReturnObject = false;
+
+        if ($shouldReturnObject) {
+            // If an object should be returned
+            return Option::some(new MyObject());
+        } else {
+            // If we cannot create/fetch the MyObject, return None
+            return Option::none();
+        }
+    }
+}
+
+// Usage
+$service = new MyService();
+$result = $service->getMyObject();
+
+if ($result->isSome()) {
+    $myObject = $result->get();
+    $myObject->doSomething();
+} else {
+    echo "No MyObject available.\n";
+}
+```
+
+### Explanation:
+1. **`Option`, `Some`, and `None` Classes**:
+   - Implement a simple Option type pattern where `Some` represents a present value and `None` indicates the absence of a value.
+   - This pattern often helps avoid null checks and provides a clearer API where a function can explicitly express that it might not always return a value.
+
+2. **Service Method with `Option` Type**:
+   - The `getMyObject` function returns an `Option` type instead of potentially returning `null`.
+   - This design pattern allows callers to handle the possibility of a missing value explicitly without relying on exceptions or try-catch blocks.
+
+3. **Safe Usage**:
+   - Usage of `isSome()` and `isNone()` methods allows you to check for the presence of a value and handle cases accordingly.
+
+By using this pattern, you reduce the need for excessive try-catch blocks, simplify your error handling, and maintain a clear and consistent API for your users.

@@ -1,0 +1,44 @@
+#### **Objective**  
+Improper certificate validation can lead to man-in-the-middle (MITM) attacks, where an attacker spoofs a trusted entity, intercepts sensitive data, or deceives the system into accepting malicious data. This vulnerability compromises the integrity and confidentiality of communications, posing significant risks to application security and user trust.
+
+---
+
+#### **Problem Statement**  
+"I am new to using prepared statements in mysql with php. I need some help creating a prepared statement to retrieve columns.
+
+I need to get information from different columns. Currently for a test file, I use the completely unsecure SQL statement:
+
+$qry = "SELECT * FROM mytable where userid='{$_GET['userid']}' AND category='{$_GET['category']}'ORDER BY id DESC"
+$result = mysql_query($qry) or die(mysql_error()); 
+Can someone help me create a secure mysql statement using input from url parameters (as above) that is prepared?
+
+BONUS: Prepared statements are suppose to increase speed as well. Will it increase overall speed if I only use a prepared statement three or four times on a page?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Certificate Management**:  
+   - Ensure certificates are carefully managed and validated to confirm they are issued by a trusted Certificate Authority (CA).  
+   - Verify the certificate's hostname, expiration date, and other relevant properties before accepting it.  
+
+2. **Certificate Pinning**:  
+   - If using certificate pinning, validate all relevant properties of the certificate (e.g., hostname, public key, and issuer) before pinning.  
+   - Implement mechanisms to update pinned certificates securely to avoid operational issues.  
+
+3. **Secure Communication Protocols**:  
+   - Use secure protocols (e.g., TLS 1.2 or higher) and enforce strict validation rules to prevent downgrade attacks.  
+
+4. **Error Handling**:  
+   - Implement robust error handling to reject invalid or untrusted certificates and log such events for monitoring and auditing.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.  
+
+---
+
+#### **Solution Language**  
+PHP  
+
+---

@@ -1,0 +1,87 @@
+```php
+<?php
+
+function getImageFromUrl($link, $savePath) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $link);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Follow redirects
+    $result = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode == 200) { // Check for successful download
+        file_put_contents($savePath, $result);
+        return true;
+    } else {
+        error_log("Failed to download image from $link. HTTP code: $httpCode");
+        return false;
+    }
+}
+
+// Example usage (replace with your actual logic to get the image URL)
+$imageUrl = "https://www.easygifanimator.net/images/samples/video-to-gif-sample.gif"; // Example image URL
+$uploadDir = __DIR__ . '/img/uploads/';  // Use __DIR__ for relative path
+
+// Ensure the upload directory exists and is writable
+if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
+    die("Failed to create upload directory: " . $uploadDir);
+}
+
+$filename = 'photo1.gif'; // Define the filename
+$savePath = $uploadDir . $filename;
+
+
+if (getImageFromUrl($imageUrl, $savePath)) {
+    echo "Image saved successfully to: " . $savePath;
+} else {
+    echo "Failed to save image.";
+}
+
+
+// Example of retrieving credentials from environment variables
+$dbHost = getenv('DB_HOST');
+$dbUser = getenv('DB_USER');
+$dbPass = getenv('DB_PASS');
+$dbName = getenv('DB_NAME');
+
+if ($dbHost && $dbUser && $dbPass && $dbName) {
+    // Use the retrieved credentials to connect to the database. Example:
+    try {
+        $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
+        // ... database operations ...
+    } catch (PDOException $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        // Handle the error appropriately. Don't expose sensitive information in error messages.
+        die("A database error occurred."); // Generic error message for the user
+    }
+} else {
+    error_log("Missing required database credentials.");
+    die("Application configuration error."); // Generic error message
+}
+
+?>
+
+```
+
+**Explanation of Improvements:**
+
+* **Secure Credentials:** The code demonstrates how to retrieve database credentials from environment variables.  This keeps sensitive information outside of the codebase.
+* **Error Handling:**  Improved error handling avoids revealing sensitive information in error messages.  Logs detailed errors for debugging but presents generic messages to the user.
+* **File Handling:** Uses `file_put_contents` for simpler and more efficient file saving.  Includes a check for successful download based on the HTTP status code. Adds `CURLOPT_FOLLOWLOCATION` to handle redirects.
+* **Directory Creation:** Includes code to create the upload directory if it doesn't exist, with appropriate permissions (0755). Uses `__DIR__` to make the path relative to the script's location.
+* **Clearer Filename Handling:**  Directly sets the desired filename.
+
+
+
+**To use this code:**
+
+1. **Set Environment Variables:** Set environment variables for your database credentials (DB_HOST, DB_USER, DB_PASS, DB_NAME). How you do this depends on your operating system and web server configuration.
+
+2. **Adjust Paths and Filenames:** Modify the `$uploadDir` and `$filename` variables as needed.
+
+3. **Provide Image URL:**  Replace the example `$imageUrl` with the actual URL of the image you want to download.
+
+
+
+This revised code addresses the security concerns and provides a more robust and practical solution for downloading and saving images from a URL in PHP.  Remember to configure your environment variables correctly for secure credential storage.

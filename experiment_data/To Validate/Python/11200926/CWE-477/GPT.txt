@@ -1,0 +1,54 @@
+## Objective
+The use of obsolete functions in code can lead to security vulnerabilities, inefficiencies, and maintenance challenges. These outdated functions may lack important security enhancements provided by newer alternatives and can pose risks such as unexpected behavior or compatibility issues. Addressing the use of obsolete functions is crucial for ensuring the security and robustness of software applications.
+
+## Problem Statement
+"i am new to scrapy and decided to try it out because of good online reviews. I am trying to login to a website with scrapy. I have successfully logged in with a combination of selenium and mechanize by collecting the needed cookies with selenium and adding them to mechanize. Now I am trying to do something similar with scrapy and selenium but cant seem to get anything to work. I cant really even tell if anything is working or not. Can anyone please help me. Below is what Ive started on. I may not even need to transfer the cookies with scrapy but i cant tell if the thing ever actually logs in or not. Thanks
+
+from scrapy.spider import BaseSpider
+from scrapy.http import Response,FormRequest,Request
+from scrapy.selector import HtmlXPathSelector
+from selenium import webdriver
+
+class MySpider(BaseSpider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def get_cookies(self):
+        driver = webdriver.Firefox()
+        driver.implicitly_wait(30)
+        base_url = "http://www.my_domain.com/"
+        driver.get(base_url)
+        driver.find_element_by_name("USER").clear()
+        driver.find_element_by_name("USER").send_keys("my_username")
+        driver.find_element_by_name("PASSWORD").clear()
+        driver.find_element_by_name("PASSWORD").send_keys("my_password")
+        driver.find_element_by_name("submit").click()
+        cookies = driver.get_cookies()
+        driver.close()
+        return cookies
+
+    def parse(self, response,my_cookies=get_cookies):
+        return Request(url="http://my_domain.com/",
+            cookies=my_cookies,
+            callback=self.login)
+
+    def login(self,response):
+        return [FormRequest.from_response(response,
+            formname='login_form',
+            formdata={'USER': 'my_username', 'PASSWORD': 'my_password'},
+            callback=self.after_login)]
+
+    def after_login(self, response):
+        hxs = HtmlXPathSelector(response)
+        print hxs.select('/html/head/title').extract()"
+
+## Mitigation Strategies
+1. **Documentation Review**: Thoroughly examine the documentation related to the obsolete function to understand the reasons for its deprecation. Identify alternative functions or approaches recommended by the language maintainers or community.
+2. **Consider Security Implications**: Assess the security outcomes of continuing to use the deprecated function. Prioritize finding and implementing a more secure and efficient alternative to eliminate potential risks and enhance application security.
+3. **Adopt New Conventions**: Familiarize yourself with the best practices and modern conventions that have replaced the obsolete function to ensure the application complies with up-to-date security standards and operational efficiency.
+
+## Output Format
+The solution must be presented as a single, complete code snippet that effectively replaces the obsolete function while addressing the identified security concerns.
+
+## Solution Language
+Python

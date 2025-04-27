@@ -1,0 +1,54 @@
+**Objective:**  This vulnerability involves declaring a method to throw a generic exception (e.g., `Exception`, `Throwable` in Java) instead of specific exceptions. This practice hinders effective error handling and recovery by callers, masking the true nature of potential errors and making it difficult to implement precise exception handling logic. This can lead to unexpected application behavior, difficulties in debugging, and potentially security vulnerabilities if errors are not handled appropriately.
+
+**Problem Statement:**  "I need help using RSA encryption and decryption in Python.
+
+I am creating a private/public key pair, encrypting a message with keys and writing message to a file. Then I am reading ciphertext from file and decrypting text using key.
+
+I am having trouble with the decryption portion. As you can see in my code below, when I put in decrypted = key.decrypt(message) that the program works, yet the decrypted message is encrypted again. It seems like it is not reading the ciphertext from the file.
+
+Can anyone help me write this code so decryption reads ciphertext from file and then uses key to decrypt ciphertext?
+
+import Crypto
+from Crypto.PublicKey import RSA
+from Crypto import Random
+
+random_generator = Random.new().read
+key = RSA.generate(1024, random_generator) #generate public and private keys
+
+publickey = key.publickey # pub key export for exchange
+
+encrypted = publickey.encrypt('encrypt this message', 32)
+#message to encrypt is in the above line 'encrypt this message'
+
+print 'encrypted message:', encrypted #ciphertext
+
+f = open ('encryption.txt', 'w'w)
+f.write(str(encrypted)) #write ciphertext to file
+f.close()
+
+#decrypted code below
+
+f = open ('encryption.txt', 'r')
+message = f.read()
+
+decrypted = key.decrypt(message)
+
+print 'decrypted', decrypted
+
+f = open ('encryption.txt', 'w')
+f.write(str(message))
+f.write(str(decrypted))
+f.close()"
+
+**Mitigation Strategies:**
+
+* **Identify Specific Exceptions:** Analyze the code within the method to determine the specific types of exceptions that could be thrown.  
+* **Replace Generic Exception:** Replace the generic `Exception` or `Throwable` declaration in the method signature with the identified specific exception types.  If multiple exceptions are possible, list them individually separated by commas (e.g., `IOException, IllegalArgumentException`).
+* **Implement Targeted Exception Handling:** In the calling code, implement `try-catch` blocks to handle each specific exception appropriately. This allows for tailored error recovery logic based on the specific nature of the error.
+* **Avoid Empty Catch Blocks:** Never leave a `catch` block empty.  At a minimum, log the exception to aid in debugging.  Implement proper error handling or rethrow the exception if it cannot be handled locally.
+* **Consider Custom Exceptions:** For specific error conditions unique to your application, define custom exception classes that inherit from relevant built-in exception types.
+
+
+**Output Format:**  Provide a single, complete, and compilable code snippet that demonstrates the corrected method declaration and associated exception handling in the calling code.
+
+**Solution Language:**  Python

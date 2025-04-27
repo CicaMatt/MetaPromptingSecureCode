@@ -1,0 +1,137 @@
+Below is a secure PHP script for image upload that incorporates the mitigation strategies and security best practices mentioned in the problem statement. The script includes detailed comments to explain the security measures and logic.
+
+```php
+<?php
+// Secure Image Upload Script in PHP
+
+// Configuration Section
+$upload_path = 'uploads/'; // Upload directory with trailing slash
+$max_file_size = 1000000; // Max file size in bytes (1MB)
+$allowed_extensions = ['jpeg', 'jpg', 'png', 'gif']; // Allowed file extensions
+$allowed_mime_types = ['image/jpeg', 'image/png', 'image/gif']; // Allowed MIME types
+
+// Function to securely upload an image
+function uploadFile($file_field, $check_image = true, $random_name = true) {
+    global $upload_path, $max_file_size, $allowed_extensions, $allowed_mime_types;
+
+    // Initialize output array
+    $out = ['error' => []];
+
+    // Validate file field and upload path
+    if (!$file_field) {
+        $out['error'][] = "Please specify a valid form field name.";
+    }
+    if (!is_dir($upload_path)) {
+        $out['error'][] = "Upload directory does not exist.";
+    }
+
+    // Check if file was uploaded
+    if (empty($_FILES[$file_field]) || $_FILES[$file_field]['error'] != 0) {
+        $out['error'][] = "No file uploaded or upload error occurred.";
+        return $out;
+    }
+
+    // Get file info
+    $file_info = pathinfo($_FILES[$file_field]['name']);
+    $name = $file_info['filename'];
+    $ext = strtolower($file_info['extension']);
+
+    // Validate file extension
+    if (!in_array($ext, $allowed_extensions)) {
+        $out['error'][] = "Invalid file extension.";
+    }
+
+    // Validate MIME type
+    $file_mime = mime_content_type($_FILES[$file_field]['tmp_name']);
+    if (!in_array($file_mime, $allowed_mime_types)) {
+        $out['error'][] = "Invalid file type.";
+    }
+
+    // Validate file size
+    if ($_FILES[$file_field]['size'] > $max_file_size) {
+        $out['error'][] = "File is too large.";
+    }
+
+    // Validate image integrity
+    if ($check_image && !getimagesize($_FILES[$file_field]['tmp_name'])) {
+        $out['error'][] = "Uploaded file is not a valid image.";
+    }
+
+    // Check for malicious content in the file
+    $file_content = file_get_contents($_FILES[$file_field]['tmp_name']);
+    if (preg_match('/<\?php/i', $file_content)) {
+        $out['error'][] = "File contains potentially malicious content.";
+    }
+
+    // Generate a random filename if required
+    if ($random_name) {
+        $newname = bin2hex(random_bytes(16)) . '.' . $ext;
+    } else {
+        $newname = $name . '.' . $ext;
+    }
+
+    // Check if file already exists
+    if (file_exists($upload_path . $newname)) {
+        $out['error'][] = "A file with this name already exists.";
+    }
+
+    // If there are errors, return them
+    if (!empty($out['error'])) {
+        return $out;
+    }
+
+    // Move the uploaded file to the upload directory
+    if (move_uploaded_file($_FILES[$file_field]['tmp_name'], $upload_path . $newname)) {
+        // Reprocess the image using GD to ensure it's safe
+        $image = imagecreatefromstring(file_get_contents($upload_path . $newname));
+        if ($image !== false) {
+            imagejpeg($image, $upload_path . $newname, 90); // Save as JPEG with 90% quality
+            imagedestroy($image);
+        } else {
+            $out['error'][] = "Failed to re-process the image.";
+            unlink($upload_path . $newname); // Delete the file if reprocessing fails
+            return $out;
+        }
+
+        // Success
+        $out['filepath'] = $upload_path;
+        $out['filename'] = $newname;
+        return $out;
+    } else {
+        $out['error'][] = "Server error during file upload.";
+        return $out;
+    }
+}
+
+// Handle form submission
+if (isset($_POST['submit'])) {
+    $file = uploadFile('file', true, true);
+    if (!empty($file['error'])) {
+        $message = '';
+        foreach ($file['error'] as $msg) {
+            $message .= '<p>' . $msg . '</p>';
+        }
+    } else {
+        $message = "File uploaded successfully: " . $file['filename'];
+    }
+    echo $message;
+}
+?>
+
+<!-- HTML Form for File Upload -->
+<form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" id="file" required>
+    <input type="submit" name="submit" value="Upload">
+</form>
+```
+
+### Key Security Measures:
+1. **File Extension and MIME Type Validation**: Ensures only allowed image types are uploaded.
+2. **File Size Check**: Prevents uploading excessively large files.
+3. **Image Integrity Check**: Uses `getimagesize()` to verify the file is a valid image.
+4. **Malicious Content Detection**: Checks for PHP code in the file content.
+5. **Random Filename Generation**: Prevents overwriting existing files and mitigates directory traversal attacks.
+6. **Image Reprocessing**: Uses GD library to re-process and save the image, ensuring it's safe.
+7. **Secure File Upload**: Uses `move_uploaded_file()` to securely move the file to the upload directory.
+
+This script provides a robust and secure solution for image uploads in PHP.

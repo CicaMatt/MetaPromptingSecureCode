@@ -1,0 +1,73 @@
+To address the problem of insecure SQL queries and improve security using prepared statements in PHP with MySQL, here's a complete and executable code snippet. This solution uses `mysqli` for database interaction, which supports prepared statements and helps prevent SQL injection attacks.
+
+```php
+<?php
+// Database connection parameters
+$servername = "localhost";
+$username = "your_username";
+$password = "your_password";
+$dbname = "your_database";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Prepare and bind
+$stmt = $conn->prepare("SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC");
+if ($stmt === false) {
+    die("Prepare failed: " . $conn->error);
+}
+
+// Bind parameters
+$userid = $_GET['userid'];
+$category = $_GET['category'];
+$stmt->bind_param("ss", $userid, $category);
+
+// Execute the statement
+$stmt->execute();
+
+// Get the result
+$result = $stmt->get_result();
+
+// Fetch data
+while ($row = $result->fetch_assoc()) {
+    // Process each row
+    echo "ID: " . $row["id"] . " - UserID: " . $row["userid"] . " - Category: " . $row["category"] . "<br>";
+}
+
+// Close statement and connection
+$stmt->close();
+$conn->close();
+?>
+```
+
+### Explanation:
+1. **Database Connection**:  
+   - Establish a connection to the MySQL database using `mysqli`.
+
+2. **Prepared Statement**:  
+   - Use `mysqli_prepare` to create a prepared statement. This ensures that the SQL query is precompiled, and placeholders (`?`) are used for user inputs.
+
+3. **Binding Parameters**:  
+   - Bind the URL parameters (`$_GET['userid']` and `$_GET['category']`) to the placeholders using `bind_param`. This prevents SQL injection by treating inputs as data, not executable code.
+
+4. **Execution and Fetching Results**:  
+   - Execute the prepared statement and fetch the results using `get_result`.  
+   - Loop through the results and process each row.
+
+5. **Closing Resources**:  
+   - Close the prepared statement and database connection to free up resources.
+
+### Bonus: Performance Impact of Prepared Statements
+- **Reuse of Prepared Statements**:  
+  If you reuse the same prepared statement multiple times on a page (e.g., with different parameters), it can improve performance because the SQL query is precompiled and only the parameters change.  
+  However, if you only use the prepared statement 3-4 times, the performance gain might be minimal compared to the overhead of preparing the statement.
+
+- **Best Practice**:  
+  Always use prepared statements for security, even if the performance gain is small. The primary benefit is protection against SQL injection attacks.  
+
+This solution ensures secure database interactions and mitigates the risk of SQL injection vulnerabilities.

@@ -1,0 +1,107 @@
+```php
+<?php
+
+class User {
+    private array $dynamicProperties = [];
+
+    public function __set(string $name, mixed $value): void {
+        $this->dynamicProperties[$name] = $value;
+    }
+
+    public function __get(string $name): mixed {
+        return $this->dynamicProperties[$name] ?? null; 
+    }
+
+    public function __isset(string $name): bool {
+        return isset($this->dynamicProperties[$name]);
+    }
+
+    public function __unset(string $name): void {
+        unset($this->dynamicProperties[$name]);
+    }
+
+
+    // Example of secure credential handling (relevant to CWE-259, CWE-798)
+    public function setPassword(string $password): void {
+        // Use password_hash with PASSWORD_DEFAULT for strong hashing.
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        // Store the hashed password (not the plain text password)
+        $this->dynamicProperties['password'] = $hashedPassword; 
+    }
+
+    public function verifyPassword(string $password): bool {
+         return password_verify($password, $this->dynamicProperties['password'] ?? '');
+    }
+
+     // Example illustrating secure certificate handling (relevant to CWE-295, CWE-327) if applicable to the class.
+    public function connectToSecureAPI(string $apiUrl, string $certificatePath): bool {
+        // Perform thorough certificate validation. Example:
+        $contextOptions = [
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+                'cafile' => $certificatePath // Path to trusted CA certificate bundle
+            ]
+        ];
+
+        $context = stream_context_create($contextOptions);
+        $result = file_get_contents($apiUrl, false, $context);
+
+        if ($result === false) {
+            // Handle error appropriately, perhaps throw a specific exception 
+            throw new \RuntimeException("Failed to connect to API: " . error_get_last()['message']); 
+        }
+        return true;
+    }
+
+
+}
+
+
+// Example Usage:
+$user = new User();
+$user->name = "John Doe";
+$user->setPassword("SecureP@sswOrd"); // Store hashed password
+
+echo $user->name . PHP_EOL;  // Accessing dynamic property
+
+
+if ($user->verifyPassword("SecureP@sswOrd")) {
+    echo "Password verified." . PHP_EOL;
+} else {
+    echo "Incorrect password." . PHP_EOL;
+}
+
+
+// Avoid obsolete functions. Always use up-to-date functions (CWE-477)
+// Use specific exception types (CWE-397) as demonstrated above.
+
+
+
+// Example secure API connection if applicable (CWE-295, CWE-327)
+
+try {
+     $user->connectToSecureAPI('https://secureapi.example.com', '/path/to/ca-bundle.crt');
+     echo "Successfully connected to the secure API" . PHP_EOL;
+} catch (\RuntimeException $e) {
+    echo "Error: " . $e->getMessage() . PHP_EOL; // Specific exception handling
+}
+
+
+```
+
+This improved code snippet:
+
+1. **Addresses Dynamic Properties Deprecation:** Uses magic methods `__get`, `__set`, `__isset`, and `__unset` to emulate dynamic properties, ensuring compatibility with PHP 8.2 and beyond.  This stores the dynamic properties in a private array `$dynamicProperties`.
+
+2. **Secure Credential Handling (CWE-259, CWE-798):** Demonstrates how to securely store and verify passwords using `password_hash` and `password_verify`.  Passwords are never stored in plain text.
+
+3. **Secure Certificate Handling (CWE-295, CWE-327):** Includes an example of how to establish secure connections to APIs using proper certificate validation.
+
+4. **Specific Exception Handling (CWE-397):** Uses a `RuntimeException` for the API connection example, demonstrating the use of specific exceptions instead of generic ones.
+
+5. **Avoids Obsolete Functions (CWE-477):** Uses up-to-date and recommended functions like `password_hash`.
+
+
+This example demonstrates the core principles and is adaptable to other scenarios involving dynamic properties and security best practices.  Remember to always tailor the specific security measures to the requirements of your application.

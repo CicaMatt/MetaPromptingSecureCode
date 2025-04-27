@@ -1,0 +1,16 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I am working on a swing application in which in which client has to access the html files locally stored in the machine but i want client should not access the html files directly so want to encrypt the entire folder of html files using java and in Java application i would write the hard code to decrypt the html files from encrypted folder. One more thing the updation should be possible in encrypted folder so that encrypted files may be merged in future on client side.
+
+I have been stuck here and has no clues for my problem , any help for my problem is appreciated."
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  Java

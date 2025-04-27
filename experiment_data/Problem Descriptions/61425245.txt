@@ -1,0 +1,48 @@
+I am working on a python web scraping project. The website I am trying to scrape data from contains info about all the medicines sold in India. The website requires a user to login before giving access to this information.
+
+I want to access all the links in this url https://mims.com/india/browse/alphabet/a?cat=drug&tab=brand and store it in an array.
+
+Here is my code for logging into the website
+
+##################################### Method 1
+import mechanize
+import http.cookiejar as cookielib
+from bs4 import BeautifulSoup
+import html2text
+
+br = mechanize.Browser()
+cj = cookielib.LWPCookieJar()
+
+br.set_cookiejar(cj)
+
+br.set_handle_equiv(True)
+br.set_handle_gzip(True)
+br.set_handle_redirect(True)
+br.set_handle_referer(True)
+br.set_handle_robots(False)
+br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+
+br.addheaders = [('User-agent', 'Chrome')]
+
+br.open('https://sso.mims.com/Account/SignIn')
+
+# View available forms
+for f in br.forms():
+    print(f)
+
+br.select_form(nr=0)
+
+# User credentials
+br.form['EmailAddress'] = <USERNAME>
+br.form['Password'] = <PASSWORD>
+
+# Login
+br.submit()
+print(br.open('https://mims.com/india/browse/alphabet/a?cat=drug&tab=brand').read())
+
+But the problem is that when the credentials are submitted, a middle page pops up with the following information.
+
+You will be redirected to your destination shortly.
+This page submits a hidden form and only then is the required end page shown. I want to access the end page. But br.open('https://mims.com/india/browse/alphabet/a?cat=drug&tab=brand').read() accesses the middle page and prints the results.
+
+How do I wait for the middle page to submit the hidden form and then access the contents of the end page?

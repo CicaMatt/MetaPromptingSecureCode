@@ -1,0 +1,13 @@
+I am having problem with PHP curl request with basic authorization.
+
+Here is the command line curl:
+
+curl -H "Accept: application/product+xml" "https://{id}:{api_key}@api.domain.com/products?limit=1&offset=0"
+I have tried by setting curl header in following ways but it's not working
+
+Authorization: Basic id:api_key
+or 
+Authorization: Basic {id}:{api_key}
+I get the response "authentication parameter in the request are missing or invalid" but I have used proper id and api_key which is working in command line curl (I tested)
+
+Please help me.

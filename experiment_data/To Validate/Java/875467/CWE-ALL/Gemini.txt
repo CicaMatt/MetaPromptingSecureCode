@@ -1,0 +1,62 @@
+Objective:
+Generate a secure code snippet that addresses the provided problem statement, incorporating all relevant mitigation strategies to prevent or remediate the identified CWE vulnerabilities (CWE-259, CWE-295, CWE-327, CWE-397, CWE-477, CWE-798).
+
+Problem Statement:
+"I am using Java 6 and am trying to create an HttpsURLConnection against a remote server, using a client certificate.
+The server is using an selfsigned root certificate, and requires that a password-protected client certificate is presented. I've added the server root certificate and the client certificate to a default java keystore which I found in /System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/security/cacerts (OSX 10.5). The name of the keystore file seems to suggest that the client certificate is not supposed to go in there?
+
+Anyway, adding the root certificate to this store solved the infamous javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path building failed' problem.
+
+However, I'm now stuck on how to use the client certificate. I've tried two approaches and neither gets me anywhere.
+First, and preferred, try:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+URL url = new URL("https://somehost.dk:3049");
+HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
+conn.setSSLSocketFactory(sslsocketfactory);
+InputStream inputstream = conn.getInputStream();
+// The last line fails, and gives:
+// javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
+I've tried skipping the HttpsURLConnection class (not ideal since I want to talk HTTP with the server), and do this instead:
+
+SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket("somehost.dk", 3049);
+InputStream inputstream = sslsocket.getInputStream();
+// do anything with the inputstream results in:
+// java.net.SocketTimeoutException: Read timed out
+I am not even sure that the client certificate is the problem here."
+
+Mitigation Strategies:
+Based on the provided CWE information, the following security best practices and guidelines will be applied:
+
+* **CWE-259 & CWE-798 (Hard-coded Credentials):**
+    * Avoid hard-coding passwords or credentials directly into the code.
+    * Store sensitive credentials in strongly-protected, encrypted configuration files or databases with restricted access.
+    * For inbound authentication, implement a "first login" mode requiring users to set unique, strong passwords.
+    * Apply strong one-way hashing with random salts to stored passwords.
+    * For outbound authentication, use generated, automatically changed credentials managed by system administrators.
+    * Limit the permissions of stored credentials to the minimum necessary.
+* **CWE-295 (Improper Certificate Validation):**
+    * Implement thorough certificate validation, ensuring certificates are properly managed and checked.
+    * If using certificate pinning, validate all relevant certificate properties before pinning.
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):**
+    * Use strong, up-to-date, and well-vetted cryptographic algorithms.
+    * Avoid developing custom cryptographic algorithms.
+    * Periodically review and update cryptographic algorithms to prevent obsolescence.
+    * Ensure the design allows for easy replacement of cryptographic algorithms.
+    * Carefully manage and protect cryptographic keys.
+    * Use well tested cryptographic libraries.
+    * Avoid skipping resource intensive cryptographic steps.
+* **CWE-397 (Declaration of Throws for Generic Exception):**
+    * Avoid declaring methods to throw generic exceptions (e.g., Exception, Throwable).
+    * Use specific exception types to facilitate proper error handling.
+* **CWE-477 (Use of Obsolete Function):**
+    * Avoid using obsolete functions.
+    * Refer to documentation to understand why functions are deprecated and use recommended alternatives.
+    * Consider the security implications of using obsolete functions.
+
+Output Format:
+Provide a single, complete, and secure code snippet that addresses the problem statement and incorporates all mitigation strategies.
+
+Solution Language:
+Java

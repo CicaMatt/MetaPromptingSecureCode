@@ -1,0 +1,84 @@
+To securely store and periodically access a username and password for a Python script that's running in a cron-like environment on Windows (using Task Scheduler perhaps), we need to ensure that we are not storing plaintext credentials. Instead, we can encrypt these credentials and store them securely in a SQLite database. We also need to ensure that the encryption keys and sensitive data are managed correctly.
+
+Here's a solution that involves using the Fernet symmetric encryption from the `cryptography` library to encrypt and decrypt the credentials. Fernet guarantees that the data is encrypted and that a unique key is used for encryption. We also use SQLite to store the encrypted credentials:
+
+### Code Snippet
+
+```python
+import sqlite3
+from cryptography.fernet import Fernet
+
+# Generate a key for encryption and decryption (do this once and save the key securely!)
+def generate_key():
+    key = Fernet.generate_key()
+    with open('secret.key', 'wb') as key_file:
+        key_file.write(key)
+
+# Load the key from the key file
+def load_key():
+    with open('secret.key', 'rb') as key_file:
+        return key_file.read()
+
+# Encrypt the credentials
+def encrypt_credentials(username, password, key):
+    fernet = Fernet(key)
+    encrypted_username = fernet.encrypt(username.encode())
+    encrypted_password = fernet.encrypt(password.encode())
+    return encrypted_username, encrypted_password
+
+# Decrypt the credentials
+def decrypt_credentials(encrypted_username, encrypted_password, key):
+    fernet = Fernet(key)
+    decrypted_username = fernet.decrypt(encrypted_username).decode()
+    decrypted_password = fernet.decrypt(encrypted_password).decode()
+    return decrypted_username, decrypted_password
+
+# Store encrypted credentials in the SQLite database
+def store_credentials(db_path, username, password, key):
+    encrypted_username, encrypted_password = encrypt_credentials(username, password, key)
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("CREATE TABLE IF NOT EXISTS credentials (id INTEGER PRIMARY KEY, username BLOB, password BLOB)")
+    cursor.execute("INSERT INTO credentials (username, password) VALUES (?, ?)", (encrypted_username, encrypted_password))
+    conn.commit()
+    conn.close()
+
+# Retrieve and decrypt credentials from the SQLite database
+def get_credentials(db_path, key):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, password FROM credentials WHERE id=1")  # Assuming single user
+    encrypted_username, encrypted_password = cursor.fetchone()
+    conn.close()
+    return decrypt_credentials(encrypted_username, encrypted_password, key)
+
+# Usage example
+DB_PATH = 'credentials.db'
+
+# Generate and save the key (only do this once and comment it out afterwards)
+# generate_key()
+
+# Load the encryption key
+encryption_key = load_key()
+
+# Store the credentials
+# store_credentials(DB_PATH, 'my_username', 'my_secure_password', encryption_key)
+
+# Retrieve credentials
+username, password = get_credentials(DB_PATH, encryption_key)
+print(f"Retrieved Username: {username}")
+print(f"Retrieved Password: {password}")
+```
+
+### Explanation
+1. **Key Management**: We generate a symmetric encryption key using `Fernet.generate_key()`. This key should be securely stored and protected. It's essential that this key is not hard-coded in your script.
+
+2. **Encrypting/Decrypting Data**: We use the key to create a Fernet instance and encrypt/decrypt the username and password.
+
+3. **Database Storage**: The encrypted username and password are stored in an SQLite database. This ensures that if the database file is accessed by unauthorized users, they would not see plaintext credentials.
+
+4. **Credentials Handling**: The functions `store_credentials` and `get_credentials` handle storing encrypted credentials in the database and retrieving and decrypting them afterward.
+
+### Notes
+- Make sure to keep the `secret.key` file secure, as it is required to decrypt your credentials.
+- This code addresses the need for encrypted storage while avoiding obsolete functions. Ensure your Python runtime and libraries are up-to-date for better security and performance.

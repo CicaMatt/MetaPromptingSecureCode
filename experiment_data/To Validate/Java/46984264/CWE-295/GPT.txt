@@ -1,0 +1,24 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"We have aes-256 encryption for some data in one of the tables and we are migrating this to sql server. The problem is that we cannot decrypt the data in sql server due to incompatibility. Is there any way we can encrypt data in MYSQL in a way which is compatible with sql server aswell. Any advise ?"
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+Java

@@ -1,0 +1,86 @@
+#### **Objective**  
+Improper certificate validation can lead to man-in-the-middle (MITM) attacks, where an attacker spoofs a trusted entity, intercepts sensitive data, or deceives the system into accepting malicious data. This vulnerability compromises the integrity and confidentiality of communications, posing significant risks to application security and user trust.
+
+---
+
+#### **Problem Statement**  
+"Can someone help me to understand what Java CountDownLatch is and when to use it?
+
+I don't have a very clear idea of how this program works. As I understand all three threads start at once and each Thread will call CountDownLatch after 3000ms. So count down will decrement one by one. After latch becomes zero the program prints "Completed". Maybe the way I understood is incorrect.
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        latch.countDown();
+    }
+}
+// -----------------------------------------------------
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // coundown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for(int i=0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // ref to latch. each time call new Processes latch will count down by 1
+        }
+
+        try {
+            latch.await();  // wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Completed.");
+    }
+
+}"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Certificate Management**:  
+   - Ensure certificates are carefully managed and validated to confirm they are issued by a trusted Certificate Authority (CA).  
+   - Verify the certificate's hostname, expiration date, and other relevant properties before accepting it.  
+
+2. **Certificate Pinning**:  
+   - If using certificate pinning, validate all relevant properties of the certificate (e.g., hostname, public key, and issuer) before pinning.  
+   - Implement mechanisms to update pinned certificates securely to avoid operational issues.  
+
+3. **Secure Communication Protocols**:  
+   - Use secure protocols (e.g., TLS 1.2 or higher) and enforce strict validation rules to prevent downgrade attacks.  
+
+4. **Error Handling**:  
+   - Implement robust error handling to reject invalid or untrusted certificates and log such events for monitoring and auditing.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.  
+
+---
+
+#### **Solution Language**  
+Java  
+
+---

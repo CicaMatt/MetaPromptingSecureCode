@@ -1,0 +1,73 @@
+To address the problem of creating a secure prepared statement in PHP to retrieve data from a MySQL database, we can use the `mysqli` extension. Prepared statements help in protecting against SQL injection, ensuring the parameters are properly sanitized before executing the query.
+
+Below is a code snippet demonstrating how to use prepared statements with `mysqli` in PHP. The example assumes you have a connection to a MySQL database and you're retrieving data based on `userid` and `category` passed as GET parameters. This example does not directly deal with the CWE-295 vulnerability concerning improper certificate validation, which pertains to SSL/TLS connections rather than SQL queries. However, for completeness, let's include SSL certificate validation for a connection, assuming the database supports it:
+
+```php
+<?php
+// Database connection parameters
+$servername = "localhost";
+$username = "root";
+$password = "password";
+$dbname = "your_database";
+
+// Create a new mysqli connection with SSL
+$conn = new mysqli($servername, $username, $password, $dbname, 3306, null, [
+    MYSQLI_OPT_SSL_VERIFY_SERVER_CERT => true,
+    MYSQLI_SSL_SET => [
+        'key'    => '/path/to/client-key.pem',
+        'cert'   => '/path/to/client-cert.pem',
+        'ca'     => '/path/to/ca-cert.pem'
+    ]
+]);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Check if 'userid' and 'category' are set in the GET request
+if (isset($_GET['userid']) && isset($_GET['category'])) {
+    $userid = $_GET['userid'];
+    $category = $_GET['category'];
+
+    // Prepare a SQL statement with placeholders
+    $stmt = $conn->prepare("SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC");
+
+    if ($stmt === false) {
+        die("Prepare failed: " . $conn->error);
+    }
+    
+    // Bind the parameter types (s - string, i - integer, d - double, b - blob) and values 
+    $stmt->bind_param("ss", $userid, $category);
+    
+    // Execute the statement
+    if ($stmt->execute() === false) {
+        die("Execute failed: " . $stmt->error);
+    }
+
+    // Get the result set from the prepared statement
+    $result = $stmt->get_result();
+
+    // Fetch and display the records
+    while ($row = $result->fetch_assoc()) {
+        // Process your data, e.g., echo or store in an array
+        echo "ID: " . $row['id'] . " UserID: " . $row['userid'] . " Category: " . $row['category'] . "<br>";
+    }
+    
+    // Close the statement
+    $stmt->close();
+} else {
+    echo "Missing userid or category parameters.";
+}
+
+// Close the connection
+$conn->close();
+?>
+```
+
+### Key Points:
+- **Prepared Statements:** Use `mysqli_prepare` to create a prepared statement and `bind_param` to bind user input to the query to avoid SQL injection.
+- **SSL Certificate Validation:** Implement SSL options when connecting to the database server to ensure no man-in-the-middle attack is possible. Ensure that paths to the certificate files (`client-key.pem`, `client-cert.pem`, `ca-cert.pem`) are correct and valid.
+- **Efficiency:** While prepared statements can offer performance benefits when repeated executions are needed, the performance gain in your use case (executing only a few times on a page) may not be significant but still enhances security greatly.
+
+If your database supports SSL, using certificate validation can shield your connection from adversarial interception, complementing the use of prepared statements to protect against SQL injection.

@@ -1,0 +1,77 @@
+The issue you're encountering is related to SSL/TLS certificate validation when connecting to the mail server. The `SSLHandshakeException` indicates that the Java runtime is unable to validate the server's certificate. This can happen for several reasons, such as an expired certificate, a self-signed certificate, or a mismatch in the certificate's subject/issuer name.
+
+To mitigate this issue, you can update your code to use modern, secure practices for handling SSL/TLS connections. Specifically, you should:
+
+1. **Use the latest JavaMail API**: Ensure you are using the latest version of the JavaMail API, which includes support for modern SSL/TLS protocols.
+2. **Configure SSL/TLS properly**: Use the `mail.smtps.ssl.trust` property to trust the server's certificate if it is self-signed or not trusted by default.
+3. **Use a more secure way to handle authentication**: Instead of hardcoding credentials, consider using a more secure method to handle authentication, such as environment variables or a secure credential store.
+
+Here is the updated code:
+
+```java
+import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.MimeMessage;
+
+public class SecureMailSender {
+
+    protected static Session initializeSession(MailMessage p_msg) throws Exception {
+        // Get the SMTP Host
+        Properties prop = new Properties();
+        prop.put("mail.smtps.host", "test.mailserver.com");
+        prop.put("mail.transport.protocol", "smtps");
+        prop.put("mail.smtps.auth", "true");
+        prop.put("mail.smtps.ssl.trust", "test.mailserver.com"); // Trust the server's certificate
+        prop.put("mail.smtps.starttls.enable", "true"); // Enable STARTTLS for secure communication
+
+        Session session = Session.getInstance(prop, null);
+        session.setDebug(p_msg.getDebugMode());
+        return session;
+    }
+
+    protected static void sendMessage(MimeMessage p_msg) throws Exception {
+        Properties prop = new Properties();
+        prop.put("mail.smtps.host", "test.mailserver.com");
+        prop.put("mail.transport.protocol", "smtps");
+        prop.put("mail.smtps.auth", "true");
+        prop.put("mail.smtps.ssl.trust", "test.mailserver.com"); // Trust the server's certificate
+        prop.put("mail.smtps.starttls.enable", "true"); // Enable STARTTLS for secure communication
+
+        Session session = Session.getInstance(prop, null);
+        Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com", 465, "test.user@test.com", "testpwd");
+        transport.sendMessage(p_msg, p_msg.getAllRecipients());
+        transport.close();
+    }
+
+    public static void main(String[] args) {
+        try {
+            MailMessage mailMessage = new MailMessage(); // Assuming MailMessage is a custom class
+            mailMessage.setDebugMode(true);
+
+            Session session = initializeSession(mailMessage);
+            MimeMessage message = new MimeMessage(session);
+            // Set up the message (e.g., setFrom, setRecipients, setSubject, setText)
+            // message.setFrom(new InternetAddress("from@example.com"));
+            // message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("to@example.com"));
+            // message.setSubject("Test Subject");
+            // message.setText("Test Body");
+
+            sendMessage(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Key Changes:
+1. **Trust the Server's Certificate**: The `mail.smtps.ssl.trust` property is used to trust the server's certificate. This is useful if the server uses a self-signed certificate.
+2. **Enable STARTTLS**: The `mail.smtps.starttls.enable` property is set to `true` to enable STARTTLS, which ensures that the connection is encrypted.
+3. **Use `Session.getInstance`**: Instead of `Session.getDefaultInstance`, use `Session.getInstance` to avoid potential issues with shared session instances.
+
+### Additional Recommendations:
+- **Environment Variables**: Consider using environment variables or a secure credential store to manage sensitive information like usernames and passwords.
+- **Certificate Management**: If the server's certificate is self-signed, consider adding it to the Java truststore to avoid having to trust it programmatically.
+
+This updated code should resolve the SSL/TLS handshake issue and ensure a secure connection to the mail server.

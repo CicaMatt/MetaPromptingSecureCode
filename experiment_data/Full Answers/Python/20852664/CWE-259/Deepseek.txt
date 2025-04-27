@@ -1,0 +1,76 @@
+To address the issue with the `decrypt_file()` function, the primary problem lies in the handling of bytes and strings when reading from and writing to the file. The encrypted data is stored as a string representation of bytes, which needs to be properly converted back to bytes before decryption. Additionally, the padding logic in `decrypt_file()` is incorrect and unnecessary since the padding is already handled by the `decrypt()` function.
+
+Here is the corrected and complete code:
+
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + ((bytes([x])) * x)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:]))
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'r') as f:
+        plaintext = f.read().encode('utf-8')
+    
+    enc = encrypt(plaintext, key)
+    
+    with open(file_name, 'wb') as f:
+        f.write(enc)
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        ciphertext = f.read()
+    
+    dec = decrypt(ciphertext, key)
+    
+    with open(file_name, 'w') as f:
+        f.write(dec.decode('utf-8'))
+
+# Example usage
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+# Encrypt the file
+encrypt_file('to_enc.txt', key)
+
+# Decrypt the file
+decrypt_file('to_enc.txt', key)
+```
+
+### Explanation of Changes:
+1. **File Handling**: 
+   - Use `'rb'` and `'wb'` modes for reading and writing binary data to avoid issues with string and byte conversions.
+   - Use `with open(...) as f` for better file handling and automatic closing.
+
+2. **Padding in `decrypt_file()`**:
+   - Removed the unnecessary padding logic in `decrypt_file()` since the `decrypt()` function already handles unpadding.
+
+3. **Data Conversion**:
+   - When reading the encrypted file, read it as binary (`'rb'`) to get the bytes directly.
+   - When writing the decrypted data, decode the bytes to a string using `'utf-8'` before writing to the file.
+
+### Usage:
+- The `encrypt_file()` function reads the plaintext from the file, encrypts it, and writes the encrypted data back to the file.
+- The `decrypt_file()` function reads the encrypted data from the file, decrypts it, and writes the decrypted plaintext back to the file.
+
+This solution ensures that the encryption and decryption processes work correctly with file I/O, handling the necessary conversions between bytes and strings appropriately.

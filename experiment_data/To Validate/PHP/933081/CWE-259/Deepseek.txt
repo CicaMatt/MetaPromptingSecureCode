@@ -1,0 +1,40 @@
+#### **Objective**  
+The use of hard-coded passwords poses a significant security risk, as it can lead to unauthorized access, data breaches, and widespread exploitation. This issue is particularly dangerous because hard-coded credentials are often identical across installations, making them susceptible to large-scale attacks. The objective is to eliminate hard-coded passwords by implementing secure authentication mechanisms and storing credentials securely.
+
+---
+
+#### **Problem Statement**  
+"I understand what try-catch statements do, but from reading the documentation on php.net, I would not be able to implement one into my own code. I need a real example to help me understand.
+
+How can I turn this example into a try-catch statement, if the upload was not successful?
+
+$move = move_uploaded_file($_FILES['file']['tmp_name'], $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$_FILES['file']['name']);
+
+if (!$move) {
+    die ('File didn\'t upload');
+} else {            
+    //opens the uploaded file for extraction
+    echo 'Upload Complete!';
+}
+This may not be a good example to work with, but any help would be appreciated."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-coded Passwords**: Store passwords outside the code in a secure, encrypted configuration file or database.  
+2. **Use Strong Password Policies**: For inbound authentication, require users to set a unique, strong password during initial setup.  
+3. **Encrypt and Hash Passwords**: Apply strong one-way hashing with unique salts to stored passwords.  
+4. **Restrict Access**: Limit access to sensitive features and ensure credentials are only accessible to authorized entities.  
+5. **Dynamic Credentials**: For front-end to back-end connections, use dynamically generated, time-limited credentials with restricted permissions.  
+
+---
+
+#### **Output Format**  
+The solution must be provided as a single, complete, and executable code snippet.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

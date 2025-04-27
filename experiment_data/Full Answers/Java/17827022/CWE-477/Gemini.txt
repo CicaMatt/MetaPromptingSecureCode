@@ -1,0 +1,64 @@
+```java
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println(Thread.currentThread().getName() + " Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(Thread.currentThread().getName() + " finished its task.");
+        latch.countDown(); // Decrement the latch count
+    }
+}
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // Initialize the latch with a count of 3
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // Create a thread pool with 3 threads
+
+        for (int i = 0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // Submit 3 Processor tasks to the thread pool
+        }
+
+        System.out.println("Main thread waiting for all tasks to complete...");
+
+        try {
+            latch.await(); // Main thread blocks here until the latch count becomes 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("All tasks completed. Main thread continuing.");
+        executor.shutdown(); // Shut down the executor to prevent resource leaks
+    }
+}
+
+```
+
+
+**Explanation and Improvements:**
+
+1. **Clearer Thread Identification:** Added `Thread.currentThread().getName()` to the `Processor` class to clearly show which thread is starting and finishing. This makes the output much easier to understand.
+2. **Explanatory Comments:**  Added comments to clarify the purpose of key parts of the code, like the latch initialization, `await()`, and `countDown()`.
+3. **Main Thread Message:**  Included print statements in the main thread to indicate when it's waiting and when the latch has opened.  This clarifies the main thread's behavior.
+4. **Executor Shutdown:** Added `executor.shutdown()` after the `latch.await()` to properly shut down the thread pool. This is crucial for preventing resource leaks in a real-world application.
+5. **Corrected Understanding:** Your initial understanding was mostly correct. The key concept is that the main thread waits at `latch.await()` until all three worker threads (Processors) have each called `latch.countDown()`, reducing the latch count to zero. Only then does the main thread continue execution.
+
+
+This improved version, along with the explanations, provides a more robust and understandable example of using `CountDownLatch`. It also demonstrates good practices for thread management, including shutting down the executor service. This addresses potential resource issues not present in the original code.

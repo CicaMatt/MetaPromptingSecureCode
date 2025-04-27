@@ -1,0 +1,7 @@
+The embed URL for a channel's live stream is:
+
+https://www.youtube.com/embed/live_stream?channel=CHANNEL_ID
+and it works but if I want to embed near at it a YouTube live chat for current streaming the URL that I use for the embed is:
+
+https://www.youtube.com/live_chat?v=VIDEOID&embed_domain=DOMAINURL 
+The problem is this: for every new live stream the Video ID changes. So that the embedded code isn't valid anymore and chat isn't displayed for next streaming.I want a permanent URL live chat valid for all my YouTube streaming without change video id manually every time. How to resolve? Perhaps with a script in PHP or javascript that read current YouTube URL and replace video id in chat embed URL? thanks

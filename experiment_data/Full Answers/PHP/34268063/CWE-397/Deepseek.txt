@@ -1,0 +1,54 @@
+To address the issue of handling `null` returns in PHP 7+ when a return type is defined, you can use a combination of custom exceptions and proper error handling. Instead of throwing a generic `Exception`, you can define a custom exception for cases where `null` is returned. This approach ensures that your code is more maintainable and easier to debug.
+
+Here’s a complete and executable PHP code snippet that demonstrates this approach:
+
+```php
+<?php
+
+// Define a custom exception for null returns
+class NullReturnException extends Exception {}
+
+// Define your class and method
+class MyClass {
+    public function getMyObject() : MyObject {
+        // Simulate a condition where null might be returned
+        $result = null; // This could be some logic that might return null
+        
+        if ($result === null) {
+            throw new NullReturnException("The method returned null, which is not allowed.");
+        }
+        
+        return $result;
+    }
+}
+
+// Define the MyObject class
+class MyObject {
+    // Your object properties and methods here
+}
+
+// Usage example
+try {
+    $myClass = new MyClass();
+    $myObject = $myClass->getMyObject();
+    echo "Object retrieved successfully.\n";
+} catch (NullReturnException $e) {
+    echo "Caught NullReturnException: " . $e->getMessage() . "\n";
+    // Handle the null return case here
+} catch (Exception $e) {
+    echo "Caught generic exception: " . $e->getMessage() . "\n";
+    // Handle other exceptions here
+}
+```
+
+### Explanation:
+
+1. **Custom Exception**: We define a `NullReturnException` class that extends the base `Exception` class. This allows us to throw a specific exception when `null` is returned.
+
+2. **Method Definition**: The `getMyObject` method is defined to return an object of type `MyObject`. If the method would return `null`, it throws a `NullReturnException` instead.
+
+3. **Error Handling**: In the usage example, we use a `try...catch` block to handle the `NullReturnException` specifically. This allows us to handle the case where `null` is returned in a controlled manner.
+
+4. **Maintainability**: By using a custom exception, the code becomes more maintainable and easier to debug. Other developers (or your future self) will understand the intent behind the exception and how to handle it.
+
+This approach avoids the need for creating a `NullObject` for every class and keeps your code clean and focused on handling specific error conditions.

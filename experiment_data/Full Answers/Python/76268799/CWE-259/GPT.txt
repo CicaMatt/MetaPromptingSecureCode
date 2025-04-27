@@ -1,0 +1,54 @@
+To address the problem with your SQLAlchemy version 2.0 code and the use of enumerated types, it's important to ensure that you are using the right approach to define and map ENUM types in SQLAlchemy with PostgreSQL. The error you're encountering suggests that there's an issue with how the ENUM type is being handled. Let's correct that with the following steps:
+
+1. Ensure that your ENUM declaration and its integration with the PostgreSQL ENUM type are compatible with SQLAlchemy 2.0.
+2. Fix the way you are using `mapped_column` with enums by utilizing the `Enum` type built into SQLAlchemy.
+
+Here’s how you can modify your existing code snippet to solve the issue:
+
+```python
+from sqlalchemy import create_engine, Column, Enum
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import sqlalchemy.types as types
+import enum
+import uuid
+import datetime as dt
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+class CampaignStatus(enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id = Column(types.UUID, primary_key=True, default=uuid.uuid4)
+    created_at = Column(dt.datetime, default=dt.datetime.now)
+    status = Column(Enum(CampaignStatus, name="campaign_status"), nullable=False)
+
+# Setup the database (example using PostgreSQL)
+engine = create_engine('postgresql://username:password@localhost/mydatabase')
+Base.metadata.create_all(engine)
+
+# Create a session
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# Example of how to create a new campaign
+new_campaign = Campaign(status=CampaignStatus.activated)
+session.add(new_campaign)
+session.commit()
+
+session.close()
+```
+
+### Key Points:
+
+- **Enum Handling:** The `Enum` type in SQLAlchemy is used directly to define the column type, making it compatible with SQLAlchemy's ORM and handling the PostgreSQL ENUM type.
+- **UUIDs:** The `types.UUID` type is used for the `id` column, aligning with Python’s `uuid.UUID` type.
+- **Metadata Creation:** Ensure that the database is created with `Base.metadata.create_all(engine)` which includes tables configured to use PostgreSQL ENUM types correctly.
+- **Database Connection:** The `create_engine` function is used to connect to a PostgreSQL database. Please update `'postgresql://username:password@localhost/mydatabase'` with your actual database credentials.
+
+This code snippet assumes you have a PostgreSQL server running and accessible, where you can create databases and manage connections securely. Always handle database credentials with best practices for security, such as using environment variables or secure vault services to manage sensitive information.

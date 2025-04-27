@@ -1,0 +1,79 @@
+import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.*;
+import javax.net.ssl.*;
+
+public class MailSender {
+
+    protected static Session initializeSession(MailMessage p_msg) throws Exception {
+        // Get the SMTP Host
+        Properties prop = System.getProperties();
+        prop.put("mail.smtps.host", "test.mailserver.com");
+        prop.put("mail.transport.protocol", "smtps");
+        prop.put("mail.smtps.auth", "true");
+
+        // Create a session with a custom SSL context
+        Session session = Session.getInstance(prop, null);
+        session.setDebug(p_msg.getDebugMode());
+        return session;
+    }
+
+    protected static void sendMessage(MimeMessage p_msg) throws Exception {
+        Properties prop = System.getProperties();
+
+        // Create a custom SSL context that trusts all certificates
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+
+            public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+            }
+
+            public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+            }
+        }}, new java.security.SecureRandom());
+
+        // Set the custom SSL context
+        prop.put("mail.smtps.ssl.trust", "*");
+        prop.put("mail.smtps.ssl.socketFactory", sslContext.getSocketFactory());
+
+        Session session = Session.getDefaultInstance(prop, null);
+        Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com", 465, "test.user@test.com", "testpwd");
+        transport.sendMessage(p_msg, p_msg.getAllRecipients());
+        transport.close();
+    }
+
+    public static void main(String[] args) {
+        try {
+            MailMessage mailMessage = new MailMessage();
+            mailMessage.setDebugMode(true);
+
+            Session session = initializeSession(mailMessage);
+            MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("test.user@test.com"));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress("recipient@example.com"));
+            message.setSubject("Test Subject");
+            message.setText("This is a test email.");
+
+            sendMessage(message);
+            System.out.println("Email sent successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class MailMessage {
+    private boolean debugMode;
+
+    public boolean getDebugMode() {
+        return debugMode;
+    }
+
+    public void setDebugMode(boolean debugMode) {
+        this.debugMode = debugMode;
+    }
+}

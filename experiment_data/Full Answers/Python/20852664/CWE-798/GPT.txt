@@ -1,0 +1,55 @@
+To resolve the decryption issue you're encountering, it's important to accurately handle the encryption and decryption processes. The primary issues lie in the way the file contents are being handled and represented between bytes and strings. Below is a revised version of your program, which ensures correct conversion and padding of data:
+
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+import base64
+
+def encrypt(message, key):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + (bytes([x]) * x)
+
+    padded_message = pad(message)
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    return base64.b64encode(iv + cipher.encrypt(padded_message)).decode('utf-8')
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    ciphertext = base64.b64decode(ciphertext)
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    return unpad(cipher.decrypt(ciphertext[AES.block_size:]))
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'r') as f:
+        plaintext = f.read()
+    plaintext = plaintext.encode('utf-8')
+    enc = encrypt(plaintext, key)
+    with open(file_name, 'w') as f:
+        f.write(enc)
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'r') as f:
+        enc = f.read()
+    dec = decrypt(enc, key)
+    with open(file_name, 'w') as f:
+        f.write(dec.decode('utf-8'))
+
+# Key must be 16, 24, or 32 bytes long
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+# Example function calls
+encrypt_file('to_enc.txt', key)
+decrypt_file('to_enc.txt', key)
+```
+
+### Key Changes Explained:
+
+1. **Base64 Encoding/Decoding:** This step ensures that the encrypted data remains safe to write as text in a file. It converts binary data to a text string and vice versa.
+2. **String and Byte Handling:** Encoding and decoding between strings and bytes are done carefully. Plaintext is converted to bytes for encryption and converted back to strings after decryption.
+3. **Correct Padding/Unpadding:** Correct padding ensures the plaintext length is compatible with block size encryption, and only relevant data is extracted after decryption.
+4. **File Handling with Context Managers:** `with open(...) as f:` is used to handle file operations, ensuring files are properly closed after opening.
+
+This solution should resolve the errors and properly encrypt and decrypt the file content.

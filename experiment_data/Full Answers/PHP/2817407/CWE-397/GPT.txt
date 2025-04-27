@@ -1,0 +1,59 @@
+To address the discrepancy in TripleDES encryption across different programming languages and ensure your PHP code produces the same result as the Perl implementation, careful attention must be paid to match the specifics of the algorithm implementation, including the mode of operation, padding method, and key usage.
+
+Here’s a PHP solution using the `openssl` library, which allows for detailed specification of the cipher, mode, and padding. The `mcrypt` function used in the original PHP snippet is deprecated, so using `openssl` is a more modern and secure approach:
+
+```php
+<?php
+// Properly handling potential exceptions
+try {
+    $theKey = "123412341234123412341234";  // 24 byte key for TripleDES
+    $theString = "username=test123";
+    
+    // Ensure the OpenSSL extension is available
+    if (!extension_loaded('openssl')) {
+        throw new Exception('OpenSSL extension is required');
+    }
+
+    // OpenSSL encryption settings
+    $method = 'DES-EDE3'; // Triple DES EDE mode
+    $options = OPENSSL_RAW_DATA | OPENSSL_NO_PADDING;
+    
+    // OpenSSL expects a 24-byte key, so ensure this is the case
+    if (strlen($theKey) !== 24) {
+        throw new Exception('Key must be 24 bytes for TripleDES');
+    }
+
+    // Padding the string to the nearest multiple of 8 bytes (block size of DES)
+    $blockSize = 8;
+    $padLength = $blockSize - (strlen($theString) % $blockSize);
+    $theString .= str_repeat(chr($padLength), $padLength);
+
+    // Encrypt using openssl_encrypt function
+    $encryptedData = openssl_encrypt($theString, $method, $theKey, $options);
+
+    // Encode the result in Base64
+    $strEncodedEnc = base64_encode($encryptedData);
+
+    echo "Encrypted and Base64-encoded string: " . $strEncodedEnc;
+
+} catch (Exception $e) {
+    // Log the exception message
+    error_log("Encryption error: " . $e->getMessage());
+    
+    // Display an error message for further handling
+    echo "An error occurred during encryption.";
+}
+?>
+```
+
+### Key Points:
+
+1. **Algorithm and Mode**: The `openssl_encrypt` function uses `DES-EDE3` for TripleDES EDE mode, which is similar to the Perl code's `Crypt::TripleDES`.
+
+2. **Padding**: Proper PKCS7 padding is manually added to ensure that the string is a multiple of the block size (8 bytes for DES).
+
+3. **Error Handling**: Specific exceptions are thrown when certain conditions aren’t met, providing clear error information. This represents mitigation strategies like using specific exceptions and providing contextual information.
+
+4. **Security Practices**: The script checks if the OpenSSL extension is available, and uses `openssl` which is recommended over deprecated or less secure methods. It also enforces a strict 24-byte key length for TripleDES and uses structured logging for error tracking.
+
+By aligning encryption parameters closely with those required by the payment processor's Perl implementation, this PHP code is tailored to produce the expected result, minimizing discrepancies.

@@ -1,0 +1,52 @@
+To address the problem of generic exception handling in your PHP script, let's create a more robust error handling mechanism by implementing specific exceptions and including precise error messages. We will also improve the error checking for database connection and selection processes to ensure the correct output based on the issue encountered. Here's the improved code:
+
+```php
+<?php
+   $hostname = "localhost";
+   $username = "root1"; // Intentionally incorrect username
+   $password = "";
+   $database = "php_thenewboston"; // Intentional incorrect database name
+   
+   class ServerException extends Exception {}
+   class DatabaseException extends Exception {}
+   
+   try {
+       // Attempt to establish the connection
+       $conn = mysqli_connect($hostname, $username, $password);
+       
+       // Check connection to MySQL server
+       if (!$conn) {
+           throw new ServerException('Could not connect to server: ' . mysqli_connect_error());
+       }
+   
+       // Attempt to select the database
+       $conn_db = mysqli_select_db($conn, $database);
+       
+       // Check database selection
+       if (!$conn_db) {
+           throw new DatabaseException('Could not connect to database: ' . mysqli_error($conn));
+       }
+   
+       echo "Connected successfully.";
+   
+   } catch (ServerException $ex) {
+       // Handle server related exceptions
+       echo "Server Error: " . $ex->getMessage();
+   } catch (DatabaseException $ex) {
+       // Handle database related exceptions
+       echo "Database Error: " . $ex->getMessage();
+   }
+?>
+```
+
+### Key Improvements:
+
+1. **Specific Exceptions**: We created two specific exception classes extending the generic Exception class in PHP - `ServerException` for server connection errors and `DatabaseException` for database selection failures.
+
+2. **Detailed Error Messages**: The exceptions include detailed error information from `mysqli_connect_error()` and `mysqli_error()`, respectively, enhancing diagnostics.
+
+3. **Separation of Concerns**: The logic for handling server and database connection errors is clearly separated using different exception classes.
+
+4. **Descriptive Output**: By capturing specific exceptions, we provide more detailed, relevant feedback, aiding in precise troubleshooting.
+
+This approach ensures that we handle server and database errors correctly and distinctly, improving both the clarity and maintainability of your code.

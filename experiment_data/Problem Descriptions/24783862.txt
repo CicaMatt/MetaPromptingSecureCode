@@ -1,0 +1,18 @@
+I'm trying to go through all of the files in a directory, and if there is a directory, go through all of its files and so on until there are no more directories to go to. Each and every processed item will be added to a results array in the function below. It is not working though I'm not sure what I can do/what I did wrong, but the browser runs insanely slow when this code below is processed, any help is appreciated, thanks!
+
+Code:
+    function getDirContents($dir){
+        $results = array();
+        $files = scandir($dir);
+
+            foreach($files as $key => $value){
+                if(!is_dir($dir. DIRECTORY_SEPARATOR .$value)){
+                    $results[] = $value;
+                } else if(is_dir($dir. DIRECTORY_SEPARATOR .$value)) {
+                    $results[] = $value;
+                    getDirContents($dir. DIRECTORY_SEPARATOR .$value);
+                }
+            }
+    }
+
+    print_r(getDirContents('/xampp/htdocs/WORK'));

@@ -1,0 +1,62 @@
+To address the requirement of accessing all trusted root certificates in a Java application, you can utilize Java's security and cryptography APIs to programmatically interact with the keystore. Instead of using generic exceptions, we will employ specific exception handling strategies to ensure clarity and manageability.
+
+Here is a Java code example that retrieves and prints all trusted root certificates from the default system keystore:
+
+```java
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class TrustedRootCertificates {
+
+    private static final Logger LOGGER = Logger.getLogger(TrustedRootCertificates.class.getName());
+
+    public static void main(String[] args) {
+        try {
+            // Load the default keystore
+            KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keystore.load(null, null);
+
+            // Iterate over all the aliases in the keystore
+            Enumeration<String> aliases = keystore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate cert = keystore.getCertificate(alias);
+                
+                // Check if the certificate is an instance of X509Certificate
+                if (cert instanceof X509Certificate) {
+                    X509Certificate x509Cert = (X509Certificate) cert;
+                    // Print the certificate details
+                    System.out.println("Alias: " + alias);
+                    System.out.println("Subject DN: " + x509Cert.getSubjectX500Principal());
+                    System.out.println("Issuer DN: " + x509Cert.getIssuerX500Principal());
+                    System.out.println("Serial Number: " + x509Cert.getSerialNumber());
+                    System.out.println("Validity: " + x509Cert.getNotBefore() + " to " + x509Cert.getNotAfter());
+                    System.out.println("------------------------------------------------");
+                }
+            }
+        } catch (KeyStoreException e) {
+            LOGGER.log(Level.SEVERE, "A KeyStore error occurred", e);
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.log(Level.SEVERE, "Algorithm not found", e);
+        } catch (CertificateException e) {
+            LOGGER.log(Level.SEVERE, "Certificate error encountered", e);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "IO error when loading the keystore", e);
+        }
+    }
+}
+```
+
+### Key Points from the Code:
+1. **Specific Exception Handling:** The code utilizes specific exceptions like `KeyStoreException`, `NoSuchAlgorithmException`, `CertificateException`, and `IOException` to handle known error conditions distinctly.
+2. **Logging with Context:** The `Logger` is used to log error messages with appropriate severity levels. This aids in diagnostics and provides context about any exceptions that occur.
+3. **Printing Certificate Details:** Assuming the certificates are X509 certificates, it extracts and prints details like subject and issuer distinguished names (DNs), serial numbers, and validity periods.
+4. **Hierarchical Use of Exceptions:** By catching each specific exception type, the application can manage different failure modes more precisely, thus enhancing robustness and security.

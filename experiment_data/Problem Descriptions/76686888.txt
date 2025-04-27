@@ -1,0 +1,17 @@
+I found some examples on how to use ObjectId within BaseModel classes. Basically, this can be achieved by creating a Pydantic-friendly class as follows:
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return ObjectId(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
+However, this seems to be for Pydantic v1, as this mechanism has been superseeded by the __get_pydantic_core_schema__ classmethod. However, I have been unable to achieve an equivalent solution with Pydantic v2. Is it possible? What validators do I need? I tried to refactor things but was unable to get anything usable.

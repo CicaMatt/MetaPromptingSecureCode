@@ -1,0 +1,76 @@
+To address your concerns regarding the potential security implications of using Python's `str.format()`, we can create a custom subclass of `string.Formatter` to mitigate the risks you've identified. This custom subclass will restrict padding sizes, prevent access to special methods, and handle exceptions carefully.
+
+Here's a code snippet that demonstrates how you can implement these safeguards:
+
+```python
+import string
+
+class SafeFormatter(string.Formatter):
+    MAX_PADDING = 100  # Limit the padding to prevent DoS attacks
+
+    def get_field(self, field_name, args, kwargs):
+        # Prevent access to dunder (double underscore) methods or special methods
+        if field_name.startswith('__') and field_name.endswith('__'):
+            raise ValueError(f"Access to {field_name} is not allowed")
+        
+        # Only allow attribute/index access if it's whitelisted
+        # Implement your own whitelist logic here if needed
+        field = super().get_field(field_name, args, kwargs)
+        return field
+
+    def format_field(self, value, format_spec):
+        if format_spec.startswith('>') or format_spec.startswith('<') or format_spec.startswith('^'):
+            try:
+                # Extract the padding length from the format specifier
+                padding_length = int(format_spec[1:])
+                if padding_length > self.MAX_PADDING:
+                    raise ValueError(
+                        f"Padding length {padding_length} exceeds the allowed limit of {self.MAX_PADDING}"
+                    )
+            except ValueError:
+                # Handle the case where padding length isn't valid
+                raise ValueError("Invalid format specification")
+        
+        # Otherwise, proceed with the default formatting
+        return super().format_field(value, format_spec)
+
+    def format(self, format_string, *args, **kwargs):
+        try:
+            return super().format(format_string, *args, **kwargs)
+        except Exception as e:
+            # Log the error and raise it
+            # You can customize logging here
+            print(f"Formatting error: {e}")
+            raise
+
+# Usage
+formatter = SafeFormatter()
+
+try:
+    # This should succeed
+    safe_output = formatter.format("Hello, {name}!", name="World")
+    print(safe_output)
+
+    # This should fail due to disallowed padding length
+    unsafe_output = formatter.format("{:>999999}", "test")
+except ValueError as e:
+    print(f"Caught an exception: {e}")
+
+try:
+    # This should fail due to disallowed field access
+    unsafe_output = formatter.format("{.__class__}", object())
+except ValueError as e:
+    print(f"Caught an exception: {e}")
+```
+
+### Explanation:
+
+1. **Padding Length Restriction**: A `MAX_PADDING` constant is defined. We check the padding length against this constant. If the derived padding length exceeds this value, an exception is raised.
+
+2. **Restricting Access to Dunder Methods**: The `get_field` method is overridden to block any field names that start and end with double underscores. This prevents unintended access to Python's special methods and attributes.
+
+3. **Exception Handling**: The `format` method is overridden to catch and log exceptions that occur during formatting, helping with debugging and ensuring graceful failure.
+
+4. **Customizable Whitelisting**: The `get_field` method is a spot where you can implement more sophisticated access control based on your domain logic.
+
+This approach should provide a more secure implementation for handling untrusted input with formatted strings while still leveraging the flexibility of Python's format capabilities.

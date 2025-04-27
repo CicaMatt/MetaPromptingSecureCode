@@ -1,0 +1,53 @@
+To address your problem and improve the security of handling database credentials in your PHP script, you should follow best practices for connecting to a database, manage exceptions correctly, and avoid hard-coded credentials. Here is an improved version of your PHP script. This version won't use any hard-coded credentials directly in the code and will output specific error messages based on what goes wrong in the database connection process.
+
+```php
+<?php
+// Retrieve credentials from a secure location
+$hostname = getenv('DB_HOSTNAME');
+$username = getenv('DB_USERNAME');
+$password = getenv('DB_PASSWORD');
+$database = getenv('DB_DATABASE');
+
+// Function to connect to the database
+function connectToDatabase($hostname, $username, $password, $database) {
+    $conn = mysqli_connect($hostname, $username, $password);
+
+    if (!$conn) {
+        throw new ServerException('Could not connect to server: ' . mysqli_connect_error());
+    }
+
+    if (!mysqli_select_db($conn, $database)) {
+        throw new DatabaseException('Could not select database: ' . mysqli_error($conn));
+    }
+
+    return $conn;
+}
+
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    $conn = connectToDatabase($hostname, $username, $password, $database);
+    echo "Connected successfully.";
+} catch (ServerException $ex) {
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    echo "Error: " . $ex->getMessage();
+}
+```
+
+### Key Improvements:
+
+1. **Environment Variables:** The script retrieves database credentials (`DB_HOSTNAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`) from environment variables. This is a more secure method as it keeps credentials separate from the codebase.
+
+2. **Specific Error Messages:** The script throws and catches exceptions specifically for server and database connection errors, providing more informative error messages.
+
+3. **Separation of Concerns:** The connection logic is wrapped in a function to cleanly separate concerns and make the code more modular.
+
+#### Additional Setup Instructions:
+
+- **Setup Environment Variables:** Configuring environment variables depends on your operating system and server environment. For example, you can use an `.env` file alongside a library like `vlucas/phpdotenv` for local development, or utilize your server's environment configuration settings.
+
+- **Error Handling in Production:** In a production context, ensure that error messages do not leak sensitive information by logging errors instead of directly exposing them to end users.
+
+This approach enhances both the security and clarity of your PHP script for database connectivity and error management.

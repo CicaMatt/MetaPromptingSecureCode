@@ -1,0 +1,55 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+Java

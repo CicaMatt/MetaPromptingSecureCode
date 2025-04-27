@@ -1,0 +1,65 @@
+The error you're encountering is due to the `restrict_xpaths` parameter in your `LinkExtractor` rules. Specifically, the `restrict_xpaths` parameter is expecting an XPath expression that selects elements, but you're providing an XPath expression that selects attributes (`@href`). This causes the `lxml` library to return a string instead of an element, leading to the `AttributeError`.
+
+To fix this, you need to modify the `restrict_xpaths` expressions to select the elements themselves, not their attributes. Here's the corrected version of your spider:
+
+```python
+import scrapy
+from tutorial.items import DmozItem
+from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors import LinkExtractor
+
+class TsrSpider(CrawlSpider):
+    name = 'tsr'
+    allowed_domains = ['thestudentroom.co.uk']
+    start_urls = ['http://www.thestudentroom.co.uk/forumdisplay.php?f=143']
+
+    download_delay = 4
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:35.0) Gecko/20100101 Firefox/35.0'
+
+    rules = (
+        Rule(
+            LinkExtractor(
+                allow=('forumdisplay\.php\?f=143\&page=\d',),
+                restrict_xpaths=("//li[@class='pager-page_numbers']/a",))),
+
+        Rule(
+            LinkExtractor(
+                allow=('showthread\.php\?t=\d+\&page=\d+',),
+                restrict_xpaths=("//li[@class='pager-page_numbers']/a",)), 
+            callback='parse_link'),
+
+        Rule(
+            LinkExtractor(
+                allow=('showthread\.php\?t=\d+',),
+                restrict_xpaths=("//tr[@class='thread  unread    ']",)),
+            callback='parse_link'),
+        )
+
+    def parse_link(self, response):
+        # Iterate over posts.     
+        for sel in response.xpath("//li[@class='post threadpost old   ']"):
+            rating = sel.xpath(
+                "div[@class='post-footer']//span[@class='score']/text()").extract()
+            if not rating:
+                rating = 0
+            else:
+                rating = rating[0]
+            item = DmozItem()
+            item['post'] = sel.xpath(
+                "div[@class='post-content']/blockquote[@class='postcontent restore']/text()").extract()
+            item['link'] = response.url
+            item['topic'] = response.xpath(
+                "//div[@class='forum-header section-header']/h1/span/text()").extract()
+            item['rating'] = rating
+            yield item
+```
+
+### Explanation:
+1. **Rule 1 and Rule 2**: The `restrict_xpaths` parameter is changed from `"//li[@class='pager-page_numbers']/a/@href"` to `"//li[@class='pager-page_numbers']/a"`. This ensures that the `LinkExtractor` selects the `<a>` elements, not their `href` attributes.
+2. **Rule 3**: The `restrict_xpaths` parameter remains unchanged as it already selects the correct elements.
+
+This change ensures that the `LinkExtractor` receives elements, not strings, and should resolve the `AttributeError` you're encountering.
+
+### Additional Notes:
+- **Error Handling**: While this fixes the immediate issue, consider adding error handling in your `parse_link` method to manage unexpected responses or missing elements gracefully.
+- **Documentation**: Ensure that your code is well-documented to make it easier for others (or yourself in the future) to understand the purpose and behavior of each rule and method.

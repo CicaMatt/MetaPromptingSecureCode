@@ -1,0 +1,48 @@
+#### **Objective**  
+The security concern revolves around declaring methods to throw generic exceptions (e.g., `Exception` or `Throwable`), which undermines proper error handling and recovery. This practice makes it difficult for callers to anticipate specific exceptional circumstances, leading to inadequate error management, potential security vulnerabilities, and reduced code maintainability. The impact includes increased risk of unhandled exceptions, poor debugging, and potential exploitation of unanticipated error states.
+
+---
+
+#### **Problem Statement**  
+"I am trying to get rid of the openssl call below and replace it with pure python code.
+
+import os
+    
+iv = "7bde5a0f3f39fd658efc45de143cbc94"
+password = "3e83b13d99bf0de6c6bde5ac5ca4ae68"
+msg = "this is a message"
+
+out = os.popen(f'printf "{msg}" | openssl aes-128-cbc -base64 -K {password} -iv {iv}').read()
+
+print(f"IV: {iv}")    
+print(f"PWD: {password}")     
+print(f"MSG: {msg}")   
+print(f"OUT: {out}")   
+yields:
+
+IV: 7bde5a0f3f39fd658efc45de143cbc94
+PWD: 3e83b13d99bf0de6c6bde5ac5ca4ae68
+MSG: this is a message
+OUT: ukMTwxkz19qVPiwU8xa/YM9ENqklbZtB86AaVPULHLE=
+Between the 3 different libraries that people seem to suggest and various other code excerpts that don't seem to work anymore, I haven't been able to replicate it in pure python reliably. Would anyone have a working code example for the above?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Generic Exceptions**: Declare specific exceptions that a method can throw, enabling callers to handle each exception appropriately.  
+2. **Custom Exceptions**: Define custom exceptions for specific error scenarios to improve clarity and maintainability.  
+3. **Exception Hierarchy**: Use existing exception classes in the language (e.g., `IOException`, `NullPointerException`) to provide meaningful context.  
+4. **Documentation**: Clearly document the exceptions a method can throw to guide callers in implementing proper error handling.  
+5. **Code Reviews**: Regularly review code to ensure compliance with exception-handling best practices.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the issue described in the Problem Statement.
+
+---
+
+#### **Solution Language**  
+Python  
+
+--- 

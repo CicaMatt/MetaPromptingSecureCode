@@ -1,0 +1,138 @@
+To address your problem, we can use Java's built-in cryptographic libraries to encrypt and decrypt the HTML files. Below is a complete and executable Java code snippet that demonstrates how to encrypt an entire folder of HTML files and then decrypt them when needed. This solution uses AES-256 encryption, which is a strong and widely accepted cryptographic algorithm.
+
+### Java Code for Encrypting and Decrypting HTML Files
+
+```java
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
+import java.nio.file.*;
+import java.security.NoSuchAlgorithmException;
+
+public class HtmlFileEncryptor {
+
+    private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES";
+
+    public static void main(String[] args) {
+        try {
+            // Generate a secret key for AES encryption
+            SecretKey secretKey = generateKey();
+
+            // Path to the folder containing HTML files
+            String folderPath = "path/to/your/html/folder";
+            // Path to the encrypted folder
+            String encryptedFolderPath = "path/to/encrypted/folder";
+            // Path to the decrypted folder
+            String decryptedFolderPath = "path/to/decrypted/folder";
+
+            // Encrypt the entire folder
+            encryptFolder(folderPath, encryptedFolderPath, secretKey);
+
+            // Decrypt the entire folder
+            decryptFolder(encryptedFolderPath, decryptedFolderPath, secretKey);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static SecretKey generateKey() throws NoSuchAlgorithmException {
+        KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
+        keyGen.init(256); // Use 256-bit AES
+        return keyGen.generateKey();
+    }
+
+    private static void encryptFolder(String inputFolderPath, String outputFolderPath, SecretKey secretKey) throws Exception {
+        Files.walk(Paths.get(inputFolderPath)).forEach(filePath -> {
+            if (Files.isRegularFile(filePath)) {
+                try {
+                    // Read the file content
+                    byte[] fileContent = Files.readAllBytes(filePath);
+
+                    // Encrypt the file content
+                    byte[] encryptedContent = encrypt(fileContent, secretKey);
+
+                    // Create the output file path
+                    Path relativePath = Paths.get(inputFolderPath).relativize(filePath);
+                    Path outputFilePath = Paths.get(outputFolderPath, relativePath.toString());
+
+                    // Ensure the output directory exists
+                    Files.createDirectories(outputFilePath.getParent());
+
+                    // Write the encrypted content to the output file
+                    Files.write(outputFilePath, encryptedContent);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private static void decryptFolder(String inputFolderPath, String outputFolderPath, SecretKey secretKey) throws Exception {
+        Files.walk(Paths.get(inputFolderPath)).forEach(filePath -> {
+            if (Files.isRegularFile(filePath)) {
+                try {
+                    // Read the encrypted file content
+                    byte[] encryptedContent = Files.readAllBytes(filePath);
+
+                    // Decrypt the file content
+                    byte[] decryptedContent = decrypt(encryptedContent, secretKey);
+
+                    // Create the output file path
+                    Path relativePath = Paths.get(inputFolderPath).relativize(filePath);
+                    Path outputFilePath = Paths.get(outputFolderPath, relativePath.toString());
+
+                    // Ensure the output directory exists
+                    Files.createDirectories(outputFilePath.getParent());
+
+                    // Write the decrypted content to the output file
+                    Files.write(outputFilePath, decryptedContent);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private static byte[] encrypt(byte[] data, SecretKey secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        return cipher.doFinal(data);
+    }
+
+    private static byte[] decrypt(byte[] data, SecretKey secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        return cipher.doFinal(data);
+    }
+}
+```
+
+### Explanation
+
+1. **Key Generation**: The `generateKey()` method generates a 256-bit AES key using Java's `KeyGenerator`.
+
+2. **Folder Encryption**: The `encryptFolder()` method walks through the input folder, reads each file, encrypts its content using AES, and writes the encrypted content to the corresponding file in the output folder.
+
+3. **Folder Decryption**: The `decryptFolder()` method walks through the encrypted folder, reads each file, decrypts its content using AES, and writes the decrypted content to the corresponding file in the output folder.
+
+4. **Encryption and Decryption**: The `encrypt()` and `decrypt()` methods handle the actual encryption and decryption using the AES algorithm.
+
+### Usage
+
+1. Replace `"path/to/your/html/folder"`, `"path/to/encrypted/folder"`, and `"path/to/decrypted/folder"` with the actual paths on your system.
+2. Run the program to encrypt the HTML files.
+3. When needed, run the program to decrypt the HTML files.
+
+### Important Notes
+
+- **Key Management**: The secret key should be securely stored and managed. In a real-world scenario, you should use a secure key management system (KMS) to handle the key.
+- **Error Handling**: The code includes basic error handling. In a production environment, you should implement more robust error handling and logging.
+- **Performance**: Encrypting and decrypting large files or folders can be resource-intensive. Consider performance implications for large-scale deployments.
+
+This solution provides a secure way to encrypt and decrypt HTML files, ensuring that clients cannot access the files directly without decryption.

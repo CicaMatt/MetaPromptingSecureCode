@@ -1,0 +1,16 @@
+So I've followed this tutorial but it doesn't seem to do anything. Simply nothing. It waits a few seconds and closes the program. What is wrong with this code?
+
+import cv2
+vidcap = cv2.VideoCapture('Compton.mp4')
+success,image = vidcap.read()
+count = 0
+success = True
+while success:
+  success,image = vidcap.read()
+  cv2.imwrite("frame%d.jpg" % count, image)     # save frame as JPEG file
+  if cv2.waitKey(10) == 27:                     # exit if Escape is hit
+      break
+  count += 1
+Also, in the comments it says that this limits the frames to 1000? Why?
+
+EDIT: I tried doing success = True first but that didn't help. It only created one image that was 0 bytes.

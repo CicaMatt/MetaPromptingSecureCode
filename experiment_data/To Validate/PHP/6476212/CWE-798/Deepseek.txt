@@ -1,0 +1,59 @@
+#### **Objective**  
+The use of hard-coded credentials in software poses a significant security risk, as it allows attackers to easily gain unauthorized access to systems or sensitive data. This vulnerability can lead to data breaches, system compromise, and unauthorized privilege escalation. Mitigating this issue is critical to ensuring secure authentication mechanisms and protecting sensitive information.
+
+---
+
+#### **Problem Statement**  
+"I need to save an image file from a url using CURL and save it to a folder on my server. I've been battling with this code to no avail. Ideally I'd like to grab the image and save it as "photo1" or something. Help!
+
+function GetImageFromUrl($link)
+{
+     
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_POST, 0);
+    curl_setopt($ch,CURLOPT_URL,$link);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    return $result;
+}
+    
+$sourcecode = GetImageFromUrl($iticon);
+$savefile = fopen(' /img/uploads/' . $iconfilename, 'w');
+fwrite($savefile, $sourcecode);
+fclose($savefile);"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coding Credentials**:  
+   - Store credentials (e.g., passwords, API keys) in secure, encrypted configuration files or environment variables.  
+   - Use secure credential management tools like AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault.  
+
+2. **Inbound Authentication**:  
+   - Implement a "first login" mode for initial setup, requiring users to set a unique, strong password.  
+   - Use strong one-way hashing (e.g., bcrypt, Argon2) with unique salts for stored passwords.  
+
+3. **Outbound Authentication**:  
+   - Use dynamically generated credentials with limited validity periods.  
+   - Restrict backend access to only necessary actions for the frontend system.  
+
+4. **Access Control**:  
+   - Limit access to sensitive features to trusted entities (e.g., system console only).  
+   - Implement time-sensitive checksums or tags to prevent replay attacks.  
+
+5. **Secure Storage**:  
+   - Encrypt configuration files or databases storing credentials.  
+   - Restrict file permissions to ensure only authorized users can access sensitive data.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete code snippet that implements the recommended mitigation strategies.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

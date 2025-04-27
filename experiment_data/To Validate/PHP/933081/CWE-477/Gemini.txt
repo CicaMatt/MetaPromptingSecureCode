@@ -1,0 +1,26 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I understand what try-catch statements do, but from reading the documentation on php.net, I would not be able to implement one into my own code. I need a real example to help me understand.
+
+How can I turn this example into a try-catch statement, if the upload was not successful?
+
+$move = move_uploaded_file($_FILES['file']['tmp_name'], $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$_FILES['file']['name']);
+
+if (!$move) {
+    die ('File didn\'t upload');
+} else {            
+    //opens the uploaded file for extraction
+    echo 'Upload Complete!';
+}
+This may not be a good example to work with, but any help would be appreciated."
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  PHP

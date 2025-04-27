@@ -1,0 +1,86 @@
+```java
+import javax.net.ssl.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.*;
+import java.security.cert.CertificateException;
+
+public class SecureHttpsClient {
+
+    private static final String KEYSTORE_TYPE = "JKS"; // Or "PKCS12"
+    private static final String KEYSTORE_PASSWORD = System.getenv("KEYSTORE_PASSWORD"); // Fetch from environment variable
+    private static final String KEY_PASSWORD = System.getenv("KEY_PASSWORD"); // Fetch from environment variable
+    private static final String TRUSTSTORE_PASSWORD = System.getenv("TRUSTSTORE_PASSWORD"); // Fetch from environment variable
+
+    private static final String KEYSTORE_PATH = "path/to/client.jks"; // Path to client keystore
+    private static final String TRUSTSTORE_PATH = "path/to/truststore.jks"; // Path to truststore
+
+
+    public static void main(String[] args) throws Exception {
+
+        // Load Keystore and Truststore from files
+        KeyStore keyStore = loadKeyStore(KEYSTORE_PATH, KEYSTORE_PASSWORD);
+        KeyStore trustStore = loadKeyStore(TRUSTSTORE_PATH, TRUSTSTORE_PASSWORD);
+
+
+        // Create Key Manager and Trust Manager
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, KEY_PASSWORD.toCharArray());
+        KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(trustStore);
+        TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+        // Create SSL Context
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(keyManagers, trustManagers, new SecureRandom());
+
+        // Create SSL Socket Factory
+        SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+        // Use HttpsURLConnection
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setSSLSocketFactory(sslSocketFactory);
+
+
+        InputStream inputStream = conn.getInputStream();
+
+        // Process the input stream
+        // ...
+    }
+
+
+
+    private static KeyStore loadKeyStore(String path, String password) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+        KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
+        try (FileInputStream fis = new FileInputStream(path)) {
+            keyStore.load(fis, password.toCharArray());
+        }
+        return keyStore;
+    }
+}
+
+```
+
+
+**Explanation of Changes and Security Improvements:**
+
+1. **Removed Hardcoded Credentials:** Passwords for the keystore and key are now retrieved from environment variables. This is a standard and recommended practice for storing sensitive information outside the codebase.
+2. **Separate Keystore and Truststore:** The code now utilizes separate keystores for client certificates (KEYSTORE_PATH) and trusted server certificates (TRUSTSTORE_PATH).  This is crucial for security and organization. Do not mix client certificates and CA certificates in the same keystore file.
+3. **Explicit Keystore Loading:** The code explicitly loads the keystore using a file path instead of relying on the default `cacerts` keystore, providing more control over the certificates used.
+4. **Key Manager and Trust Manager:** Correctly initializes `KeyManagerFactory` and `TrustManagerFactory`  to handle client certificate authentication and server certificate validation, respectively.
+5. **Custom SSLSocketFactory:** Creates a custom `SSLSocketFactory` from the `SSLContext`, ensuring the correct keystore and truststore are used for the connection.
+
+**Deployment Steps:**
+
+1. **Create Keystore and Truststore:**  Generate your client keystore and import the necessary certificates, and create a truststore containing the server's root certificate.
+2. **Set Environment Variables:** Set the `KEYSTORE_PASSWORD`, `KEY_PASSWORD`, and `TRUSTSTORE_PASSWORD` environment variables to the respective passwords.
+3. **Update Paths:**  Update `KEYSTORE_PATH` and `TRUSTSTORE_PATH`  to the correct locations of your keystore and truststore files.
+4. **Compile and Run:** Compile and run the modified Java code.
+
+
+This improved code enhances security by removing hardcoded credentials, using separate keystores, and correctly configuring the SSL connection. Remember to protect your keystore and truststore files with appropriate permissions and access controls. Using environment variables is generally better than configuration files for passwords because it reduces the risk of accidentally checking passwords into version control systems.  For even more robust security consider dedicated secrets management tools like HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault.

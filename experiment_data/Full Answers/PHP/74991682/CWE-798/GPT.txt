@@ -1,0 +1,68 @@
+To address the issue of deprecated dynamic properties in PHP 8.2 and onwards, we need to refactor our code to remove the reliance on dynamic properties while still achieving the functional goals. Here's how you can adjust your PHP code to comply with the new requirements:
+
+### Mitigation Strategies for Dynamic Properties
+
+1. **Use Magic Methods:**
+   - Implement the `__get`, `__set`, and `__isset` magic methods to handle dynamically setting and getting properties safely.
+
+2. **Use a Private or Protected Associative Array:**
+   - Store dynamic properties in a private or protected associative array within the class. This will maintain encapsulation and prevent unexpected behavior.
+
+3. **Strictly Define Properties:**
+   - Always define class properties in advance if known or use an array to store dynamic data.
+
+Here's a code snippet to illustrate these strategies, using magic methods and an internal associative array to manage dynamic properties:
+
+```php
+<?php
+class SecureClass {
+    // Associative array to hold dynamic properties
+    private $data = [];
+
+    // Magic method to get an undefined property
+    public function __get($name) {
+        if (array_key_exists($name, $this->data)) {
+            return $this->data[$name];
+        }
+        throw new Exception("Undefined property: $name");
+    }
+
+    // Magic method to set a dynamic property
+    public function __set($name, $value) {
+        // You can implement restrictions on what properties can be set
+        $this->data[$name] = $value;
+    }
+
+    // Magic method to check if a dynamic property is set
+    public function __isset($name) {
+        return isset($this->data[$name]);
+    }
+
+    // Optionally a method to unset a property
+    public function __unset($name) {
+        if (isset($this->data[$name])) {
+            unset($this->data[$name]);
+        }
+    }
+}
+
+// Usage
+$instance = new SecureClass();
+$instance->username = 'JohnDoe'; // Dynamically sets the 'username' property
+echo $instance->username;        // Outputs: JohnDoe
+
+// Check if a property is set
+if (isset($instance->username)) {
+    echo "Username is set.";
+}
+
+// Uncommenting the line below will throw an exception
+// echo $instance->password; // Throws Exception: Undefined property: password
+```
+
+### Security Recommendations:
+
+- **Configuration Files & Environment Variables:** Use configuration files or environment variables for sensitive information like API keys or authentication credentials, loading them securely at runtime.
+- **Encryption & Hashing:** Always encrypt sensitive data and store only hashes of passwords using established hashing algorithms like bcrypt.
+
+By following these code practices, you can effectively manage dynamic properties in PHP and ensure your code is compatible with PHP 8.2 and future versions while maintaining security and system integrity.

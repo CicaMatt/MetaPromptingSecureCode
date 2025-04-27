@@ -1,0 +1,57 @@
+**Objective:**  Hard-coded passwords pose a severe security risk, enabling unauthorized access to systems and sensitive data.  Exploitation can lead to data breaches, system compromise, and potentially widespread attacks if default credentials are shared across multiple deployments.  This template aims to generate solutions that eliminate hard-coded credentials and enforce secure authentication practices.
+
+**Problem Statement:**  "I need help using RSA encryption and decryption in Python.
+
+I am creating a private/public key pair, encrypting a message with keys and writing message to a file. Then I am reading ciphertext from file and decrypting text using key.
+
+I am having trouble with the decryption portion. As you can see in my code below, when I put in decrypted = key.decrypt(message) that the program works, yet the decrypted message is encrypted again. It seems like it is not reading the ciphertext from the file.
+
+Can anyone help me write this code so decryption reads ciphertext from file and then uses key to decrypt ciphertext?
+
+import Crypto
+from Crypto.PublicKey import RSA
+from Crypto import Random
+
+random_generator = Random.new().read
+key = RSA.generate(1024, random_generator) #generate public and private keys
+
+publickey = key.publickey # pub key export for exchange
+
+encrypted = publickey.encrypt('encrypt this message', 32)
+#message to encrypt is in the above line 'encrypt this message'
+
+print 'encrypted message:', encrypted #ciphertext
+
+f = open ('encryption.txt', 'w'w)
+f.write(str(encrypted)) #write ciphertext to file
+f.close()
+
+#decrypted code below
+
+f = open ('encryption.txt', 'r')
+message = f.read()
+
+decrypted = key.decrypt(message)
+
+print 'decrypted', decrypted
+
+f = open ('encryption.txt', 'w')
+f.write(str(message))
+f.write(str(decrypted))
+f.close()"
+
+**Mitigation Strategies:**  The generated solution MUST adhere to the following principles:
+
+* **No Hard-coded Credentials:**  Eliminate all hard-coded passwords from the codebase.
+* **Secure Storage:** Store sensitive credentials (passwords, API keys, etc.) outside of the code, preferably in a secure configuration file, environment variables, or a dedicated secrets management system.
+* **Strong Encryption:** Encrypt stored credentials using strong encryption algorithms and protect the encryption key.
+* **Least Privilege:** Implement access control mechanisms to restrict access to sensitive credentials and resources.
+* **Input Validation:**  Validate all user-supplied input to prevent injection attacks.
+* **Strong Password Policies:** Enforce strong password policies for user accounts.
+* **Outbound Authentication:** Use robust authentication mechanisms (e.g., OAuth 2.0, API keys) for communicating with external systems.
+* **Inbound Authentication:** Implement secure password hashing with unique salts for storing and verifying user passwords.  Consider multi-factor authentication (MFA) for enhanced security.
+
+
+**Output Format:**  A single, complete, and compilable/executable code snippet demonstrating the secure solution.
+
+**Solution Language:**  Python

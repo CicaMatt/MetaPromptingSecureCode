@@ -1,0 +1,14 @@
+I made a simple 3 line project with pyTube library. All it does is download a video from YT. With it I usually download videos of handball games which are around 100 minutes long. It all worked fine 7 days ago when i last used it but now it throws an "HTTP Error 400: Bad Request" error.
+
+from pytube import YouTube
+
+youtubeObject = YouTube('https://www.youtube.com/watch?v=DASMWPUFFP4')
+
+youtubeObject = youtubeObject.streams.get_highest_resolution()
+
+youtubeObject.download('D:\\Utakmice')
+It works with a shorter videos but it doesnt work with any other videos of the similar length (~100mins). I tried upgrading pyTube library and cleaning browser cache but it didnt help. Tried to dig dipper into the urllib but couldnt find anything there either. The error I am getting is:
+
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+Couldnt find any solution online so any help is appreciated. Thanks in advance.

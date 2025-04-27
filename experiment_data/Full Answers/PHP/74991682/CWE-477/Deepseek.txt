@@ -1,0 +1,46 @@
+To address the deprecation of dynamic properties in PHP 8.2 and ensure compatibility with future versions (e.g., PHP 9), we need to refactor the code to avoid using dynamic properties. Instead, we can use explicit class properties or implement the `__get` and `__set` magic methods to handle dynamic property access in a controlled manner.
+
+Below is a **complete, executable PHP code snippet** that demonstrates how to refactor a class that previously used dynamic properties to be compatible with PHP 8.2 and beyond:
+
+### Refactored Code (Compatible with PHP 8.2+)
+```php
+<?php
+class User {
+    private array $data = []; // Store dynamic properties in an array
+
+    public function __construct($name) {
+        $this->data['name'] = $name; // Store the property in the array
+    }
+
+    // Magic method to handle dynamic property access
+    public function __get($name) {
+        if (array_key_exists($name, $this->data)) {
+            return $this->data[$name];
+        }
+        trigger_error("Undefined property: $name", E_USER_NOTICE);
+        return null;
+    }
+
+    // Magic method to handle dynamic property assignment
+    public function __set($name, $value) {
+        $this->data[$name] = $value;
+    }
+}
+
+$user = new User("John Doe");
+echo $user->name; // Outputs: John Doe
+```
+
+### Explanation:
+1. **Dynamic Property Storage**: Instead of directly creating dynamic properties, we store them in a private array (`$data`).
+2. **Magic Methods**:
+   - `__get($name)`: Handles reading dynamic properties. If the property exists in the `$data` array, it returns the value; otherwise, it triggers a notice.
+   - `__set($name, $value)`: Handles writing dynamic properties by storing them in the `$data` array.
+3. **Backward Compatibility**: The refactored code maintains the same functionality as the original code but avoids the deprecated dynamic property creation.
+
+### Benefits:
+- **Compatibility**: The code is compatible with PHP 8.2 and future versions.
+- **Controlled Access**: Dynamic properties are managed explicitly, reducing the risk of unintended behavior.
+- **Maintainability**: The code is easier to maintain and debug, as all dynamic properties are centralized in the `$data` array.
+
+This solution ensures that your codebase remains secure, maintainable, and compliant with modern PHP standards.

@@ -1,0 +1,60 @@
+```java
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Enumeration;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TrustedRootCertificates {
+
+    public static List<X509Certificate> getTrustedRootCertificates() throws KeyStoreException, NoSuchAlgorithmException {
+        List<X509Certificate> trustedRoots = new ArrayList<>();
+
+        // Use the default KeyStore (cacerts) which contains the JRE's trusted roots
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+
+        // No password needed for the default KeyStore
+        keyStore.load(null, null); 
+
+        Enumeration<String> aliases = keyStore.aliases();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            Certificate cert = keyStore.getCertificate(alias);
+            if (cert instanceof X509Certificate) {
+                trustedRoots.add((X509Certificate) cert);
+            }
+        }
+
+        return trustedRoots;
+    }
+
+    public static void main(String[] args) {
+        try {
+            List<X509Certificate> rootCerts = getTrustedRootCertificates();
+            for (X509Certificate cert : rootCerts) {
+                System.out.println("Certificate: " + cert.getSubjectX500Principal());
+                // Perform further processing or validation as needed, e.g., checking validity, etc.
+            }
+        } catch (KeyStoreException e) {
+            System.err.println("Error accessing keystore: " + e.getMessage()); // Specific exception handling
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("Error with algorithm: " + e.getMessage()); // Specific exception handling
+        }
+    }
+}
+
+```
+
+**Explanation and CWE Mitigation:**
+
+* **CWE-259 & CWE-798 (Hard-coded Credentials):** Addressed by using the default `cacerts` keystore which requires no password.  If a different keystore with a password were used, the password should *not* be hardcoded but retrieved securely (e.g., from environment variables or a secure configuration service).
+* **CWE-295 (Improper Certificate Validation):** This code snippet retrieves the trusted root certificates.  It's crucial to understand that this does *not* perform certificate validation itself.  Further validation of certificates against these trusted roots is necessary when establishing secure connections.  This validation should include checking certificate validity, revocation status (CRL or OCSP), and the certificate chain.
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):** This code utilizes the standard Java `KeyStore` and `X509Certificate` classes, which rely on established and vetted cryptographic algorithms within the JRE.  It is important to keep the JRE up-to-date to benefit from security updates and patches related to cryptographic algorithms.
+* **CWE-397 (Declaration of Throws for Generic Exception):** Specific `KeyStoreException` and `NoSuchAlgorithmException` are caught and handled, providing more informative error messages and avoiding generic exception handling.
+* **CWE-477 (Use of Obsolete Function):** The code uses current best practices and avoids any obsolete Java APIs.  It relies on standard and up-to-date methods for keystore access and certificate retrieval.
+
+
+This revised code snippet provides a more secure and robust solution by addressing the identified CWE vulnerabilities and incorporating relevant mitigation strategies.  Remember to perform thorough certificate validation when using these trusted root certificates to establish secure connections.  Also, if needing a keystore beyond the default, manage credentials securely.

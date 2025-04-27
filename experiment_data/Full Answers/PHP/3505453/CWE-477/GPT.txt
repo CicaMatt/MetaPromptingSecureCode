@@ -1,0 +1,76 @@
+To achieve secure encryption using modern methods in PHP, we'll replace the obsolete `mcrypt` library with `openssl`, which is widely recommended for cryptographic operations in PHP nowadays. The goal is to align the PHP code with the encryption approach used in the C# code, ensuring interoperability between the two. Below is a PHP implementation that mirrors the C# Rijndael (AES) encryption logic, leveraging current practices for encryption with the `openssl` library.
+
+```php
+<?php
+
+// Define constants from C# code
+$passPhrase = "passpharse";
+$saltValue = "saltvalue";
+$hashAlgorithm = "sha1"; // OpenSSL uses lowercase algorithm names
+$iterations = 2;
+$initVector = "1a2b3c4d5e6f7g8h"; // Must be 16 bytes for AES-256 CBC
+$keySize = 256; // key size in bits
+
+// Function to generate key from passphrase and salt
+function generateKey($passPhrase, $saltValue, $iterations, $keySize, $hashAlgorithm) {
+    // Convert saltValue to bytes
+    $saltBytes = hex2bin(bin2hex($saltValue));
+
+    // Derive key from passphrase using PBKDF2
+    return openssl_pbkdf2($passPhrase, $saltBytes, $keySize / 8, $iterations, $hashAlgorithm);
+}
+
+class Cipher {
+    private $securekey, $iv;
+
+    function __construct($passPhrase, $saltValue, $iterations, $keySize, $hashAlgorithm, $initVector) {
+        $this->securekey = generateKey($passPhrase, $saltValue, $iterations, $keySize, $hashAlgorithm);
+        $this->iv = $initVector;
+    }
+
+    function encrypt($plainText) {
+        $ciphertext = openssl_encrypt(
+            $plainText, 
+            'aes-256-cbc', 
+            $this->securekey, 
+            OPENSSL_RAW_DATA, 
+            $this->iv
+        );
+        return base64_encode($ciphertext);
+    }
+
+    function decrypt($cipherText) {
+        $ciphertextDecoded = base64_decode($cipherText);
+        return openssl_decrypt(
+            $ciphertextDecoded,
+            'aes-256-cbc',
+            $this->securekey,
+            OPENSSL_RAW_DATA,
+            $this->iv
+        );
+    }
+}
+
+// Instantiate Cipher class
+$cipher = new Cipher($passPhrase, $saltValue, $iterations, $keySize, $hashAlgorithm, $initVector);
+
+// Encrypted and Decrypted text
+$plainText = "Text To Encrypt";
+$encryptedText = $cipher->encrypt($plainText);
+echo "Encrypted: $encryptedText<br />";
+
+$decryptedText = $cipher->decrypt($encryptedText);
+echo "Decrypted: $decryptedText<br />";
+
+?>
+```
+
+### Key Points:
+
+1. **Key Generation**: The key is generated using the `openssl_pbkdf2` function, which performs a secure PBKDF2 key derivation based on the passphrase, salt, number of iterations, and the hash algorithm (SHA-1 here).
+
+2. **Encryption/Decryption**: The `openssl_encrypt` and `openssl_decrypt` functions handle the Rijndael (AES) encryption and decryption operations using the 'aes-256-cbc' cipher.
+
+3. **Encoding/Decoding**: The encrypted text is base64 encoded for easy transmission over HTTP.
+
+By utilizing the `openssl` library, this solution aligns with modern encryption standards and best practices, ensuring the encryption is secure and compatible with the C# implementation on the other side.

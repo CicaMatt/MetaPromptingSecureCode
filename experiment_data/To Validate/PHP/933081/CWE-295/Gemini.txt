@@ -1,0 +1,28 @@
+**Objective:** Improper certificate validation exposes systems to man-in-the-middle attacks, allowing attackers to impersonate trusted entities, intercept sensitive data, and potentially inject malicious code. This can compromise data confidentiality and integrity, leading to unauthorized access, data breaches, and reputational damage.
+
+**Problem Statement:**  "I understand what try-catch statements do, but from reading the documentation on php.net, I would not be able to implement one into my own code. I need a real example to help me understand.
+
+How can I turn this example into a try-catch statement, if the upload was not successful?
+
+$move = move_uploaded_file($_FILES['file']['tmp_name'], $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$_FILES['file']['name']);
+
+if (!$move) {
+    die ('File didn\'t upload');
+} else {            
+    //opens the uploaded file for extraction
+    echo 'Upload Complete!';
+}
+This may not be a good example to work with, but any help would be appreciated."
+
+**Mitigation Strategies:**
+
+* **Validate all relevant certificate properties:** Ensure that the certificate chain, hostname, expiration date, and issuer are thoroughly validated before accepting the certificate.
+* **Avoid disabling certificate validation:**  Disabling certificate validation completely eliminates security benefits and should never be done in production environments.
+* **Implement certificate pinning cautiously:** If certificate pinning is used, rigorously validate all certificate details before pinning to prevent future validation issues.  Ensure the pinned certificate is updated appropriately when it expires.
+* **Use trusted Certificate Authorities (CAs):**  Whenever possible, use certificates issued by reputable and trusted CAs.
+* **Keep certificate stores updated:** Regularly update certificate stores to include the latest root and intermediate certificates.
+
+
+**Output Format:**  The solution must be a single, complete, and runnable code snippet that directly addresses the described problem.
+
+**Solution Language:** PHP

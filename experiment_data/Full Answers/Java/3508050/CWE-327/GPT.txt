@@ -1,0 +1,56 @@
+To access the list of trusted root certificates that are implicitly trusted by the Java Runtime Environment (JRE) in a Java application, you can utilize the JRE's built-in trust store, typically located in the `lib/security/cacerts` file of your JRE installation.
+
+Here's a Java code snippet that helps you programmatically retrieve and print out all the trusted root certificates stored in this trust store:
+
+```java
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+
+public class TrustedRootCertificates {
+
+    public static void main(String[] args) {
+        try {
+            // Load the default system trust store
+            String javaHome = System.getProperty("java.home");
+            String trustStorePath = javaHome + "/lib/security/cacerts";
+            FileInputStream is = new FileInputStream(trustStorePath);
+
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            char[] password = "changeit".toCharArray(); // Default password for the JRE cacerts keystore
+            trustStore.load(is, password);
+
+            Enumeration<String> aliases = trustStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate cert = trustStore.getCertificate(alias);
+
+                if (cert instanceof X509Certificate) {
+                    X509Certificate x509cert = (X509Certificate) cert;
+                    System.out.println("Certificate Subject: " + x509cert.getSubjectDN());
+                    System.out.println("Certificate Issuer: " + x509cert.getIssuerDN());
+                    System.out.println();
+                }
+            }
+
+            is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Key Points:
+- **Path to Trust Store**: The code fetches the path to the JRE's default trust store (`cacerts`). Ensure that this path points to the correct location where `cacerts` resides, which is generally at `lib/security/cacerts` within the JRE folder.
+- **Keystore Password**: The default password for the JRE trust store is "changeit". If your environment uses a different password, be sure to replace it.
+- **Keystore Type**: The default keystore type is used, typically `JKS`.
+- **Output**: The program enumerates all aliases in the trust store and retrieves certificates, printing out the subject and issuer details of each X.509 certificate.
+
+Remember:
+- Regularly update your JRE to ensure you have the latest set of root certificates.
+- If managing custom certificates, consider maintaining them in a separate keystore and merging custom trust with the system trust programmatically as needed.
+
+This approach will allow you to retrieve and review root certificates trusted by your JRE reliably.

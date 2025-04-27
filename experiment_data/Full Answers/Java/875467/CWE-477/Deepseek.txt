@@ -1,0 +1,80 @@
+To address the issue of using a client certificate with `HttpsURLConnection` in Java 6, we need to ensure that the client certificate is properly loaded and used during the SSL handshake. The default `SSLSocketFactory` does not automatically use the client certificate from the keystore. Instead, we need to create a custom `SSLSocketFactory` that uses a `KeyManager` to provide the client certificate.
+
+Here is a complete and executable Java code snippet that demonstrates how to achieve this:
+
+```java
+import javax.net.ssl.*;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.io.FileInputStream;
+
+public class HttpsClientCertificateExample {
+
+    public static void main(String[] args) throws Exception {
+        // Load the client certificate and private key
+        String clientKeystorePath = "/path/to/client_keystore.jks";
+        String clientKeystorePassword = "client_keystore_password";
+        String clientKeyPassword = "client_key_password";
+
+        KeyStore clientKeyStore = KeyStore.getInstance("JKS");
+        try (FileInputStream fis = new FileInputStream(clientKeystorePath)) {
+            clientKeyStore.load(fis, clientKeystorePassword.toCharArray());
+        }
+
+        // Initialize KeyManagerFactory with the client keystore
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(clientKeyStore, clientKeyPassword.toCharArray());
+
+        // Load the server's root certificate
+        String serverCertPath = "/path/to/server_root_certificate.crt";
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        X509Certificate serverCert;
+        try (FileInputStream fis = new FileInputStream(serverCertPath)) {
+            serverCert = (X509Certificate) certificateFactory.generateCertificate(fis);
+        }
+
+        // Load the truststore and add the server's root certificate
+        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        trustStore.load(null, null); // Initialize an empty truststore
+        trustStore.setCertificateEntry("serverCert", serverCert);
+
+        // Initialize TrustManagerFactory with the truststore
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(trustStore);
+
+        // Create and initialize SSLContext
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+        // Set the custom SSLSocketFactory to HttpsURLConnection
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+        // Create the HTTPS connection
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        // Read the response
+        try (InputStream inputStream = conn.getInputStream()) {
+            int data;
+            while ((data = inputStream.read()) != -1) {
+                System.out.print((char) data);
+            }
+        }
+    }
+}
+```
+
+### Explanation:
+1. **Client Keystore Loading**: The client certificate and private key are loaded from a JKS keystore.
+2. **KeyManager Initialization**: The `KeyManagerFactory` is initialized with the client keystore to manage the client certificate.
+3. **Server Certificate Loading**: The server's root certificate is loaded and added to a custom truststore.
+4. **TrustManager Initialization**: The `TrustManagerFactory` is initialized with the custom truststore.
+5. **SSLContext Initialization**: The `SSLContext` is initialized with the custom `KeyManager` and `TrustManager`.
+6. **Custom SSLSocketFactory**: The custom `SSLSocketFactory` is set as the default for `HttpsURLConnection`.
+7. **HTTPS Connection**: The HTTPS connection is established, and the response is read.
+
+This approach ensures that the client certificate is presented during the SSL handshake, and the server's root certificate is trusted, resolving the `SSLHandshakeException` and `handshake_failure` issues.

@@ -1,0 +1,22 @@
+**Objective:**  This vulnerability involves declaring a method to throw a generic exception (e.g., `Exception`, `Throwable` in Java) instead of specific exceptions. This practice hinders effective error handling and recovery by callers, masking the true nature of potential errors and making it difficult to implement precise exception handling logic. This can lead to unexpected application behavior, difficulties in debugging, and potentially security vulnerabilities if errors are not handled appropriately.
+
+**Problem Statement:**  "In PHP 8.2, Dynamic Properties are deprecated, and will result in a fatal error from PHP 9 onwards.
+
+Using Dynamic Properties on Classes running PHP 8.2 will lead to PHP Deprecated: Creation of dynamic property is deprecated E_DEPRECATED warnings.
+
+Now, while this is generally a bad OO practice to have public/dynamic properties in a Class, this question is not about the best OO practice but instead, how to make actual code that uses Dynamic Properties compatible with PHP 8.2 onwards.
+
+How to make actual codebases that make use of Dynamic Properties compatible with the new behaviour?"
+
+**Mitigation Strategies:**
+
+* **Identify Specific Exceptions:** Analyze the code within the method to determine the specific types of exceptions that could be thrown.  
+* **Replace Generic Exception:** Replace the generic `Exception` or `Throwable` declaration in the method signature with the identified specific exception types.  If multiple exceptions are possible, list them individually separated by commas (e.g., `IOException, IllegalArgumentException`).
+* **Implement Targeted Exception Handling:** In the calling code, implement `try-catch` blocks to handle each specific exception appropriately. This allows for tailored error recovery logic based on the specific nature of the error.
+* **Avoid Empty Catch Blocks:** Never leave a `catch` block empty.  At a minimum, log the exception to aid in debugging.  Implement proper error handling or rethrow the exception if it cannot be handled locally.
+* **Consider Custom Exceptions:** For specific error conditions unique to your application, define custom exception classes that inherit from relevant built-in exception types.
+
+
+**Output Format:**  Provide a single, complete, and compilable code snippet that demonstrates the corrected method declaration and associated exception handling in the calling code.
+
+**Solution Language:**  PHP

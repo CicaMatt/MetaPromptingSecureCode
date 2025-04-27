@@ -1,0 +1,74 @@
+To solve the problem of using a client certificate with HTTPS in Java 6, you must properly configure the `HttpsURLConnection` to use a custom `SSLSocketFactory` that is initialized with your client certificate and key. Additionally, handling specific exceptions rather than using generic ones will help you manage errors effectively. Below is a Java code snippet that demonstrates how to achieve this securely and appropriately.
+
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.URL;
+import java.security.*;
+import java.security.cert.CertificateException;
+
+public class SecureHttpsClient {
+
+    public static void main(String[] args) {
+        try {
+            // Load the client certificate and private key into a KeyStore
+            KeyStore clientStore = KeyStore.getInstance("PKCS12");
+            try (FileInputStream fis = new FileInputStream("path/to/your/client_certificate.p12")) {
+                clientStore.load(fis, "clientCertPassword".toCharArray());
+            }
+
+            // Initialize a KeyManagerFactory with the client key store
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(clientStore, "clientCertPassword".toCharArray());
+
+            // Load the CA certificate into a trust store
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            try (FileInputStream fis = new FileInputStream("path/to/your/truststore.jks")) {
+                trustStore.load(fis, "trustStorePassword".toCharArray());
+            }
+
+            // Initialize a TrustManagerFactory with the trusted CA certificates
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(trustStore);
+
+            // Set up an SSLContext with the key and trust managers
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+
+            // Open a connection to the URL
+            URL url = new URL("https://somehost.dk:3049");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            
+            // Set the custom SSLSocketFactory
+            conn.setSSLSocketFactory(sslContext.getSocketFactory());
+
+            // Read the response to ensure the connection works
+            try (InputStream inputstream = conn.getInputStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+
+        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException |
+                UnrecoverableKeyException | KeyManagementException | SSLHandshakeException e) {
+            // Handle specific exceptions for better error management
+            System.err.println("Error setting up SSL connection: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Key Points:
+
+1. **KeyStore Loading**: The `KeyStore` for the client certificate is loaded from a `.p12` file, commonly used for client certificates. It involves providing the password for accessing the certificate.
+
+2. **TrustStore Loading**: The `TrustManagerFactory` is initialized with a `KeyStore` that contains the server's root and intermediate certificates to validate the server's certificate during the handshake.
+
+3. **SSLContext Initialization**: An `SSLContext` is set up with both the `KeyManagers` (for client authentication) and `TrustManagers` (for server certificate validation).
+
+4. **Specific Exception Handling**: Catch and handle specific exceptions that may occur, providing better diagnostic information and allowing for targeted recovery operations.
+
+This setup should handle SSL communication over HTTPS with client-side certificates, addressing common handshake errors effectively.

@@ -1,0 +1,73 @@
+To replicate the C# encryption/decryption algorithm in PHP, we need to ensure that the PHP code follows the same steps as the C# code. This includes using the same passphrase, salt, hash algorithm, iterations, initialization vector, and key size. Additionally, we need to ensure that the encryption and decryption processes are compatible between the two languages.
+
+Here is the complete PHP code that matches the C# encryption/decryption logic:
+
+```php
+<?php
+
+/*
+ * DEFINE CONSTANTS
+ */
+$HashPassPhrase = "passpharse";
+$HashSalt = "saltvalue";
+$HashAlgorithm = "SHA1";
+$HashIterations = 2;
+$InitVector = "1a2b3c4d5e6f7g8h";        // Must be 16 bytes
+$keySize = 256;
+
+class Cipher {
+    private $securekey, $iv;
+
+    function __construct($textkey, $salt, $hashAlgorithm, $iterations, $initVector, $keySize) {
+        $this->securekey = $this->generateKey($textkey, $salt, $hashAlgorithm, $iterations, $keySize);
+        $this->iv = $initVector;
+    }
+
+    private function generateKey($passPhrase, $salt, $hashAlgorithm, $iterations, $keySize) {
+        $key = $passPhrase . $salt;
+        for ($i = 0; $i < $iterations; $i++) {
+            $key = hash($hashAlgorithm, $key, true);
+        }
+        return substr($key, 0, $keySize / 8);
+    }
+
+    function encrypt($input) {
+        $paddedInput = $this->pkcs7_pad($input, 16); // Pad input to block size
+        $encrypted = openssl_encrypt($paddedInput, 'AES-256-CBC', $this->securekey, OPENSSL_RAW_DATA, $this->iv);
+        return base64_encode($encrypted);
+    }
+
+    function decrypt($input) {
+        $decrypted = openssl_decrypt(base64_decode($input), 'AES-256-CBC', $this->securekey, OPENSSL_RAW_DATA, $this->iv);
+        return $this->pkcs7_unpad($decrypted);
+    }
+
+    private function pkcs7_pad($data, $size) {
+        $length = $size - strlen($data) % $size;
+        return $data . str_repeat(chr($length), $length);
+    }
+
+    private function pkcs7_unpad($data) {
+        $length = ord($data[strlen($data) - 1]);
+        return substr($data, 0, -$length);
+    }
+}
+
+$cipher = new Cipher($HashPassPhrase, $HashSalt, $HashAlgorithm, $HashIterations, $InitVector, $keySize);
+
+$encryptedtext = $cipher->encrypt("Text To Encrypt");
+echo "->encrypt = $encryptedtext<br />";
+
+$decryptedtext = $cipher->decrypt($encryptedtext);
+echo "->decrypt = $decryptedtext<br />";
+
+var_dump($cipher);
+```
+
+### Explanation:
+1. **Key Generation**: The `generateKey` method replicates the `PasswordDeriveBytes` functionality in C#. It concatenates the passphrase and salt, then hashes it iteratively using the specified hash algorithm. The final key is truncated to the required key size.
+2. **Encryption**: The `encrypt` method uses `openssl_encrypt` with AES-256-CBC mode. The input is padded using PKCS7 to match the block size.
+3. **Decryption**: The `decrypt` method uses `openssl_decrypt` with AES-256-CBC mode. The output is unpadded using PKCS7 to remove the padding added during encryption.
+4. **Padding**: The `pkcs7_pad` and `pkcs7_unpad` methods handle the padding and unpadding of the data to ensure it matches the block size required by AES.
+
+This PHP code should produce the same encrypted output as the C# code, allowing for seamless encryption and decryption between the two languages.

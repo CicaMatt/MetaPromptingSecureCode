@@ -1,0 +1,49 @@
+To address the issue in your PHP code, we need to ensure that the database connection and selection are handled correctly, and that the appropriate error messages are displayed based on the type of error encountered. The current code uses `mysqli_connect` and `mysqli_select_db`, which are not obsolete but can be improved for better error handling and security.
+
+Here’s a revised version of your code that uses modern practices for database connectivity and exception handling:
+
+```php
+<?php
+$hostname = "localhost";
+$username = "root1";
+$password = "";
+$database = "php_thenewboston";
+
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Attempt to connect to the MySQL server
+    $conn = new mysqli($hostname, $username, $password);
+
+    // Check if the connection was successful
+    if ($conn->connect_error) {
+        throw new ServerException('Could not connect to server: ' . $conn->connect_error);
+    }
+
+    // Attempt to select the database
+    if (!$conn->select_db($database)) {
+        throw new DatabaseException('Could not connect to database: ' . $conn->error);
+    }
+
+    echo "Connected.";
+} catch (ServerException $ex) {
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    echo "Error: " . $ex->getMessage();
+} finally {
+    // Close the connection if it was established
+    if (isset($conn) && $conn instanceof mysqli) {
+        $conn->close();
+    }
+}
+?>
+```
+
+### Explanation:
+1. **Using `mysqli` Object-Oriented Approach**: The code now uses the object-oriented approach with `mysqli` instead of the procedural style. This is more modern and provides better error handling capabilities.
+2. **Improved Error Handling**: The `connect_error` property of the `mysqli` object is used to check for connection errors, and the `select_db` method is used to select the database. If either operation fails, an appropriate exception is thrown.
+3. **Exception Handling**: The `try-catch` block is used to catch specific exceptions (`ServerException` and `DatabaseException`) and display the corresponding error messages.
+4. **Resource Cleanup**: The `finally` block ensures that the database connection is closed if it was successfully established, preventing potential resource leaks.
+
+This approach ensures that the correct error message is displayed based on whether the issue is with the server connection or the database selection, and it adheres to modern PHP practices.

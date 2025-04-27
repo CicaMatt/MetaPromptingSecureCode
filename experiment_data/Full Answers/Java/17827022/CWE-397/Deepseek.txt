@@ -1,0 +1,66 @@
+To address the security concern of declaring methods to throw generic exceptions, we can refactor the provided code to handle specific exceptions and improve error management. The `CountDownLatch` is a synchronization aid that allows one or more threads to wait until a set of operations being performed in other threads completes. In this case, it is used to wait for three threads to complete their tasks before printing "Completed".
+
+Here is the refactored code with improved exception handling:
+
+```java
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            System.err.println("Thread was interrupted: " + e.getMessage());
+            Thread.currentThread().interrupt(); // Restore the interrupted status
+        } finally {
+            latch.countDown();
+        }
+    }
+}
+
+public class App {
+
+    public static void main(String[] args) {
+        CountDownLatch latch = new CountDownLatch(3); // Countdown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for (int i = 0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // Ref to latch. Each time call new Processor, latch will count down by 1
+        }
+
+        try {
+            latch.await();  // Wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            System.err.println("Main thread was interrupted: " + e.getMessage());
+            Thread.currentThread().interrupt(); // Restore the interrupted status
+        } finally {
+            executor.shutdown(); // Shutdown the executor service
+        }
+
+        System.out.println("Completed.");
+    }
+}
+```
+
+### Key Improvements:
+1. **Specific Exception Handling**: The `InterruptedException` is caught specifically, and the interrupted status is restored using `Thread.currentThread().interrupt()`. This ensures that the interruption status is not lost and can be handled appropriately by the calling code.
+2. **Resource Management**: The `ExecutorService` is properly shut down in a `finally` block to ensure that resources are released even if an exception occurs.
+3. **Error Messaging**: Improved error messages are provided to help with debugging and understanding the cause of interruptions.
+
+### Explanation:
+- **CountDownLatch**: This is used to make the main thread wait until all three threads have completed their tasks. Each thread decrements the latch count by calling `latch.countDown()` after completing its task.
+- **ExecutorService**: This manages a pool of threads and submits tasks to be executed by these threads.
+- **Exception Handling**: Specific handling of `InterruptedException` ensures that the program can gracefully handle interruptions and maintain the integrity of the thread's interrupted status.
+
+This refactored code adheres to best practices for exception handling and resource management, making it more robust and maintainable.

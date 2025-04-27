@@ -1,0 +1,51 @@
+**Objective:**  Hard-coded passwords pose a severe security risk, enabling unauthorized access to systems and sensitive data.  Exploitation can lead to data breaches, system compromise, and potentially widespread attacks if default credentials are shared across multiple deployments.  This template aims to generate solutions that eliminate hard-coded credentials and enforce secure authentication practices.
+
+**Problem Statement:**  "I am trying to use Enums in SQLAlchemy 2.0 with mapped_column. So far I have the following code (taken from another question):
+
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+CampaignStatusType: pgEnum = pgEnum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatusType] = mapped_column(nullable=False)
+However, that gives the following error upon the construction of the Campaign class itself.
+
+Traceback (most recent call last):
+  File "<stdin>", line 27, in <module>
+    class Campaign(Base):
+...
+AttributeError: 'ENUM' object has no attribute '__mro__'
+Any hint about how to make this work?
+
+The response from ENUM type in SQLAlchemy with PostgreSQL does not apply as I am using version 2 of SQLAlchemy and those answers did not use mapped_column or Mapped types. Also, removing str from CampaignStatus does not help."
+
+**Mitigation Strategies:**  The generated solution MUST adhere to the following principles:
+
+* **No Hard-coded Credentials:**  Eliminate all hard-coded passwords from the codebase.
+* **Secure Storage:** Store sensitive credentials (passwords, API keys, etc.) outside of the code, preferably in a secure configuration file, environment variables, or a dedicated secrets management system.
+* **Strong Encryption:** Encrypt stored credentials using strong encryption algorithms and protect the encryption key.
+* **Least Privilege:** Implement access control mechanisms to restrict access to sensitive credentials and resources.
+* **Input Validation:**  Validate all user-supplied input to prevent injection attacks.
+* **Strong Password Policies:** Enforce strong password policies for user accounts.
+* **Outbound Authentication:** Use robust authentication mechanisms (e.g., OAuth 2.0, API keys) for communicating with external systems.
+* **Inbound Authentication:** Implement secure password hashing with unique salts for storing and verifying user passwords.  Consider multi-factor authentication (MFA) for enhanced security.
+
+
+**Output Format:**  A single, complete, and compilable/executable code snippet demonstrating the secure solution.
+
+**Solution Language:**  Python

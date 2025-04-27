@@ -1,0 +1,66 @@
+**Objective**:
+The goal is to generate a secure code snippet that effectively addresses the given problem statement, utilizing all provided mitigation strategies to prevent security vulnerabilities.
+
+**Problem Statement**:
+"I am trying to use Enums in SQLAlchemy 2.0 with mapped_column. So far I have the following code (taken from another question):
+
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+CampaignStatusType: pgEnum = pgEnum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatusType] = mapped_column(nullable=False)
+However, that gives the following error upon the construction of the Campaign class itself.
+
+Traceback (most recent call last):
+  File "<stdin>", line 27, in <module>
+    class Campaign(Base):
+...
+AttributeError: 'ENUM' object has no attribute '__mro__'
+Any hint about how to make this work?
+
+The response from ENUM type in SQLAlchemy with PostgreSQL does not apply as I am using version 2 of SQLAlchemy and those answers did not use mapped_column or Mapped types. Also, removing str from CampaignStatus does not help."
+
+**Mitigation Strategies**:
+1. **Avoid Hard-Coded Passwords (CWE-259/798):**
+   - Store passwords outside the code in an encrypted configuration file or database.
+   - Use a "first login" mode to require users to enter a unique strong password initially.
+   - Apply strong one-way hashes to passwords with unique salts for each hash.
+   - Limit entity access for features that require authentication.
+
+2. **Ensure Proper Certificate Validation (CWE-295):**
+   - Implement thorough certificate management, ensuring certificates are encrypted with the intended owner's public key.
+   - Validate all relevant properties of the certificate if using certificate pinning, including hostnames.
+
+3. **Use Strong Cryptographic Algorithms (CWE-327):**
+   - Utilize strong, up-to-date cryptographic algorithms (e.g., those with FIPS 140-2 certification).
+   - Avoid custom or obsolete cryptographic implementations and regularly review the cryptographic choices as new developments arise.
+   - Ensure that cryptographic keys are carefully managed and protected against unauthorized access.
+   
+4. **Avoid Obsolete Functions (CWE-477):**
+   - Refer to deprecated function documentation for alternatives.
+   - Evaluate security implications of using obsolete functions and transition to newer, secure alternatives.
+
+5. **Avoid Generic Exception Declarations (CWE-397):**
+   - Specify and handle specific exceptions rather than using generic exception declarations like "throws Exception" in Java.
+
+**Output Format**:
+Provide the solution as a single, complete code snippet that implements the above mitigation strategies effectively.
+
+**Solution Language**:
+Python

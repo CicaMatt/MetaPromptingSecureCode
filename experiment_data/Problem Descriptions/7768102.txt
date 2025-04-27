@@ -1,0 +1,1 @@
+I write application which will send files to server through socket. Its very important to all files came correct from client to server with no errors, lost data and other like that. To do that I need to use TCP protocol I think but I dont know how to do that. Is socket in Java is default using TCP. If not how can I send data through TCP? Thanks for any help and tip.

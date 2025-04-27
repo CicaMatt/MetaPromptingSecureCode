@@ -1,0 +1,65 @@
+To ensure secure certificate validation in Java, you can use the `HttpsURLConnection` class along with a custom `X509TrustManager`. Below is a simplified code snippet demonstrating how to implement rigorous certificate validation in a secure manner.
+
+```java
+import javax.net.ssl.*;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+public class SecureCertificateValidation {
+
+    public static void main(String[] args) throws Exception {
+        // Load the CA certificate (assuming it's provided as a .crt file)
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        try (InputStream caInput = SecureCertificateValidation.class.getResourceAsStream("/path/to/ca-certificate.crt")) {
+            X509Certificate caCert = (X509Certificate) cf.generateCertificate(caInput);
+
+            // Create a KeyStore containing our trusted CA
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("caCert", caCert);
+
+            // Initialize a TrustManagerFactory with the KeyStore
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(keyStore);
+
+            // Get hold of the TrustManager
+            TrustManager[] trustManagers = tmf.getTrustManagers();
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustManagers, new java.security.SecureRandom());
+            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            // Set up the HTTPS connection with the custom SSL context
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
+            URL url = new URL("https://secure.example.com");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    // Ensure the hostname matches the certificate
+                    return HttpsURLConnection.getDefaultHostnameVerifier().verify("secure.example.com", session);
+                }
+            });
+
+            // Connect and verify
+            connection.connect();
+            System.out.println("Connected to secure site successfully with valid certificate.");
+
+            // Additional logic for data transfer after successful connection...
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Failed to validate the SSL certificate.");
+        }
+    }
+}
+```
+
+### Key Points:
+- **Certificate Loading**: This code assumes you have a `.crt` file representing your trusted Certificate Authority (CA).
+- **KeyStore Setup**: A `KeyStore` is used to hold the trusted CA certificates.
+- **TrustManagerFactory**: This initializes a `TrustManager` from the `KeyStore` which is used to validate certificates.
+- **SSLContext**: Configured with the `TrustManager` to ensure only trusted certificates are accepted.
+- **Hostname Verification**: Implemented using `HostnameVerifier` to ensure that the server's hostname matches the certificate's expected hostname.
+
+This setup ensures that only certificates issued by your trusted CA are accepted, and protects against man-in-the-middle attacks by verifying the hostname. Adjust paths, hostnames, and certificate details to fit your application's requirements.

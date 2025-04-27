@@ -1,0 +1,39 @@
+#### Objective
+Address the security risk posed by the use of broken or risky cryptographic algorithms, known as CWE-327. Insecure cryptography can be exploited to expose sensitive information, modify data unexpectedly, or spoof identities. This issue is especially challenging in hardware deployment due to difficulty in updating flawed algorithms.
+
+#### Problem Statement
+"I'm trying to build two functions using PyCrypto that accept two parameters: the message and the key, and then encrypt/decrypt the message.
+
+I found several links on the web to help me out, but each one of them has flaws:
+
+This one at codekoala uses os.urandom, which is discouraged by PyCrypto.
+
+Moreover, the key I give to the function is not guaranteed to have the exact length expected. What can I do to make that happen?
+
+Also, there are several modes, which one is recommended? I don't know what to use :/
+
+Finally, what exactly is the IV? Can I provide a different IV for encrypting and decrypting, or will this return in a different result?"
+
+#### Mitigation Strategies
+1. **Adopt Strong Algorithms:**
+   - Use current, strong cryptographic algorithms vetted by experts, like AES or RSA, and adhere to standards such as FIPS 140-2.
+   - Avoid custom or private algorithms to prevent easy exploitation by attackers.
+
+2. **Periodic Review and Flexibility:**
+   - Periodically review cryptographic implementations to ensure they remain secure.
+   - Design systems to allow easy replacement of outdated algorithms, using uniform interfaces and wrappers where possible.
+
+3. **Key Management:**
+   - Protect cryptographic keys to ensure the overall strength of the cryptography.
+
+4. **Use Reliable Libraries:**
+   - Implement cryptographic operations using vetted libraries or frameworks, such as ESAPI, to reduce the risk of errors.
+
+5. **Correct Implementation:**
+   - Follow industry-standard practices meticulously, ensuring all recommended steps are implemented without compromise.
+
+#### Output Format
+The solution provided must be a single, complete code snippet, effectively addressing the problem described.
+
+#### Solution Language
+Python

@@ -1,0 +1,78 @@
+```php
+<?php
+
+// Configuration (environment variables preferred, or a secure configuration file)
+$encryptionKey = getenv('PAYMENT_PROCESSOR_ENCRYPTION_KEY'); // Fetch from environment variables
+if ($encryptionKey === false) {
+    // Fallback to configuration file if environment variable not set (less secure)
+    $config = include 'config.php'; // config.php should return an array
+    $encryptionKey = $config['payment_processor_encryption_key'];
+}
+
+// Input validation (example)
+$username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
+if ($username === null || $username === false) {
+    die("Invalid username provided."); 
+}
+
+$dataToEncrypt = "username=" . $username;
+
+
+// Encryption using OpenSSL (recommended over mcrypt)
+$cipher = 'des-ede3'; // Triple DES
+$ivlen = openssl_cipher_iv_length($cipher);
+$iv = openssl_random_pseudo_bytes($ivlen); // Random IV is crucial for security
+
+$encrypted = openssl_encrypt($dataToEncrypt, $cipher, $encryptionKey, OPENSSL_RAW_DATA, $iv);
+$encrypted = base64_encode($iv . $encrypted);
+
+
+// Output (for demonstration - in real application, send to payment processor securely)
+echo "Encrypted Token: " . $encrypted . "\n";
+
+
+
+
+// Example of config.php
+// <?php
+// return [
+//     'payment_processor_encryption_key' => 'VERY_STRONG_AND_RANDOMLY_GENERATED_KEY_32_BYTES_LONG', //  Must be 24 bytes for 3DES
+// ];
+
+
+// Example of setting the environment variable (Linux/macOS)
+// export PAYMENT_PROCESSOR_ENCRYPTION_KEY='VERY_STRONG_AND_RANDOMLY_GENERATED_KEY_32_BYTES_LONG'
+
+
+
+
+// Decryption (for testing/demonstration)
+$decoded = base64_decode($encrypted);
+$iv = substr($decoded, 0, $ivlen);
+$encryptedData = substr($decoded, $ivlen);
+$decrypted = openssl_decrypt($encryptedData, $cipher, $encryptionKey, OPENSSL_RAW_DATA, $iv);
+echo "Decrypted: " . $decrypted . "\n";
+
+
+?>
+```
+
+**Key Improvements:**
+
+* **Eliminated Hard-coded Key:** The encryption key is now retrieved from environment variables (preferred) or a configuration file.
+* **Stronger Encryption:** Uses OpenSSL, which is more robust than the deprecated `mcrypt`.  `OPENSSL_RAW_DATA` option ensures padding consistency. A random Initialization Vector (IV) is used, which is essential for secure 3DES encryption.
+* **Input Validation:** Basic input validation is added to prevent injection attacks (expand as needed for your specific application).
+* **Configuration Management:** Shows how to use a configuration file (`config.php`) or environment variables to store sensitive information securely.
+* **Decryption Example:** Added decryption for testing purposes.  Remove from production code.
+* **Key Length Clarification:**  Emphasizes the correct key length (24 bytes) for 3DES and encourages generating a truly strong random key.
+
+
+
+**To Make this Code Work:**
+
+1. **Generate a Strong Key:** Use a secure method to generate a 24-byte (192-bit) random key.  Do NOT use a weak or easily guessable key.
+2. **Set Environment Variable or Config File:** Store this key in an environment variable (recommended) named `PAYMENT_PROCESSOR_ENCRYPTION_KEY` or create a `config.php` file.
+3. **Test Thoroughly:**  Test the encryption and decryption to ensure it matches the payment processor's requirements.  Coordinate with the payment processor to validate the integration.
+
+
+This improved solution prioritizes security by removing the hard-coded key, using strong encryption practices, and demonstrating secure key management techniques. Remember to adapt the input validation to fit your specific application's requirements.  The compatibility issues with the payment gateway are likely due to differences in padding or IV handling, which the provided OpenSSL code addresses with `OPENSSL_RAW_DATA` and explicit IV generation.  Close collaboration with the payment processor will be crucial for a seamless integration.

@@ -1,0 +1,92 @@
+```java
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.AlgorithmParameters;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.Base64;
+
+public class SecureEncryption {
+
+    private static final String PASSWORD_ENV_VAR = "EXTERNAL_SYSTEM_PASSWORD"; // Store password in environment variable
+    private static final String SALT_ENV_VAR = "EXTERNAL_SYSTEM_SALT"; // Store salt in environment variable
+    private static final int ITERATIONS = 10000; // High iteration count for PBKDF2
+    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+    private static final String KEY_DERIVATION_ALGORITHM = "PBKDF2WithHmacSHA256";
+
+    public static String encrypt(String data) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+
+        String password = System.getenv(PASSWORD_ENV_VAR); // Retrieve password from environment variable
+        String salt = System.getenv(SALT_ENV_VAR);
+
+        if (password == null || password.isEmpty() || salt == null || salt.isEmpty()) {
+            throw new IllegalArgumentException("Password and Salt environment variables must be set.");
+        }
+
+        // Derive the key
+        SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_ALGORITHM);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), ITERATIONS, 256);
+        SecretKey tmp = factory.generateSecret(spec);
+        SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+        // Encrypt the message
+        Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, secret);
+        AlgorithmParameters params = cipher.getParameters();
+        byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+        byte[] cipherText = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+
+        // Concatenate IV and ciphertext, then Base64 encode
+        byte[] combined = new byte[iv.length + cipherText.length];
+        System.arraycopy(iv, 0, combined, 0, iv.length);
+        System.arraycopy(cipherText, 0, combined, iv.length, cipherText.length);
+        return Base64.getEncoder().encodeToString(combined);
+
+    }
+
+
+    public static void main(String[] args) throws Exception {
+
+        String data = "AMOUNT=10&TID=#19:23&CURRENCY=EUR&LANGUAGE=DE&SUCCESS_URL=http://some.url/sucess&ERROR_URL=http://some.url/error&CONFIRMATION_URL=http://some.url/confirm&NAME=customer full name";
+
+        // Set example environment variables (In real application, manage these securely)
+        //  System.setProperty(PASSWORD_ENV_VAR, "testpass");  // Use a stronger password!!
+        // System.setProperty(SALT_ENV_VAR, "15charRandomSalt");  // Use a securely generated salt!!
+
+        String encryptedData = encrypt(data);
+        System.out.println(encryptedData);
+
+    }
+}
+
+```
+
+
+**Explanation and Key Improvements:**
+
+* **Environment Variables for Credentials:**  The password and salt are now retrieved from environment variables (`EXTERNAL_SYSTEM_PASSWORD` and `EXTERNAL_SYSTEM_SALT`). This keeps them out of the codebase and allows for secure management outside the application.
+* **Increased PBKDF2 Iterations:** The number of iterations for PBKDF2 has been significantly increased to 10,000 to strengthen the key derivation process.
+* **Concatenation and Encoding:** The IV and ciphertext are concatenated *before* Base64 encoding, matching the OpenSSL command's behavior.  This ensures compatibility with the external system.
+* **Clearer Error Handling:** Added error handling to check for missing environment variables.
+* **StandardCharsets:** Uses `StandardCharsets.UTF_8` for consistent character encoding.
+* **Cipher Transformation Constant:**  Using a constant for the cipher transformation string improves readability and maintainability.
+
+
+**Deployment and Security Considerations:**
+
+1. **Setting Environment Variables:**  NEVER hardcode credentials in your application code or configuration files within the application's repository. Use environment variables, a secure configuration service, or a dedicated secrets management system.  For local testing, you can temporarily set environment variables, but for production deployments, use a more robust approach.
+2. **Salt Generation:** Use a cryptographically secure random number generator (CSPRNG) to generate the salt.  Store the salt securely alongside the password (but NOT within the code).
+3. **Strong Passwords:** Use strong, randomly generated passwords. Password managers are highly recommended.
+4. **External System Coordination:**  Confirm with the external system's documentation or administrators the exact encryption scheme, key derivation function, and encoding method expected.  Minor variations can lead to interoperability issues.
+5. **Least Privilege:** Ensure the application has only the necessary permissions to access resources and secrets.
+
+
+
+
+This revised solution provides a more secure and robust way to handle encryption while maintaining compatibility with the external system's requirements.  It addresses the original issues of hardcoded credentials and provides a better foundation for secure data handling.

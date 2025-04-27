@@ -1,0 +1,44 @@
+#### **Objective**  
+The use of hard-coded credentials in software poses a significant security risk, as it allows attackers to easily gain unauthorized access to systems or sensitive data. This vulnerability can lead to data breaches, system compromise, and unauthorized privilege escalation. Mitigating this issue is critical to ensuring secure authentication mechanisms and protecting sensitive information.
+
+---
+
+#### **Problem Statement**  
+"I am working on a swing application in which in which client has to access the html files locally stored in the machine but i want client should not access the html files directly so want to encrypt the entire folder of html files using java and in Java application i would write the hard code to decrypt the html files from encrypted folder. One more thing the updation should be possible in encrypted folder so that encrypted files may be merged in future on client side.
+
+I have been stuck here and has no clues for my problem , any help for my problem is appreciated."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coding Credentials**:  
+   - Store credentials (e.g., passwords, API keys) in secure, encrypted configuration files or environment variables.  
+   - Use secure credential management tools like AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault.  
+
+2. **Inbound Authentication**:  
+   - Implement a "first login" mode for initial setup, requiring users to set a unique, strong password.  
+   - Use strong one-way hashing (e.g., bcrypt, Argon2) with unique salts for stored passwords.  
+
+3. **Outbound Authentication**:  
+   - Use dynamically generated credentials with limited validity periods.  
+   - Restrict backend access to only necessary actions for the frontend system.  
+
+4. **Access Control**:  
+   - Limit access to sensitive features to trusted entities (e.g., system console only).  
+   - Implement time-sensitive checksums or tags to prevent replay attacks.  
+
+5. **Secure Storage**:  
+   - Encrypt configuration files or databases storing credentials.  
+   - Restrict file permissions to ensure only authorized users can access sensitive data.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete code snippet that implements the recommended mitigation strategies.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

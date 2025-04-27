@@ -1,0 +1,91 @@
+To address the security concerns raised in the problem statement, we can create a custom `Formatter` class that overrides the default behavior of Python's `str.format()` method. This custom formatter will mitigate the risks associated with untrusted input by:
+
+1. Disabling padding to prevent memory exhaustion attacks.
+2. Whitelisting attribute and index access to prevent access to sensitive or dangerous attributes.
+3. Ensuring that exceptions are caught and handled appropriately.
+
+Here is a complete Python code snippet that implements these mitigation strategies:
+
+```python
+import string
+import sys
+from collections.abc import Mapping
+
+class SecureFormatter(string.Formatter):
+    def __init__(self, max_padding=100):
+        self.max_padding = max_padding
+
+    def get_field(self, field_name, args, kwargs):
+        # Whitelist attribute and index access
+        if isinstance(field_name, str):
+            if field_name.startswith('__') or field_name.endswith('__'):
+                raise ValueError("Access to dunder attributes is not allowed")
+            if '.' in field_name:
+                raise ValueError("Access to nested attributes is not allowed")
+            if '[' in field_name or ']' in field_name:
+                raise ValueError("Access to indices is not allowed")
+        return super().get_field(field_name, args, kwargs)
+
+    def format_field(self, value, format_spec):
+        # Disable padding beyond a certain limit
+        if format_spec:
+            if '>' in format_spec or '<' in format_spec or '^' in format_spec:
+                padding_length = int(format_spec.strip('><^=+'))
+                if padding_length > self.max_padding:
+                    raise ValueError(f"Padding length exceeds maximum allowed ({self.max_padding})")
+        return super().format_field(value, format_spec)
+
+    def vformat(self, format_string, args, kwargs):
+        try:
+            return super().vformat(format_string, args, kwargs)
+        except (ValueError, KeyError, IndexError) as e:
+            raise ValueError(f"Formatting error: {e}")
+
+# Example usage
+if __name__ == "__main__":
+    formatter = SecureFormatter(max_padding=100)
+    try:
+        # Safe usage
+        safe_output = formatter.format("Hello, {name}!", name="Alice")
+        print(safe_output)  # Output: Hello, Alice!
+
+        # Attempt to use excessive padding
+        # This will raise a ValueError
+        # unsafe_output = formatter.format("Hello, {:>9999999999}!", "Alice")
+
+        # Attempt to access dunder attributes
+        # This will raise a ValueError
+        # unsafe_output = formatter.format("Hello, {__class__}!", object())
+
+        # Attempt to access nested attributes
+        # This will raise a ValueError
+        # unsafe_output = formatter.format("Hello, {obj.__class__}!", obj=object())
+
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+```
+
+### Explanation:
+
+1. **Custom `SecureFormatter` Class**:
+   - Inherits from `string.Formatter` to override the default formatting behavior.
+   - Initializes with a `max_padding` parameter to limit the maximum allowed padding length.
+
+2. **`get_field` Method**:
+   - Whitelists attribute and index access by raising exceptions for:
+     - Dunder attributes (e.g., `__class__`).
+     - Nested attributes (e.g., `obj.__class__`).
+     - Index access (e.g., `obj[0]`).
+
+3. **`format_field` Method**:
+   - Disables excessive padding by checking the padding length in the format specification.
+   - Raises a `ValueError` if the padding length exceeds the `max_padding` limit.
+
+4. **`vformat` Method**:
+   - Wraps the formatting process in a try-except block to catch and handle exceptions gracefully.
+
+5. **Example Usage**:
+   - Demonstrates safe usage of the `SecureFormatter`.
+   - Includes commented-out examples of unsafe usage that would raise exceptions.
+
+This solution ensures that the `format()` method is secure against untrusted input, mitigating the risks of memory exhaustion, access to sensitive attributes, and other potential vulnerabilities.

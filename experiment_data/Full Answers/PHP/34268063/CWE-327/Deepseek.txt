@@ -1,0 +1,59 @@
+To address the issue of handling `null` returns in PHP 7 when a return type is defined, you can use a combination of nullable return types and proper error handling. PHP 7.1 introduced nullable types, which allow you to specify that a function can return either a specific type or `null`. This eliminates the need for excessive `try...catch` blocks or creating `NullObject` instances for every class.
+
+Here’s how you can handle this:
+
+### Solution Code
+
+```php
+<?php
+
+class MyObject {
+    // Your class implementation
+}
+
+class MyService {
+    /**
+     * This method can return either a MyObject or null.
+     * 
+     * @return MyObject|null
+     */
+    public function getMyObject(): ?MyObject {
+        // Simulate a condition where the object might not be available
+        $objectAvailable = false; // Change this to true to return an object
+
+        if ($objectAvailable) {
+            return new MyObject();
+        }
+
+        return null;
+    }
+}
+
+// Usage
+$service = new MyService();
+$myObject = $service->getMyObject();
+
+if ($myObject === null) {
+    // Handle the case where the object is not available
+    echo "Object is not available.\n";
+} else {
+    // Proceed with the object
+    echo "Object is available.\n";
+}
+```
+
+### Explanation
+
+1. **Nullable Return Type**: The method `getMyObject` is defined with a return type of `?MyObject`, which means it can return either an instance of `MyObject` or `null`.
+
+2. **Conditional Logic**: Inside the method, you can use conditional logic to determine whether to return an object or `null`. This simulates a real-world scenario where the object might not always be available.
+
+3. **Error Handling**: When calling the method, you can check if the returned value is `null` and handle it appropriately. This avoids the need for `try...catch` blocks and keeps your code clean and readable.
+
+### Benefits
+
+- **Simplicity**: This approach is straightforward and leverages PHP's built-in features.
+- **Readability**: The code is easy to read and understand, with clear handling of `null` cases.
+- **Maintainability**: You don't need to create additional classes or use complex patterns like the Null Object Pattern.
+
+This solution ensures that your application handles `null` returns gracefully while maintaining type safety and code clarity.

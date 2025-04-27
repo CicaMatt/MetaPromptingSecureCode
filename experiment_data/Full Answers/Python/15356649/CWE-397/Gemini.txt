@@ -1,0 +1,114 @@
+```python
+from string import Formatter
+
+class SecureFormatter(Formatter):
+    def __init__(self, max_width=100, allowed_attrs=None):
+        super().__init__()
+        self.max_width = max_width
+        self.allowed_attrs = allowed_attrs or set()
+
+    def vformat(self, format_string, args, kwargs):
+        if len(format_string) > 1000:  # Limit overall format string length
+            raise ValueError("Format string too long")
+        return super().vformat(format_string, args, kwargs)
+
+    def parse(self, format_string):
+        for literal_text, field_name, format_spec, conversion in super().parse(format_string):
+            if field_name is not None:  # Checks if it's a replacement field
+                if len(field_name) > 100: # Limit field name length (prevents abuse like {aaaaaaaaaaaaaaaa...})
+                    raise ValueError("Field name too long")
+
+
+            yield literal_text, field_name, format_spec, conversion
+
+
+    def get_field(self, field_name, args, kwargs):
+        if field_name.isdigit():
+            try:
+                return super().get_field(field_name, args, kwargs)
+            except IndexError:
+                raise IndexError(f"Index {field_name} out of range")  # More specific
+
+        # Handle attribute/index access
+        parts = field_name.split('.')  # Split on dots for attributes/indexes
+        obj = kwargs.get(parts[0], args[int(parts[0])] if parts[0].isdigit() else None)
+
+        if obj is None:
+            raise KeyError(f"Variable '{parts[0]}' not found")  # More specific
+
+        for attr in parts[1:]:
+            if attr not in self.allowed_attrs:  # Whitelist check
+                raise AttributeError(f"Access to attribute '{attr}' is not allowed")  
+
+            try:
+                if attr.isdigit(): # Check for indexing before getattr to handle lists/tuples/etc.
+                    obj = obj[int(attr)]
+                else:
+                    obj = getattr(obj, attr)
+            except AttributeError:
+                raise AttributeError(f"Object has no attribute '{attr}'") # More specific
+            except IndexError:
+                raise IndexError(f"Index '{attr}' out of range") # More specific
+            except TypeError:
+                raise TypeError(f"Invalid attribute access for '{attr}'") # More specific
+
+        return obj, field_name
+
+
+
+    def check_unused_args(self, used_args, args, kwargs):
+        return  # Disable unused arguments check, as this is often useful in web templating
+
+    def format_field(self, value, format_spec):
+        if format_spec:
+            width = ''
+            for char in format_spec:
+                if char.isdigit():
+                    width += char
+                else:
+                    break
+            if width and int(width) > self.max_width:  # Prevent excessive padding
+                raise ValueError("Padding width too large")
+
+        try:
+            return super().format_field(value, format_spec)
+        except ValueError as e:  # Be specific if possible.  Catching ValueError for formatting issues
+            raise ValueError(f"Error formatting field: {e}") from e
+
+
+# Example usage and exception handling
+
+sf = SecureFormatter(allowed_attrs={"name", "age"})
+user_data = {"user": {"name": "Alice", "age": 30}}
+
+try:
+    formatted_string = sf.format("Hello, {user.name}! You are {user.age} years old.", **user_data)
+    print(formatted_string)
+
+    # Example triggering an exception:
+    formatted_string = sf.format("Hello, {user.invalid_attr}!", **user_data)
+
+except KeyError as e:
+    print(f"KeyError: {e}")  # Handle missing variables
+except AttributeError as e:
+    print(f"AttributeError: {e}")  # Handle disallowed attribute access
+except IndexError as e:
+    print(f"IndexError: {e}")  # Handle index out of range
+except ValueError as e:
+    print(f"ValueError: {e}")  # Handle formatting errors
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")  # Catch any remaining exceptions
+
+
+```
+
+
+Key improvements:
+
+* **Specific Exceptions:** `IndexError`, `KeyError`, `AttributeError`, `ValueError` are caught specifically, enabling targeted error handling.
+* **Informative Error Messages:** Exception messages now provide details about the error, aiding debugging.
+* **Security Enhancements:** `max_width`, `allowed_attrs`, and input length checks protect against denial-of-service and unauthorized attribute access.
+* **Specific Exception Handling:** The `try...except` block demonstrates handling different exception types individually.
+
+
+This example shows how to create a more secure string formatter for untrusted input by carefully handling exceptions, whitelisting allowed attributes, and limiting the potential for resource abuse.  Remember to further customize allowed attributes and error handling to the specific needs of your application.

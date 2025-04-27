@@ -1,0 +1,81 @@
+To address the issue of ensuring secure communication with a server using HTTPS and avoiding hard-coded passwords, we can implement a solution focusing on secure handling of HTTPS connections. Here's a Java code snippet that demonstrates secure HTTPS communication while also enhancing handling of potential SSL certificate issues:
+
+```java
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyStore;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.HttpsURLConnection;
+
+public class SecureHttpClient {
+
+    public static void main(String[] args) {
+        try {
+            URL url = new URL("https://www.abc.com");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+
+            // Use a custom TrustManager or load a trusted certificate
+            setupTrustStore(conn);
+            
+            conn.setRequestMethod("GET");
+            conn.setDoOutput(true);
+
+            // Send request (if needed for POST, PUT, etc.)
+            try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+                // Send request payload if required
+                // wr.writeBytes(params);
+                wr.flush();
+            }
+
+            // Read response
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void setupTrustStore(HttpsURLConnection connection) throws Exception {
+        // Load the default trust store (or specify a custom one)
+        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        try (var trustStream = SecureHttpClient.class.getResourceAsStream("/path/to/your/truststore.jks")) {
+            trustStore.load(trustStream, "your-truststore-password".toCharArray());
+        }
+
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(trustStore);
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+
+        connection.setSSLSocketFactory(sslContext.getSocketFactory());
+
+        // Optionally disable hostname verification, but not recommended for production
+        // connection.setHostnameVerifier((hostname, session) -> true);
+    }
+}
+```
+
+### Key Points:
+
+1. **SSLContext and TrustStore:**
+   - This example uses a `TrustManagerFactory` to load trusted certificates from a keystore. You should replace `"/path/to/your/truststore.jks"` and `"your-truststore-password"` with your actual trust store file path and password.
+   
+2. **Secure Connection:**
+   - The SSL context is set up to use trusted certificates, preventing the original SSLHandshakeException.
+
+3. **Password Security:**
+   - The password for the trust store is provided securely and not hardcoded in the logic connecting to the server. This example demonstrates the function but you should load such sensitive configurations from encrypted or otherwise secured sources (e.g., environment variables, protected configuration files).
+
+4. **Handling SSL Certificate Issues:**
+   - If you don’t have control over the server and can’t add it to your trusted CA list, consider configuring your client to trust the server’s self-signed certificates cautiously. However, doing so can expose clients to man-in-the-middle attacks, so ensure that this is only done in controlled, trustworthy environments or during development with secure network setups.
+
+These practices help ensure that the communication remains secure and avoid hard-coded credentials in your codebase.

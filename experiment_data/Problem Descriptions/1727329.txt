@@ -1,0 +1,13 @@
+I am trying to write a script to prevent brute-force login attempts in a website I'm building. The logic goes something like this:
+
+User sends login information.
+Check if username and password is correct
+If Yes, let them in.
+If No, record a failed attempt in the database. Check if there's too many fails within a given timeframe (eg: 5 in 5 minutes):
+If Yes, then pause execution for 10 seconds: sleep(10), then report a login failure to the user.
+Report a login failure to the user immediately
+Explaining this to a co-worker, I was asked how this would help if a hacker sent, say, 1000 requests in one second. Would the first 5 would return immediately, and then the remaining 995 all take only 10 seconds?
+
+I have a sneaking suspicion that I don't fully understand how HTTP works - is that situation above even possible, or is there a limit to the number of concurrent requests that a server will handle from one client?
+
+Would a better solution be to have an increasing sleep time?

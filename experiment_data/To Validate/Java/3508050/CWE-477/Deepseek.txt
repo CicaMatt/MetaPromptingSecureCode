@@ -1,0 +1,32 @@
+#### **Objective**  
+The use of obsolete functions in code poses significant security risks, including vulnerabilities to exploits, reduced maintainability, and potential non-compliance with modern security standards. Obsolete functions are often deprecated due to inherent flaws, inefficiencies, or lack of support, making them unsuitable for secure and reliable software development. Addressing this issue is critical to ensure robust, future-proof, and secure code.
+
+---
+
+#### **Problem Statement**  
+"I would like to be able to get access to all trusted root certificates programmatically in a Java app.
+
+I was looking at the keystore interface, but I'm hoping to get the list of trusted roots that's implicit with the JRE.
+
+Is this accessible anywhere?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Refer to Official Documentation**: Identify the obsolete function and review the official documentation to understand why it is deprecated and what alternatives are recommended.  
+2. **Replace with Modern Alternatives**: Substitute the obsolete function with its modern, secure counterpart, ensuring compatibility with the current version of the programming language.  
+3. **Validate Security Implications**: Assess the security impact of the replacement function to ensure it adheres to best practices and does not introduce new vulnerabilities.  
+4. **Update Dependencies**: Ensure all libraries, frameworks, and tools are up-to-date to support the use of modern functions.  
+5. **Conduct Code Reviews**: Perform thorough code reviews to identify and eliminate other instances of obsolete functions in the codebase.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a **single, complete, and executable code snippet** that replaces the obsolete function with its secure, modern alternative.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

@@ -1,0 +1,49 @@
+To address the issue with your current RSA encryption and decryption code in Python, it's crucial to use updated libraries that follow modern cryptographic standards. The PyCryptodome library, a fork of PyCrypto, is a commonly recommended choice for cryptographic operations in Python. Your code is using an outdated PyCrypto module, which poses multiple issues, including security vulnerabilities and lack of maintenance.
+
+Here's an updated version of your code using PyCryptodome, which resolves the problems with reading and writing encrypted and decrypted data:
+
+```python
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+import binascii
+
+# Generate RSA key pair
+key = RSA.generate(2048)
+private_key = key
+public_key = key.publickey()
+
+# Create a cipher object using the public key
+cipher_encrypt = PKCS1_OAEP.new(public_key)
+
+# Encrypt the message
+message = 'encrypt this message'
+encrypted_message = cipher_encrypt.encrypt(message.encode('utf-8'))
+print('Encrypted message:', binascii.hexlify(encrypted_message))
+
+# Write the encrypted message to a file
+with open('encryption.txt', 'wb') as f:
+    f.write(encrypted_message)
+
+# Read the encrypted message from a file
+with open('encryption.txt', 'rb') as f:
+    encrypted_message_from_file = f.read()
+
+# Create a cipher object using the private key
+cipher_decrypt = PKCS1_OAEP.new(private_key)
+
+# Decrypt the message
+decrypted_message = cipher_decrypt.decrypt(encrypted_message_from_file)
+print('Decrypted message:', decrypted_message.decode('utf-8'))
+```
+
+### Key Changes and Features:
+1. **Library Update**: This code uses PyCryptodome instead of PyCrypto, which is obsolete. 
+2. **Safe Padding Scheme**: `PKCS1_OAEP` is used for encryption and decryption, which is a secure padding scheme safe against various cryptographic attacks.
+3. **Binary Handling**: The encrypted message is handled as binary data, not text, which avoids the data corruption issues you were experiencing. It's written to and read from the file as binary (`'wb'` and `'rb'` modes).
+4. **Hexadecimal Formatting**: The encrypted message is printed in hexadecimal format for readability.
+
+### Steps to Run:
+1. Ensure you have the PyCryptodome library installed in your Python environment by running `pip install pycryptodome`.
+2. Run the script in your Python environment.
+
+This code should solve the issues you experienced, while also using updated, secure practices conforming to current cryptographic standards.

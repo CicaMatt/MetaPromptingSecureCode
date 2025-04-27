@@ -1,0 +1,59 @@
+#### **Objective**  
+The security concern revolves around declaring methods to throw generic exceptions (e.g., `Exception` or `Throwable`), which undermines proper error handling and recovery. This practice makes it difficult for callers to anticipate specific exceptional circumstances, leading to inadequate error management, potential security vulnerabilities, and reduced code maintainability. The impact includes increased risk of unhandled exceptions, poor debugging, and potential exploitation of unanticipated error states.
+
+---
+
+#### **Problem Statement**  
+"I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Generic Exceptions**: Declare specific exceptions that a method can throw, enabling callers to handle each exception appropriately.  
+2. **Custom Exceptions**: Define custom exceptions for specific error scenarios to improve clarity and maintainability.  
+3. **Exception Hierarchy**: Use existing exception classes in the language (e.g., `IOException`, `NullPointerException`) to provide meaningful context.  
+4. **Documentation**: Clearly document the exceptions a method can throw to guide callers in implementing proper error handling.  
+5. **Code Reviews**: Regularly review code to ensure compliance with exception-handling best practices.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the issue described in the Problem Statement.
+
+---
+
+#### **Solution Language**  
+Java  
+
+--- 

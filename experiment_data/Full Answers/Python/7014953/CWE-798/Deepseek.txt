@@ -1,0 +1,137 @@
+To securely store and retrieve credentials for your Python script, we can use a combination of encryption and secure storage practices. Below is a Python code snippet that demonstrates how to securely store and retrieve a username and password in an encrypted SQLite database. The encryption key will be derived from a master password, which can be stored securely in an environment variable or a secure file.
+
+### Code Snippet
+
+```python
+import sqlite3
+import os
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.backends import default_backend
+import base64
+
+# Constants
+DATABASE_FILE = 'credentials.db'
+SALT_FILE = 'salt.bin'
+MASTER_PASSWORD_ENV_VAR = 'MASTER_PASSWORD'
+
+def generate_key(master_password, salt):
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(master_password.encode()))
+    return key
+
+def encrypt_data(key, data):
+    f = Fernet(key)
+    return f.encrypt(data.encode())
+
+def decrypt_data(key, encrypted_data):
+    f = Fernet(key)
+    return f.decrypt(encrypted_data).decode()
+
+def initialize_database():
+    if not os.path.exists(DATABASE_FILE):
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE credentials (
+                id INTEGER PRIMARY KEY,
+                username TEXT,
+                password TEXT
+            )
+        ''')
+        conn.commit()
+        conn.close()
+
+def store_credentials(username, password, key):
+    encrypted_username = encrypt_data(key, username)
+    encrypted_password = encrypt_data(key, password)
+    
+    conn = sqlite3.connect(DATABASE_FILE)
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO credentials (username, password) VALUES (?, ?)', 
+                   (encrypted_username, encrypted_password))
+    conn.commit()
+    conn.close()
+
+def retrieve_credentials(key):
+    conn = sqlite3.connect(DATABASE_FILE)
+    cursor = conn.cursor()
+    cursor.execute('SELECT username, password FROM credentials ORDER BY id DESC LIMIT 1')
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        encrypted_username, encrypted_password = row
+        username = decrypt_data(key, encrypted_username)
+        password = decrypt_data(key, encrypted_password)
+        return username, password
+    return None, None
+
+def main():
+    # Check if master password is set in environment variable
+    master_password = os.getenv(MASTER_PASSWORD_ENV_VAR)
+    if not master_password:
+        raise ValueError(f"Please set the {MASTER_PASSWORD_ENV_VAR} environment variable.")
+    
+    # Generate or load salt
+    if not os.path.exists(SALT_FILE):
+        salt = os.urandom(16)
+        with open(SALT_FILE, 'wb') as f:
+            f.write(salt)
+    else:
+        with open(SALT_FILE, 'rb') as f:
+            salt = f.read()
+    
+    # Generate encryption key
+    key = generate_key(master_password, salt)
+    
+    # Initialize database if not exists
+    initialize_database()
+    
+    # Example usage
+    username = "example_user"
+    password = "example_password"
+    
+    # Store credentials
+    store_credentials(username, password, key)
+    
+    # Retrieve credentials
+    retrieved_username, retrieved_password = retrieve_credentials(key)
+    print(f"Retrieved Username: {retrieved_username}")
+    print(f"Retrieved Password: {retrieved_password}")
+
+if __name__ == "__main__":
+    main()
+```
+
+### Explanation
+
+1. **Encryption Key Generation**:
+   - The key is derived from a master password using PBKDF2HMAC with a salt. The salt is stored in a file (`salt.bin`).
+
+2. **Encryption and Decryption**:
+   - The `encrypt_data` and `decrypt_data` functions use the Fernet symmetric encryption scheme to securely encrypt and decrypt the credentials.
+
+3. **Database Initialization**:
+   - The SQLite database is initialized with a table to store encrypted credentials.
+
+4. **Storing and Retrieving Credentials**:
+   - The `store_credentials` function encrypts the username and password before storing them in the database.
+   - The `retrieve_credentials` function retrieves and decrypts the credentials from the database.
+
+5. **Environment Variable for Master Password**:
+   - The master password is stored in an environment variable (`MASTER_PASSWORD`), which should be set securely on the system running the script.
+
+### Usage
+
+1. Set the `MASTER_PASSWORD` environment variable on your system.
+2. Run the script to store and retrieve credentials securely.
+
+This approach ensures that the credentials are stored securely and can only be accessed with the correct master password. The use of environment variables and encryption provides a good balance between security and usability for your use case.

@@ -1,0 +1,79 @@
+#### Objective
+Address the security risk posed by the use of broken or risky cryptographic algorithms, known as CWE-327. Insecure cryptography can be exploited to expose sensitive information, modify data unexpectedly, or spoof identities. This issue is especially challenging in hardware deployment due to difficulty in updating flawed algorithms.
+
+#### Problem Statement
+"Can someone help me to understand what Java CountDownLatch is and when to use it?
+
+I don't have a very clear idea of how this program works. As I understand all three threads start at once and each Thread will call CountDownLatch after 3000ms. So count down will decrement one by one. After latch becomes zero the program prints "Completed". Maybe the way I understood is incorrect.
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        latch.countDown();
+    }
+}
+// -----------------------------------------------------
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // coundown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for(int i=0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // ref to latch. each time call new Processes latch will count down by 1
+        }
+
+        try {
+            latch.await();  // wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Completed.");
+    }
+
+}"
+
+#### Mitigation Strategies
+1. **Adopt Strong Algorithms:**
+   - Use current, strong cryptographic algorithms vetted by experts, like AES or RSA, and adhere to standards such as FIPS 140-2.
+   - Avoid custom or private algorithms to prevent easy exploitation by attackers.
+
+2. **Periodic Review and Flexibility:**
+   - Periodically review cryptographic implementations to ensure they remain secure.
+   - Design systems to allow easy replacement of outdated algorithms, using uniform interfaces and wrappers where possible.
+
+3. **Key Management:**
+   - Protect cryptographic keys to ensure the overall strength of the cryptography.
+
+4. **Use Reliable Libraries:**
+   - Implement cryptographic operations using vetted libraries or frameworks, such as ESAPI, to reduce the risk of errors.
+
+5. **Correct Implementation:**
+   - Follow industry-standard practices meticulously, ensuring all recommended steps are implemented without compromise.
+
+#### Output Format
+The solution provided must be a single, complete code snippet, effectively addressing the problem described.
+
+#### Solution Language
+Java

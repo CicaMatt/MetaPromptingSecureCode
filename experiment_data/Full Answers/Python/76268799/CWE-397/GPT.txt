@@ -1,0 +1,45 @@
+To resolve the issue with using Enums in SQLAlchemy 2.0 and mapped_column with PostgreSQL, you should ensure the mapping correctly references SQLAlchemy's Enum type rather than the PostgreSQL-specific Enum directly for the status column. The error you're encountering indicates a misuse of Enum type that's causing SQLAlchemy to misinterpret the class structure.
+
+Here’s the corrected code:
+
+```python
+from sqlalchemy import Column, Enum
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column
+import enum
+import datetime as dt
+import uuid
+
+Base = declarative_base()
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatus] = mapped_column(Enum(CampaignStatus), nullable=False)
+
+# Ensure your database engine and session configurations are set up correctly
+# Example:
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
+# engine = create_engine('postgresql+psycopg2://user:password@localhost/mydatabase')
+# Base.metadata.create_all(engine)
+```
+
+### Key Changes:
+
+1. **Use SQLAlchemy's Enum Type:**
+   - Changed `CampaignStatusType` to directly use SQLAlchemy's `Enum` type while specifying `CampaignStatus` as the Python enum. This eliminates the need to use the PostgreSQL-specific ENUM type directly.
+   
+2. **Correct the `status` Column Definition:**
+   - Set `status` to be a `mapped_column` of `Enum(CampaignStatus)` instead of the previously defined `CampaignStatusType`. This is more in line with SQLAlchemy’s ORM mapping in version 2.0, where type hints and the `Enum` type ensure proper handling.
+
+3. **Declarative Base Setup:**
+   - Make sure you are using SQLAlchemy's `declarative_base()` to define the base class for declarative class definitions.
+
+This approach ensures that SQLAlchemy correctly interprets the enum data type, aligning with the newer version's syntax and best practices. Don't forget to handle database connections and schema creation as needed for your application.

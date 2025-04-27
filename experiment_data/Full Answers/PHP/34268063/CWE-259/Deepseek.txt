@@ -1,0 +1,43 @@
+```php
+<?php
+class MyObject {
+    // Example class definition
+}
+
+class NullMyObject extends MyObject {
+    // Null Object Pattern implementation
+    public function __construct() {
+        // Initialize with default/null values
+    }
+}
+
+function getMyObject(): MyObject {
+    // Simulate a scenario where the object might not be found
+    $object = null; // Replace with actual logic to fetch the object
+
+    if ($object === null) {
+        return new NullMyObject(); // Return a Null Object instead of null
+    }
+
+    return $object;
+}
+
+// Usage
+$myObject = getMyObject();
+
+if ($myObject instanceof NullMyObject) {
+    // Handle the case where the object is null
+    echo "Object not found, using NullMyObject.\n";
+} else {
+    // Proceed with the valid object
+    echo "Object found.\n";
+}
+?>
+```
+
+### Explanation:
+- **Null Object Pattern**: Instead of returning `null`, a `NullMyObject` instance is returned. This avoids the need for `try...catch` blocks and ensures type safety.
+- **Type Safety**: The method `getMyObject()` adheres to the return type `MyObject` by returning either a valid `MyObject` or a `NullMyObject`.
+- **Avoiding Hard-coded Passwords**: This solution does not involve hard-coded passwords, aligning with secure coding practices.
+
+This approach ensures that your code remains clean, type-safe, and avoids the pitfalls of returning `null` when a return type is defined.

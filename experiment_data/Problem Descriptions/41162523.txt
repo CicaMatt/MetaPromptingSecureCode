@@ -1,0 +1,9 @@
+Let say i have encripted SHA1 password like this
+
+String pass = "f6ce584e7b4ff5253eed4a2ea2b44247";
+and i want make condition like this :
+
+ if (pass.equals("userinput")){
+        System.out.println("success");
+    }
+please someone help me to make proper condition / function to compare those both value between user input and encripted password. Your help will be highly appreciated. thanks

@@ -1,0 +1,58 @@
+```php
+<?php
+
+class MyClass {
+    private array $dynamicProperties = [];
+
+    public function __set(string $name, mixed $value): void {
+        $this->dynamicProperties[$name] = $value;
+    }
+
+    public function __get(string $name): mixed {
+        return $this->dynamicProperties[$name] ?? null;
+    }
+
+    public function __isset(string $name): bool {
+        return isset($this->dynamicProperties[$name]);
+    }
+
+    public function __unset(string $name): void {
+        unset($this->dynamicProperties[$name]);
+    }
+}
+
+
+// Example usage demonstrating compatibility with dynamic property access:
+$obj = new MyClass();
+
+// Setting dynamic properties
+$obj->name = "John Doe";
+$obj->age = 30;
+$obj->city = "New York";
+
+// Getting dynamic properties
+echo $obj->name . "\n"; // Output: John Doe
+echo $obj->age . "\n";  // Output: 30
+
+// Checking if a dynamic property exists
+if (isset($obj->city)) {
+    echo $obj->city . "\n"; // Output: New York
+}
+
+// Unsetting a dynamic property
+unset($obj->age);
+
+// Trying to access the unset property (will return null)
+var_dump($obj->age); // Output: NULL
+
+
+//Demonstrating that the underlying mechanism uses an array:
+var_dump($obj->dynamicProperties); // Output: array(2) { ["name"]=> string(8) "John Doe" ["city"]=> string(8) "New York" }
+
+
+?>
+```
+
+**Explanation:**
+
+This solution utilizes PHP's magic methods `__set`, `__get`, `__isset`, and `__unset` to emulate dynamic properties. Instead of directly creating dynamic properties, it stores them in a private array called `$dynamicProperties`.  This approach avoids the deprecation warning in PHP 8.2 and the fatal error in PHP 9.0 and later, while maintaining the same functionality as dynamic properties.  It also clearly demonstrates how the data is being stored, and allows for direct access to the underlying data if needed.  This approach is considerably cleaner and more maintainable than using reflection or other workarounds.  It respects encapsulation by keeping the underlying storage private.  Finally, it's forward-compatible, eliminating the need for future changes.

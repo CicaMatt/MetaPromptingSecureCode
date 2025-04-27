@@ -1,0 +1,56 @@
+#### **Objective**  
+The use of broken or risky cryptographic algorithms can lead to severe security vulnerabilities, including unauthorized data access, data tampering, and identity spoofing. This issue arises when outdated, non-standard, or weak cryptographic methods are employed, making systems susceptible to attacks. The objective is to ensure the implementation of secure, up-to-date cryptographic algorithms to protect sensitive data and maintain system integrity.
+
+---
+
+#### **Problem Statement**  
+"I want to write a program with database connectivity and exception handling in PHP. If I insert an incorrect username then it should display its corresponding error message, and if I insert the incorrect database it should display its corresponding error message.
+
+But in the following program whether I insert incorrect database or incorrect username it only displays the message "Could not connect to database".
+
+<?php
+   $hostname = "localhost";
+   $username = "root1";
+   $password = "";
+   $database = "php_thenewboston";
+   $conn = mysqli_connect($hostname,$username,$password);
+   $conn_db = mysqli_select_db($conn,$database);
+   class ServerException extends Exception{}  
+   class DatabaseException extends Exception{}
+   try{
+       if(!$conn){
+           throw new ServerException('Could not connect to server.');
+       }elseif(!$conn_db){
+           throw new DatabaseException('Could not connect to database.');
+       }else{
+           echo "Connected.";
+       }
+   }catch(ServerException $ex){
+       echo "Error :".$ex->getMessage();        
+   }catch(DatabaseException $ex){
+       echo "Error :".$ex->getMessage();
+   }
+?>
+I am a beginner in PHP. Please comment below for any query."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Use Strong, Up-to-Date Algorithms**: Replace outdated or weak algorithms (e.g., MD5, SHA1, DES) with modern, vetted cryptographic algorithms such as AES-256, SHA-256, or SHA-3.  
+2. **Leverage Vetted Libraries**: Utilize well-tested cryptographic libraries (e.g., OpenSSL, BouncyCastle, or language-specific libraries) to avoid implementation errors.  
+3. **Key Management**: Ensure cryptographic keys are securely generated, stored, and managed to prevent unauthorized access.  
+4. **Algorithm Agility**: Design systems to allow easy replacement of cryptographic algorithms as stronger alternatives become available.  
+5. **Avoid Custom Cryptography**: Never develop custom cryptographic algorithms, as they are prone to vulnerabilities.  
+6. **Periodic Review**: Regularly review and update cryptographic implementations to ensure compliance with current security standards (e.g., FIPS 140-2).  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

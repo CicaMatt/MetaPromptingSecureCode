@@ -1,0 +1,23 @@
+**Objective:**  
+The security concern involves the use of hard-coded credentials within a product, either for inbound or outbound authentication. This can lead to significant risks such as unauthorized access, data breaches, and compromised system integrity. Inbound hard-coded credentials can result in default accounts with simple passwords that are difficult to change, while outbound hard-coded credentials can expose sensitive back-end service access details that are easy to discover.
+
+**Problem Statement:**  
+"I would like to be able to get access to all trusted root certificates programmatically in a Java app.
+
+I was looking at the keystore interface, but I'm hoping to get the list of trusted roots that's implicit with the JRE.
+
+Is this accessible anywhere?"
+
+**Mitigation Strategies:**  
+1. **Architectural Design:**
+   - Store outbound authentication credentials in a secured, encrypted configuration file or database. Use strong encryption and restrict access to authorized users only. Consider using platform-specific security features like Windows EFS.
+   - Implement a "first login" mechanism to allow users to set a unique, strong password or key, avoiding hard-coded defaults.
+   - If hard-coded credentials must remain, restrict access to the feature requiring them, ensuring it is only accessible through secured channels.
+   - Use strong, one-way hashes with unique salts for inbound authentication credentials, storing hashed passwords rather than plain text.
+   - For front-end to back-end connections, use frequently changing generated credentials stored securely, restrict backend actions to necessary operations, and employ message tagging with checksums to prevent replay attacks.
+
+**Output Format:**  
+The solution must be provided as a single and complete code snippet.
+
+**Solution Language:**  
+Java

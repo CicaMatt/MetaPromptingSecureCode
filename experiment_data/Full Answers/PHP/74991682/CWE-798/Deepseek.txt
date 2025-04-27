@@ -1,0 +1,72 @@
+To address the issue of dynamic properties in PHP 8.2 and ensure compatibility with future PHP versions, we need to refactor the code to avoid using dynamic properties. Instead, we can use explicit class properties or magic methods like `__get` and `__set` to handle dynamic property access in a controlled manner.
+
+Below is a PHP code snippet that demonstrates how to refactor a class to avoid dynamic properties while maintaining functionality. This example also incorporates secure credential management practices:
+
+```php
+<?php
+
+class SecureCredentialsManager
+{
+    private array $credentials = [];
+    private string $encryptionKey;
+
+    public function __construct(string $encryptionKey)
+    {
+        $this->encryptionKey = $encryptionKey;
+    }
+
+    public function setCredential(string $key, string $value): void
+    {
+        $this->credentials[$key] = $this->encrypt($value);
+    }
+
+    public function getCredential(string $key): ?string
+    {
+        if (isset($this->credentials[$key])) {
+            return $this->decrypt($this->credentials[$key]);
+        }
+        return null;
+    }
+
+    private function encrypt(string $data): string
+    {
+        return openssl_encrypt($data, 'AES-128-CBC', $this->encryptionKey, 0, substr($this->encryptionKey, 0, 16));
+    }
+
+    private function decrypt(string $data): string
+    {
+        return openssl_decrypt($data, 'AES-128-CBC', $this->encryptionKey, 0, substr($this->encryptionKey, 0, 16));
+    }
+}
+
+// Example usage
+$encryptionKey = 'your-secure-encryption-key'; // This should be stored securely, e.g., in environment variables
+$credentialManager = new SecureCredentialsManager($encryptionKey);
+
+// Set credentials securely
+$credentialManager->setCredential('db_password', 'mySecurePassword123');
+
+// Retrieve credentials securely
+$dbPassword = $credentialManager->getCredential('db_password');
+echo "Database Password: $dbPassword\n";
+```
+
+### Explanation:
+
+1. **Avoiding Dynamic Properties**:
+   - The `SecureCredentialsManager` class uses an associative array `$credentials` to store credentials securely.
+   - Instead of dynamically creating properties, we use explicit methods `setCredential` and `getCredential` to manage credentials.
+
+2. **Secure Storage**:
+   - Credentials are encrypted before being stored in the `$credentials` array using the `encrypt` method.
+   - The `decrypt` method is used to retrieve and decrypt the credentials when needed.
+
+3. **Encryption**:
+   - The `openssl_encrypt` and `openssl_decrypt` functions are used for encryption and decryption, ensuring that credentials are stored securely.
+   - The encryption key should be stored securely, such as in environment variables, and not hard-coded in the script.
+
+4. **Access Control**:
+   - The `$credentials` array is private, ensuring that it cannot be accessed directly from outside the class.
+   - The `setCredential` and `getCredential` methods provide controlled access to the credentials.
+
+This approach ensures compatibility with PHP 8.2 and future versions while maintaining secure credential management practices.

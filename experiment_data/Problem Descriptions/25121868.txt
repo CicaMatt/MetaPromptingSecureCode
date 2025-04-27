@@ -1,0 +1,78 @@
+I need help to convert this code to Java for password comparison and it must run on Android. I am specially confused in how to add the salt given in this C# Code here:
+
+Code C#
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace CMS.Core.Utility
+{
+    public sealed class CMSHashManager
+    {
+        private static readonly string _salt = "3D5900AE-111A-45BE-96B3-D9E4606CA793";
+        private static readonly int _hashIterationsMax = 10;
+        private CMSHashManager()
+        {
+        }
+
+        #region Public Methods
+        //Gets the salted hash value with predetermined iterations.
+        public static string GetPasswordHash(string plaintextPassword)
+        {
+            string hashData = plaintextPassword;
+            for (int hashLimit = 0; hashLimit < _hashIterationsMax; hashLimit++)
+                hashData = GetHash(_salt + hashData);
+            return hashData;
+        }
+
+        //Verifies the hash
+        public static bool VerifyHashedPassword(string plaintextPassword, string encryptedPassword)
+        {
+            string hashData = GetPasswordHash(plaintextPassword);
+            return encryptedPassword.Equals(hashData);
+        }
+
+        #endregion Public Methods
+
+        #region Private Methods
+        //Gets the hash value of the data using SHA512Managed
+        private static string GetHash(string unhashedData)
+        {
+            byte[] hashData = Encoding.UTF8.GetBytes(unhashedData);
+            // on server 2003 or higher, can use SHA512CryptoServiceProvider         
+            //SHA512CryptoServiceProvider sha512CryptoServiceProvider = new SHA512CryptoServiceProvider();
+
+            SHA512Managed sha512CryptoServiceProvider = new SHA512Managed();
+            hashData = sha512CryptoServiceProvider.ComputeHash(hashData);
+            sha512CryptoServiceProvider.Clear();
+            return Convert.ToBase64String(hashData);
+        }
+        #endregion Private Methods
+
+    }
+
+}
+I have already written this java method which creates a MD5 hash:
+
+Code Java
+public String getMD5Password(String password) throws NoSuchAlgorithmException, UnsupportedEncodingException{
+    MessageDigest digest = java.security.MessageDigest.getInstance("SHA-512"); 
+    digest.update(password.getBytes("UTF-16LE")); 
+    byte messageDigest[] = digest.digest();
+
+    // Create Hex String
+    StringBuffer hexString = new StringBuffer();
+    for (int i = 0; i < messageDigest.length; i++) {
+        String h = Integer.toHexString(0xFF & messageDigest[i]);
+        while (h.length() < 2)
+            h = "0" + h;
+        hexString.append(h);
+    }
+    return hexString.toString();
+}
+Test
+For testing purposes you can use the following case:
+
+plaintext:12345
+Encrypted:NgkuakH7UsCQwGHMQOhVXI3nW6M+1AtREY4Qx35osQo87p/whZIzy8cZU7+R7XnmyzgMzLWSvX+rTiW‌​‌​zfGTPsA==

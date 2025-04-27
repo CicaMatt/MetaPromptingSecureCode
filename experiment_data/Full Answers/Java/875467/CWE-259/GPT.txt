@@ -1,0 +1,69 @@
+To address the issue of using a client certificate with `HttpsURLConnection` while avoiding hard-coded passwords, you can manage certificates and passwords securely using the Java KeyStore. Below is a code snippet demonstrating how you can load a client certificate from a `.p12` file, which is password-protected, and use it with `HttpsURLConnection`. You should ensure that sensitive information like passwords is not hard-coded.
+
+In this solution, consider using a secure mechanism to store and retrieve the password for the KeyStore (e.g., environment variables, secure configuration storage). For demonstration purposes, I use a simple example, but in production, make use of appropriate secure storage for passwords.
+
+```java
+import javax.net.ssl.*;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+import java.util.concurrent.TimeUnit;
+
+public class SecureHttpsClient {
+    public static void main(String[] args) {
+        try {
+            // Load client certificate
+            // Replace "your_certificate.p12" with the path to your client certificate file
+            // Retrieve the password securely, e.g., from environment variables
+            String keyStorePassword = System.getenv("KEYSTORE_PASSWORD");
+            FileInputStream keyStoreStream = new FileInputStream("path/to/your_certificate.p12");
+
+            // Initialize KeyStore
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            keyStore.load(keyStoreStream, keyStorePassword.toCharArray());
+
+            // Create KeyManagerFactory using the KeyStore
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+
+            // Create trust manager to handle self-signed certificates
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init((KeyStore) null);
+
+            // Initialize SSLContext with KeyManager and TrustManager
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+            // Create URL connection
+            URL url = new URL("https://somehost.dk:3049");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+
+            // Set connection timeouts
+            connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(10));
+            connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(10));
+
+            // Make request and read response
+            try (InputStream responseStream = connection.getInputStream()) {
+                // Handle the response stream as required
+                // For demonstration, simply print out the content
+                int data;
+                while ((data = responseStream.read()) != -1) {
+                    System.out.print((char) data);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+- **Loading KeyStore:** We load a client certificate from a `.p12` file. Securely manage your password retrieval, such as using `System.getenv("KEYSTORE_PASSWORD")`.
+- **TrustManager:** Use a trust manager to handle self-signed certificates, ensuring that your SSLContext is properly initialized.
+- **SSLContext:** This is configured with both key managers and trust managers.
+- **HttpsURLConnection is used to communicate with the server**, ensuring a secure TLS connection.
+- **Security:** Sensitive information such as passwords should be handled securely, not hard-coded, and managed according to your security policies.

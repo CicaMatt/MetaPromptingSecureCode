@@ -1,0 +1,87 @@
+To address the problem of differing TripleDES encryption outputs across ColdFusion, PHP, and Perl, we need to ensure the encryption process is consistent. We'll accomplish this by carefully managing the encryption settings and implementation detail to match the Perl example provided by the payment processor. Furthermore, we'll incorporate the mitigation strategies mentioned to enhance the security of the solution.
+
+Here is the PHP solution:
+
+```php
+<?php
+// Define custom exception classes
+class EncryptionException extends Exception {}
+class InvalidKeyException extends EncryptionException {}
+
+// Function to securely obtain the encryption key (Avoiding hard-coded password)
+function getEncryptionKey()
+{
+    // In a real scenario, load from a secure environment or encrypted configuration file
+    return '123412341234123412341234'; // Ensure the key length matches 24 bytes (TripleDES requirement)
+}
+
+// Function to match Perl's encryption with TripleDES
+function encryptTripleDES($plainText, $key)
+{
+    // Use OpenSSL (strong cryptographic implementation)
+    $cipher = 'DES-EDE3';
+
+    // Ensure the key is of proper length
+    if (strlen($key) !== 24) {
+        throw new InvalidKeyException('Key must be exactly 24 bytes long for TripleDES encryption.');
+    }
+
+    // Encrypt the data
+    $ciphertext = openssl_encrypt(
+        $plainText,
+        $cipher,
+        $key,
+        OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING // Use RAW data output and no padding to mimic Perl
+    );
+
+    if ($ciphertext === false) {
+        throw new EncryptionException('Encryption failed: ' . openssl_error_string());
+    }
+
+    // Base64 encode to match Perl's Base64 encoding
+    return base64_encode($ciphertext);
+}
+
+// Main script
+try {
+    // Securely get the encryption key
+    $encryptionKey = getEncryptionKey();
+
+    // The plaintext to be encrypted
+    $stringToEncrypt = 'username=test123';
+
+    // Encrypt the string
+    $encryptedString = encryptTripleDES($stringToEncrypt, $encryptionKey);
+
+    // Print the result
+    echo "Encrypted string (Base64): $encryptedString\n";
+
+} catch (InvalidKeyException $e) {
+    // Handle invalid key error
+    echo 'Key Error: ' . $e->getMessage() . "\n";
+} catch (EncryptionException $e) {
+    // Handle encryption-specific errors
+    echo 'Encryption Error: ' . $e->getMessage() . "\n";
+} catch (Exception $e) {
+    // Handle other generic exceptions
+    echo 'Unexpected Error: ' . $e->getMessage() . "\n";
+}
+?>
+```
+
+### Key Points and Mitigation Strategies Addressed:
+
+1. **Avoid Hard-Coded Passwords (CWE-259/798):**
+   - The function `getEncryptionKey()` simulates loading the encryption key from a secure source, although it's hard-coded here for demonstration. In practice, this should retrieve from a secure environment variable, encrypted configuration file, or a secure storage.
+
+2. **Use Strong Cryptographic Algorithms (CWE-327):**
+   - OpenSSL is used with the `DES-EDE3` cipher, corresponding to TripleDES.
+   - Key management is highlighted, ensuring the key is securely obtained and checked for the correct length.
+
+3. **Avoid Obsolete Functions (CWE-477):**
+   - Replaced deprecated `mcrypt_*` functions with `openssl_*` functions, ensuring security continuity and use of up-to-date encryption standards.
+
+4. **Error Handling with Specific Exceptions (CWE-397):**
+   - Specific exceptions are caught and handled to avoid revealing sensitive system information.
+
+By following these guidelines, you ensure the cryptographic operations are secure, align with the expected output from the payment processor, and adhere to modern security practices.

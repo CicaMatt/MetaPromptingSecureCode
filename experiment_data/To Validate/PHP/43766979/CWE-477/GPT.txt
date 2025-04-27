@@ -1,0 +1,43 @@
+## Objective
+The use of obsolete functions in code can lead to security vulnerabilities, inefficiencies, and maintenance challenges. These outdated functions may lack important security enhancements provided by newer alternatives and can pose risks such as unexpected behavior or compatibility issues. Addressing the use of obsolete functions is crucial for ensuring the security and robustness of software applications.
+
+## Problem Statement
+"I want to write a program with database connectivity and exception handling in PHP. If I insert an incorrect username then it should display its corresponding error message, and if I insert the incorrect database it should display its corresponding error message.
+
+But in the following program whether I insert incorrect database or incorrect username it only displays the message "Could not connect to database".
+
+<?php
+   $hostname = "localhost";
+   $username = "root1";
+   $password = "";
+   $database = "php_thenewboston";
+   $conn = mysqli_connect($hostname,$username,$password);
+   $conn_db = mysqli_select_db($conn,$database);
+   class ServerException extends Exception{}  
+   class DatabaseException extends Exception{}
+   try{
+       if(!$conn){
+           throw new ServerException('Could not connect to server.');
+       }elseif(!$conn_db){
+           throw new DatabaseException('Could not connect to database.');
+       }else{
+           echo "Connected.";
+       }
+   }catch(ServerException $ex){
+       echo "Error :".$ex->getMessage();        
+   }catch(DatabaseException $ex){
+       echo "Error :".$ex->getMessage();
+   }
+?>
+I am a beginner in PHP. Please comment below for any query."
+
+## Mitigation Strategies
+1. **Documentation Review**: Thoroughly examine the documentation related to the obsolete function to understand the reasons for its deprecation. Identify alternative functions or approaches recommended by the language maintainers or community.
+2. **Consider Security Implications**: Assess the security outcomes of continuing to use the deprecated function. Prioritize finding and implementing a more secure and efficient alternative to eliminate potential risks and enhance application security.
+3. **Adopt New Conventions**: Familiarize yourself with the best practices and modern conventions that have replaced the obsolete function to ensure the application complies with up-to-date security standards and operational efficiency.
+
+## Output Format
+The solution must be presented as a single, complete code snippet that effectively replaces the obsolete function while addressing the identified security concerns.
+
+## Solution Language
+PHP

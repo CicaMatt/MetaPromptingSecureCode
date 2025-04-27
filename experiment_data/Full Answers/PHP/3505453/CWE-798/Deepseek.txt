@@ -1,0 +1,88 @@
+To address the problem of hard-coded credentials and ensure secure encryption/decryption between C# and PHP, we need to implement a secure approach in PHP that matches the C# encryption logic. Below is the PHP code that replicates the C# encryption process, while also incorporating secure practices such as avoiding hard-coded credentials and using environment variables for sensitive data.
+
+### PHP Code for Secure Encryption/Decryption
+
+```php
+<?php
+
+/*
+ * DEFINE CONSTANTS FROM ENVIRONMENT VARIABLES
+ */
+$HashPassPhrase = getenv('ENCRYPTION_PASSPHRASE'); // Use environment variable for passphrase
+$HashSalt = getenv('ENCRYPTION_SALT'); // Use environment variable for salt
+$HashAlgorithm = "SHA1";
+$HashIterations = 2;
+$InitVector = "1a2b3c4d5e6f7g8h"; // Must be 16 bytes
+$keySize = 256;
+
+class Cipher {
+    private $securekey, $iv;
+
+    function __construct($textkey, $salt, $hashAlgorithm, $iterations, $initVector, $keySize) {
+        // Derive the key using PBKDF2 with HMAC-SHA1
+        $this->securekey = hash_pbkdf2($hashAlgorithm, $textkey, $salt, $iterations, $keySize / 8, true);
+        $this->iv = $initVector;
+    }
+
+    function encrypt($input) {
+        // Pad the input to be a multiple of the block size
+        $blockSize = 32; // 256 bits = 32 bytes
+        $padding = $blockSize - (strlen($input)) % $blockSize;
+        $input .= str_repeat(chr($padding), $padding);
+
+        // Encrypt the input using AES-256-CBC
+        $cipherText = openssl_encrypt($input, 'AES-256-CBC', $this->securekey, OPENSSL_RAW_DATA, $this->iv);
+
+        // Return base64 encoded cipher text
+        return base64_encode($cipherText);
+    }
+
+    function decrypt($input) {
+        // Decode the base64 encoded input
+        $cipherText = base64_decode($input);
+
+        // Decrypt the input using AES-256-CBC
+        $plainText = openssl_decrypt($cipherText, 'AES-256-CBC', $this->securekey, OPENSSL_RAW_DATA, $this->iv);
+
+        // Remove padding
+        $padding = ord($plainText[strlen($plainText) - 1]);
+        $plainText = substr($plainText, 0, -$padding);
+
+        return $plainText;
+    }
+}
+
+// Create a new Cipher instance with the passphrase, salt, hash algorithm, iterations, init vector, and key size
+$cipher = new Cipher($HashPassPhrase, $HashSalt, $HashAlgorithm, $HashIterations, $InitVector, $keySize);
+
+// Example usage
+$plainText = "Text To Encrypt";
+$encryptedText = $cipher->encrypt($plainText);
+echo "Encrypted: $encryptedText\n";
+
+$decryptedText = $cipher->decrypt($encryptedText);
+echo "Decrypted: $decryptedText\n";
+```
+
+### Explanation of the Code
+
+1. **Environment Variables**: 
+   - The passphrase and salt are retrieved from environment variables (`ENCRYPTION_PASSPHRASE` and `ENCRYPTION_SALT`), avoiding hard-coded credentials.
+
+2. **Key Derivation**:
+   - The key is derived using `hash_pbkdf2` with HMAC-SHA1, matching the C# `PasswordDeriveBytes` functionality.
+
+3. **Encryption/Decryption**:
+   - The `openssl_encrypt` and `openssl_decrypt` functions are used with AES-256-CBC mode, which is equivalent to Rijndael with a 256-bit key in CBC mode.
+   - Padding is manually added to ensure the input is a multiple of the block size (32 bytes for AES-256).
+
+4. **Base64 Encoding**:
+   - The encrypted data is base64 encoded for safe transmission over HTTP.
+
+### Secure Practices
+
+- **Avoid Hard-Coding Credentials**: Use environment variables or secure vaults to store sensitive information.
+- **Strong Key Derivation**: Use PBKDF2 with a sufficient number of iterations to derive the encryption key.
+- **Secure Encryption**: Use AES-256-CBC for encryption, which is a strong and widely accepted standard.
+
+This PHP code should produce encrypted text that can be decrypted by the provided C# code, ensuring secure and consistent encryption/decryption across both platforms.

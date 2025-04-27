@@ -1,0 +1,35 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I'm busy creating an application and i want to use the PHP 7 return types. Now I read on php.net that it was a design decision that it is not allowed to return null when a return type is defined.
+
+What is the correct way too handle this?
+
+One option is a try...catch block:
+
+public function getMyObject() : MyObject
+{ 
+     return null;
+}
+
+try
+{
+    getMyObject();
+}
+catch(Exception $e)
+{
+    //Catch the exception
+}
+I don't have a good feeling about this, because my code will be a huge try...catch block since I need to write a try...catch block for every method that returns an object.
+
+The Null Object Pattern is a good solution for this, but I don't like the idea to create a NullObject for each object in my application. Is there correct way to do this?"
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  PHP

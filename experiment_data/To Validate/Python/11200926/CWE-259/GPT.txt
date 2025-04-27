@@ -1,0 +1,64 @@
+**Objective:**  
+The primary security concern is the use of hard-coded passwords in a software product, which can lead to significant authentication failures. These weaknesses can result in unauthorized access, exploitation, and potential system compromise, affecting system integrity and security. Hard-coded passwords are difficult to detect, challenging to fix, and can potentially force disabling of the product if publicized.
+
+**Problem Statement:**  
+"i am new to scrapy and decided to try it out because of good online reviews. I am trying to login to a website with scrapy. I have successfully logged in with a combination of selenium and mechanize by collecting the needed cookies with selenium and adding them to mechanize. Now I am trying to do something similar with scrapy and selenium but cant seem to get anything to work. I cant really even tell if anything is working or not. Can anyone please help me. Below is what Ive started on. I may not even need to transfer the cookies with scrapy but i cant tell if the thing ever actually logs in or not. Thanks
+
+from scrapy.spider import BaseSpider
+from scrapy.http import Response,FormRequest,Request
+from scrapy.selector import HtmlXPathSelector
+from selenium import webdriver
+
+class MySpider(BaseSpider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def get_cookies(self):
+        driver = webdriver.Firefox()
+        driver.implicitly_wait(30)
+        base_url = "http://www.my_domain.com/"
+        driver.get(base_url)
+        driver.find_element_by_name("USER").clear()
+        driver.find_element_by_name("USER").send_keys("my_username")
+        driver.find_element_by_name("PASSWORD").clear()
+        driver.find_element_by_name("PASSWORD").send_keys("my_password")
+        driver.find_element_by_name("submit").click()
+        cookies = driver.get_cookies()
+        driver.close()
+        return cookies
+
+    def parse(self, response,my_cookies=get_cookies):
+        return Request(url="http://my_domain.com/",
+            cookies=my_cookies,
+            callback=self.login)
+
+    def login(self,response):
+        return [FormRequest.from_response(response,
+            formname='login_form',
+            formdata={'USER': 'my_username', 'PASSWORD': 'my_password'},
+            callback=self.after_login)]
+
+    def after_login(self, response):
+        hxs = HtmlXPathSelector(response)
+        print hxs.select('/html/head/title').extract()"
+
+**Mitigation Strategies:**  
+1. **Architecture and Design Phase:**
+   - **Outbound Authentication:**
+     - Store passwords in a securely encrypted configuration file or database, ensuring protection from unauthorized access.
+     - Protect the encryption key with appropriate security measures (CWE-320).
+   - **Inbound Authentication:**
+     - Implement a "first login" mode to prompt users to create a unique, strong password.
+     - Apply strong one-way hashing to passwords, storing hashes with proper access control. Use per-user salting to enhance security against brute-force attacks.
+   - **Access Control:**
+     - Enforce strict access control checks, limiting feature access that requires authenticating with hard-coded passwords.
+   - **Front-end to Back-end Connections:**
+     - Utilize generated passwords that change automatically and require periodic manual entry by a system administrator.
+     - Limit front-end granted actions on the back-end system.
+     - Implement message tagging and checksumming to prevent replay attacks.
+
+**Output Format:**  
+The solution must be generated as a single and complete code snippet.
+
+**Solution Language:**  
+Python

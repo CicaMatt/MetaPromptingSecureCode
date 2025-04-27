@@ -1,0 +1,72 @@
+To address the security concern of using unsecure SQL statements with hard-coded inputs, we can replace them with prepared statements. Prepared statements not only help protect against SQL injection attacks but also can improve performance by pre-compiling SQL and reuse them with different input values. Here's how you can implement a secure MySQL prepared statement in PHP to retrieve information from a database, using inputs from URL parameters.
+
+```php
+<?php
+// Enable error reporting
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+// Database connection parameters
+$servername = "localhost";
+$username = "your_username";
+$password = "your_password";
+$dbname = "your_database";
+
+try {
+    // Create a new mysqli instance
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    // Check for connect error
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    // Check if userid and category are set in the URL parameters
+    if (isset($_GET['userid']) && isset($_GET['category'])) {
+        $userid = $_GET['userid'];
+        $category = $_GET['category'];
+
+        // Prepare the SQL statement
+        $stmt = $conn->prepare("SELECT * FROM mytable WHERE userid=? AND category=? ORDER BY id DESC");
+
+        // Bind parameters to the SQL statement
+        // 'ss' indicates the types of the parameters: both are strings
+        $stmt->bind_param("ss", $userid, $category);
+
+        // Execute the statement
+        $stmt->execute();
+
+        // Get the result
+        $result = $stmt->get_result();
+
+        // Fetch data and process it
+        while ($row = $result->fetch_assoc()) {
+            // Do something with each row of data
+            echo "ID: " . $row['id'] . " UserID: " . $row['userid'] . " Category: " . $row['category'] . "<br>";
+        }
+
+        // Close the statement
+        $stmt->close();
+    } else {
+        echo "Missing required URL parameters.";
+    }
+
+    // Close the connection
+    $conn->close();
+} catch (mysqli_sql_exception $e) {
+    // Handle the exception
+    echo "Error: " . $e->getMessage();
+}
+?>
+```
+
+### Key Points:
+
+1. **Connection**: Securely connect to the database using mysqli.
+2. **Prepare Statement**: Use `$conn->prepare()` to create the SQL statement without directly interpolating variables. This protects against SQL injection.
+3. **Parameter Binding**: Use `bind_param()` to safely bind user input to the SQL statement.
+4. **Execution and Fetching**: Execute the query and fetch results using `get_result()` and `fetch_assoc()`.
+5. **Error Handling**: Use try-catch blocks to capture any exceptions that occur during database operations.
+
+### Performance Note:
+
+Prepared statements can indeed offer performance benefits if the same statement is executed multiple times with different parameters, due to reduced parsing and compiling overhead. However, if used only a few times on a page, the performance gain may not be significant, but security improvements are worth it.

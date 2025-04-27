@@ -1,0 +1,63 @@
+To access the list of trusted root certificates in a Java application, it's important to use modern APIs and best practices. The Java KeyStore API provides a way to manage certificates and keys, and the default trust store used by the Java Runtime Environment (JRE) can be accessed programmatically. Here's how you can achieve this:
+
+```java
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+
+public class TrustedCertificates {
+
+    public static void main(String[] args) {
+        try {
+            // Get the default trusted CA certificates file
+            String trustedCAsPath = System.getProperty("java.home") + "/lib/security/cacerts";
+
+            // Load the JRE's default keystore
+            FileInputStream is = new FileInputStream(trustedCAsPath);
+            KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keystore.load(is, "changeit".toCharArray()); // Default password is 'changeit'
+
+            // Iterate through all the certificates
+            Enumeration<String> aliases = keystore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate cert = keystore.getCertificate(alias);
+
+                // Display certificate details
+                if (cert instanceof X509Certificate) {
+                    X509Certificate x509Cert = (X509Certificate) cert;
+                    System.out.println("Certificate: " + alias);
+                    System.out.println("  Subject DN: " + x509Cert.getSubjectDN());
+                    System.out.println("  Issuer DN: " + x509Cert.getIssuerDN());
+                    System.out.println("  Serial Number: " + x509Cert.getSerialNumber());
+                    System.out.println("  Valid From: " + x509Cert.getNotBefore());
+                    System.out.println("  Valid Until: " + x509Cert.getNotAfter());
+                    System.out.println("  Signature Algorithm: " + x509Cert.getSigAlgName());
+                    System.out.println("-------------------------------------------");
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation
+1. **Load Keystore**: The JRE's default key store is located typically at `<java-home>/lib/security/cacerts`. We load this using `FileInputStream`.
+   
+2. **Access Certificates**: We utilize the `KeyStore` API to load all certificates, using `getDefaultType()` to ensure compatibility with different Java platform installations.
+
+3. **Security Best Practices**: 
+   - **Use of Property Lookup**: Dynamic look-up of `java.home` and using `System.getProperty()` ensures that the code targets the correct default JRE installation path.
+   - **Default Password**: The default password "changeit" is used, but this can be altered for deployed environments.
+   - **Clear Error Handling**: Exceptions are logged to help diagnose issues understanding which part of the certificate loading failed.
+
+### Security Implications
+- Using the default keystore path and dynamically generating the path enhances maintainability and flexibility.
+- The solution avoids deprecated methods and uses recommended APIs directly.
+
+By adopting this approach, you ensure that obsolete methods are not utilized, and application security benefits from robust management and access to trusted certificates.

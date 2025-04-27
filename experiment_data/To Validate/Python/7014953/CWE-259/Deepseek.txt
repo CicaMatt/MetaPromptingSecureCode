@@ -1,0 +1,32 @@
+#### **Objective**  
+The use of hard-coded passwords poses a significant security risk, as it can lead to unauthorized access, data breaches, and widespread exploitation. This issue is particularly dangerous because hard-coded credentials are often identical across installations, making them susceptible to large-scale attacks. The objective is to eliminate hard-coded passwords by implementing secure authentication mechanisms and storing credentials securely.
+
+---
+
+#### **Problem Statement**  
+"I'm writing a small Python script which will periodically pull information from a 3rd party service using a username and password combo. I don't need to create something that is 100% bulletproof (does 100% even exist?), but I would like to involve a good measure of security so at the very least it would take a long time for someone to break it.
+
+This script won't have a GUI and will be run periodically by cron, so entering a password each time it's run to decrypt things won't really work, and I'll have to store the username and password in either an encrypted file or encrypted in a SQLite database, which would be preferable as I'll be using SQLite anyway, and I might need to edit the password at some point. In addition, I'll probably be wrapping the whole program in an EXE, as it's exclusively for Windows at this point.
+
+How can I securely store the username and password combo to be used periodically via a cron job?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-coded Passwords**: Store passwords outside the code in a secure, encrypted configuration file or database.  
+2. **Use Strong Password Policies**: For inbound authentication, require users to set a unique, strong password during initial setup.  
+3. **Encrypt and Hash Passwords**: Apply strong one-way hashing with unique salts to stored passwords.  
+4. **Restrict Access**: Limit access to sensitive features and ensure credentials are only accessible to authorized entities.  
+5. **Dynamic Credentials**: For front-end to back-end connections, use dynamically generated, time-limited credentials with restricted permissions.  
+
+---
+
+#### **Output Format**  
+The solution must be provided as a single, complete, and executable code snippet.
+
+---
+
+#### **Solution Language**  
+Python
+
+---

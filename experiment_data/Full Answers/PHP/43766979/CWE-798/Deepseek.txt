@@ -1,0 +1,75 @@
+To address the issue of hard-coded credentials and improve the error handling in your PHP program, we can implement the following changes:
+
+1. **Avoid Hard-Coding Credentials**: Store the database credentials in environment variables or a secure configuration file.
+2. **Improved Error Handling**: Differentiate between server connection errors and database selection errors.
+3. **Secure Storage**: Use environment variables to store sensitive information.
+
+Here is the updated PHP code:
+
+```php
+<?php
+// Load environment variables from a .env file or set them in the server configuration
+// Example using a .env file with the phpdotenv library: https://github.com/vlucas/phpdotenv
+// require 'vendor/autoload.php';
+// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+// $dotenv->load();
+
+// Fetch credentials from environment variables
+$hostname = getenv('DB_HOST') ?: 'localhost';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASS') ?: '';
+$database = getenv('DB_NAME') ?: 'php_thenewboston';
+
+// Custom exception classes
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Attempt to connect to the server
+    $conn = mysqli_connect($hostname, $username, $password);
+    if (!$conn) {
+        throw new ServerException('Could not connect to server.');
+    }
+
+    // Attempt to select the database
+    $conn_db = mysqli_select_db($conn, $database);
+    if (!$conn_db) {
+        throw new DatabaseException('Could not connect to database.');
+    }
+
+    // If both connections are successful
+    echo "Connected.";
+} catch (ServerException $ex) {
+    // Handle server connection errors
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    // Handle database selection errors
+    echo "Error: " . $ex->getMessage();
+} catch (Exception $ex) {
+    // Handle any other exceptions
+    echo "An unexpected error occurred: " . $ex->getMessage();
+}
+?>
+```
+
+### Explanation:
+
+1. **Environment Variables**:
+   - The credentials are fetched from environment variables using `getenv()`. This avoids hard-coding sensitive information directly in the script.
+   - You can set these environment variables in your server configuration or use a `.env` file with a library like `phpdotenv`.
+
+2. **Error Handling**:
+   - The `ServerException` is thrown if the connection to the MySQL server fails.
+   - The `DatabaseException` is thrown if the database selection fails.
+   - Each exception is caught in its respective `catch` block, allowing for specific error messages.
+
+3. **Secure Storage**:
+   - By using environment variables, the credentials are not exposed in the codebase, reducing the risk of accidental exposure.
+
+### Additional Recommendations:
+
+- **Use Prepared Statements**: When interacting with the database, always use prepared statements to prevent SQL injection.
+- **Logging**: Implement logging for errors and important events to help with debugging and monitoring.
+- **Regular Updates**: Keep your PHP and MySQL server up to date to benefit from the latest security patches.
+
+This approach ensures that your application is more secure and provides better error handling for different types of connection issues.

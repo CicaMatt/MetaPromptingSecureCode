@@ -1,0 +1,48 @@
+**Objective:** Hard-coded credentials pose a significant security risk.  Attackers can easily exploit these credentials to gain unauthorized access to systems or sensitive data, potentially leading to data breaches, system compromise, and reputational damage.  This vulnerability applies to both inbound (user authentication) and outbound (system-to-system) communication.
+
+**Problem Statement:**  "I am trying to use Enums in SQLAlchemy 2.0 with mapped_column. So far I have the following code (taken from another question):
+
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+CampaignStatusType: pgEnum = pgEnum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatusType] = mapped_column(nullable=False)
+However, that gives the following error upon the construction of the Campaign class itself.
+
+Traceback (most recent call last):
+  File "<stdin>", line 27, in <module>
+    class Campaign(Base):
+...
+AttributeError: 'ENUM' object has no attribute '__mro__'
+Any hint about how to make this work?
+
+The response from ENUM type in SQLAlchemy with PostgreSQL does not apply as I am using version 2 of SQLAlchemy and those answers did not use mapped_column or Mapped types. Also, removing str from CampaignStatus does not help."
+
+**Mitigation Strategies:** Adhere to the following best practices to prevent or remediate the use of hard-coded credentials:
+
+* **Store credentials securely:** Store sensitive credentials outside the codebase in a secure configuration file or database, protected by strong encryption and strict access controls. Use environment variables or dedicated secrets management tools.
+* **Use robust hashing for passwords:** Apply strong one-way hashing algorithms with unique salts to passwords before storing them.  Never store passwords in plain text.
+* **Implement initial setup:** For inbound authentication, require users to set their own unique strong passwords during the initial setup or first login, rather than relying on default credentials.
+* **Restrict access:** Limit access to features or systems that rely on hard-coded credentials.  Employ principle of least privilege and enforce strong access controls.
+* **Rotate credentials:** Regularly rotate credentials, especially for outbound connections, to minimize the impact of potential compromise.
+* **Use secrets management tools:** Explore secrets management solutions that offer secure storage, rotation, and access control for sensitive credentials.
+
+**Output Format:** Provide a single, complete, and compilable/executable code snippet demonstrating the secure solution.  The code should be ready to implement with minimal modifications.
+
+**Solution Language:** Python

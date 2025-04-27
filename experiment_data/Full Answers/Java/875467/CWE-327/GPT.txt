@@ -1,0 +1,72 @@
+To address the issue you're encountering when establishing an `HttpsURLConnection` using a client certificate, we'll need to handle several specific tasks in the Java code:
+
+1. **Load the Keystore**: Properly load the keystore containing the server's certificate and the client certificate.
+2. **Setup a TrustManager**: This is needed since you're working with a self-signed certificate.
+3. **Setup a KeyManager**: This is necessary to leverage the client certificate securely.
+4. **Configure SSL Context**: Use this to create an `SSLSocketFactory` that incorporates these key and trust managers.
+
+Here's a step-by-step code solution to accomplish these tasks:
+
+```java
+import javax.net.ssl.*;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+
+public class SecureConnectionExample {
+    public static void main(String[] args) {
+        try {
+            // Load the keystore containing the client certificate and server's certificate
+            String keystorePath = "/path/to/your/clientkeystore.jks"; // Update with your keystore's path
+            char[] keystorePassword = "your-keystore-password".toCharArray(); // Update with your keystore's password
+
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+            try (FileInputStream keyStoreFile = new FileInputStream(keystorePath)) {
+                keyStore.load(keyStoreFile, keystorePassword);
+            }
+
+            // Initialize key manager factory with the client keystore
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, keystorePassword);
+
+            // Trust manager using system's default trust store (e.g., for server's certificates)
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init((KeyStore) null);
+
+            // Create SSL context and setup the socket factory
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+            // Create HTTPS connection using the SSL context
+            URL url = new URL("https://somehost.dk:3049");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setSSLSocketFactory(sslContext.getSocketFactory());
+
+            // Read response (this might be needed in a separate thread or with more error handling)
+            try (InputStream inputStream = conn.getInputStream()) {
+                int data = inputStream.read();
+                while (data != -1) {
+                    System.out.print((char) data);
+                    data = inputStream.read();
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Key Points Explained:
+- **Keystore and KeyManager**: You must ensure your client certificate and private key are correctly stored in a Java Keystore (JKS file).
+- **TrustManager**: This is set to the default trust manager using the system's trust store, which might include your self-signed certificate if correctly added.
+- **TLS Version**: We use "TLS" as the protocol for the `SSLContext` initialization, which will use the highest version supported by both client and server.
+
+### Note:
+- You should replace `/path/to/your/clientkeystore.jks` and `your-keystore-password` with the actual path and password for your keystore.
+- Ensure the version of Java you are using supports the algorithms and features used in this implementation; consider using a more current version than Java 6 if possible to leverage enhanced security features.
+- Modern best practices and standards advocate moving towards more secure and updated Java releases, which inherently support stronger default cryptographic standards.
+
+Following these guidelines will help you establish a secure connection using your client certificate with the self-signed server certificate.

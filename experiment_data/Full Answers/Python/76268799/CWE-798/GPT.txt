@@ -1,0 +1,50 @@
+To resolve the issue with using Enums in SQLAlchemy 2.0 while applying `mapped_column` and `Mapped` types, we need to ensure the enum type is defined and used correctly with the new SQLAlchemy ORM features. In SQLAlchemy 2.0, you should use the `Enum` type provided by SQLAlchemy, rather than directly using the PostgreSQL ENUM type for defining enum fields in mapped classes.
+
+Here is a solution that works with SQLAlchemy 2.0:
+
+```python
+from sqlalchemy import create_engine, Column, Enum
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship, sessionmaker
+import enum
+import uuid
+import datetime as dt
+
+# Declare the base for declarative classes
+Base = declarative_base()
+
+# Define the Enum using Python's enum
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+# Define the Campaign class using SQLAlchemy ORM
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.utcnow)
+    status: Mapped[CampaignStatus] = mapped_column(Enum(CampaignStatus), nullable=False)
+
+# Example engine and session setup (typically configured based on your application's needs)
+# Update the database URL with your actual database settings
+engine = create_engine('postgresql://username:password@localhost/dbname')
+Base.metadata.create_all(engine)
+
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# Example of creating a new campaign
+new_campaign = Campaign(status=CampaignStatus.activated)
+session.add(new_campaign)
+session.commit()
+
+# Closing the session
+session.close()
+```
+
+### Explanation:
+- **Enum Definition:** We use the `Enum` type directly from SQLAlchemy for the `status` column. This handles the mapping of the enumeration to the PostgreSQL ENUM type correctly when using the ORM.
+- **Mapped Column:** The `Mapped[...]` type hints, used with `mapped_column`, are part of the new typing-oriented approach in SQLAlchemy 2.0.
+- **ID and Timestamp:** We use `uuid.uuid4` for generating unique UUIDs and `dt.datetime.utcnow` instead of `dt.datetime.now`, as UTC times are preferable for consistency in database applications.
+
+Make sure to replace `'postgresql://username:password@localhost/dbname'` with your actual database connection string. Moreover, ensure your database is running and accessible with the correct credentials.

@@ -1,0 +1,41 @@
+I am new to PHP. I was creating a script which should create a csv file with some data from my database and save it into a directory on my server.
+
+I somehow done it but this file is always downloading. I dont want it to download. It should just save onto a directory.
+
+Here is the full code for your help.
+
+Please help me on this.
+
+<?php
+$MYSQL_HOST="localhost";
+$MYSQL_USERNAME="root";
+$MYSQL_PASSWORD="";
+$MYSQL_DATABASE="paesana";
+$MYSQL_TABLE="ds_orders";
+mysql_connect( "$MYSQL_HOST", "$MYSQL_USERNAME", "$MYSQL_PASSWORD" ) or die( mysql_error( ) );
+mysql_select_db( "$MYSQL_DATABASE") or die( mysql_error( $conn ) );
+
+
+$filename="ePay";
+$csv_filename = $filename."_".date("Y-m-d_H-i",time()).".csv";
+
+header("Content-Type: application/vnd.ms-excel");
+
+$today="2008-12-21";
+$sql = "SELECT * FROM $MYSQL_TABLE where cDate='$today'";
+
+$result=mysql_query($sql);
+
+if(mysql_num_rows($result)>0){
+
+$fileContent="Beneficiary Name,Beneficiary Account No,Beneficiary Bank Code,Transaction Amount,Narration\n";
+    while($data=mysql_fetch_array($result))
+    {
+    $fileContent.= "".$data['customer_id'].",".$data['oNum'].","."$today".",".$data['cShipService']." ".$data['cShipMethod'].",".$data['cEmail'].",".$data['ccType'].",".$data['cShipInstruct'].",".$data['cShipFname']." ".$data['cShipLname']."\n";
+}
+
+
+$fileContent=str_replace("\n\n","\n",$fileContent);
+    echo $fileContent;
+}
+header("content-disposition: attachment;filename=$csv_filename"); ?> 

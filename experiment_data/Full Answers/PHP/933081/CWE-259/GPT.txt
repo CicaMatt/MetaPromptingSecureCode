@@ -1,0 +1,45 @@
+Certainly! To transform your existing code into one that utilizes a `try-catch` block, you will need to simulate an exception being thrown when the file upload fails. PHP’s built-in exception handling mechanism allows you to manage errors and exceptions more effectively than using `die()` or other similar statements.
+
+Below is a complete PHP code snippet demonstrating how to use `try-catch` for the file upload scenario:
+
+```php
+<?php
+// Define a custom exception class for file upload errors
+class FileUploadException extends Exception {}
+
+// Function to move the uploaded file
+function moveUploadedFile($tmpName, $destination) {
+    if (!move_uploaded_file($tmpName, $destination)) {
+        throw new FileUploadException('File didn\'t upload');
+    }
+}
+
+try {
+    // Attempt to move the uploaded file to the desired location
+    $tmpName = $_FILES['file']['tmp_name'];
+    $destination = $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$_FILES['file']['name'];
+    
+    moveUploadedFile($tmpName, $destination);
+    
+    // If no exceptions were thrown, the upload was successful
+    echo 'Upload Complete!';
+} catch (FileUploadException $e) {
+    // Handle the file upload error
+    echo 'Error: ' . $e->getMessage();
+} catch (Exception $e) {
+    // Handle any other type of error (Optional)
+    echo 'An unexpected error occurred: ' . $e->getMessage();
+}
+```
+
+### Key Points:
+
+1. **Custom Exception Class**: `FileUploadException` is a custom exception class that helps in providing more specific error handling logic related to file uploads.
+
+2. **Throwing Exceptions**: In the `moveUploadedFile()` function, we check if `move_uploaded_file` returns false, which indicates the upload failed, and subsequently throw a `FileUploadException`.
+
+3. **Try-Catch Block**: Within the `try` block, we attempt to move the uploaded file. If an exception occurs, execution jumps immediately to the corresponding `catch` block for error handling.
+
+4. **Error Messages**: The `catch` block captures the thrown exceptions, allowing you to handle them gracefully and output an appropriate error message without abruptly terminating the script. 
+
+This approach reduces the risk of hard-coded vulnerabilities and provides a robust means of handling potential errors during file uploads.

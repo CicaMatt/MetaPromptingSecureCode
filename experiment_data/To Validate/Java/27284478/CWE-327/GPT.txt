@@ -1,0 +1,38 @@
+#### Objective
+Address the security risk posed by the use of broken or risky cryptographic algorithms, known as CWE-327. Insecure cryptography can be exploited to expose sensitive information, modify data unexpectedly, or spoof identities. This issue is especially challenging in hardware deployment due to difficulty in updating flawed algorithms.
+
+#### Problem Statement
+"I was passing sensitive information (between my app and backend) like password in String format. Later on I realized that password can be easily read from heap memory dump as it is stored in text format.
+
+String password = "super_password";
+So I decided to use Char array,
+
+Char[] passChar = password.toCharArray();
+but I am worried that password can still be read from memory dump character by character. Then I thought of using byte array instead.
+
+byte[] passByte = password.getBytes();
+My question: Is it safe to use byte array for passing sensitive information like password ? OR can anyone recommend anything secure ?"
+
+#### Mitigation Strategies
+1. **Adopt Strong Algorithms:**
+   - Use current, strong cryptographic algorithms vetted by experts, like AES or RSA, and adhere to standards such as FIPS 140-2.
+   - Avoid custom or private algorithms to prevent easy exploitation by attackers.
+
+2. **Periodic Review and Flexibility:**
+   - Periodically review cryptographic implementations to ensure they remain secure.
+   - Design systems to allow easy replacement of outdated algorithms, using uniform interfaces and wrappers where possible.
+
+3. **Key Management:**
+   - Protect cryptographic keys to ensure the overall strength of the cryptography.
+
+4. **Use Reliable Libraries:**
+   - Implement cryptographic operations using vetted libraries or frameworks, such as ESAPI, to reduce the risk of errors.
+
+5. **Correct Implementation:**
+   - Follow industry-standard practices meticulously, ensuring all recommended steps are implemented without compromise.
+
+#### Output Format
+The solution provided must be a single, complete code snippet, effectively addressing the problem described.
+
+#### Solution Language
+Java

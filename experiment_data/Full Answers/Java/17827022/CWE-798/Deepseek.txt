@@ -1,0 +1,116 @@
+To address the problem statement and provide a solution that avoids hard-coded credentials while demonstrating the use of `CountDownLatch`, we will create a secure authentication mechanism. This example will use environment variables to store sensitive credentials and demonstrate how to securely manage them in a multi-threaded environment using `CountDownLatch`.
+
+### Solution Code
+
+```java
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class SecureProcessor implements Runnable {
+    private CountDownLatch latch;
+    private String username;
+    private String password;
+
+    public SecureProcessor(CountDownLatch latch, String username, String password) {
+        this.latch = latch;
+        this.username = username;
+        this.password = password;
+    }
+
+    public void run() {
+        System.out.println("Thread started for user: " + username);
+
+        // Simulate some processing
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Simulate secure authentication
+        if (authenticate(username, password)) {
+            System.out.println("Authentication successful for user: " + username);
+        } else {
+            System.out.println("Authentication failed for user: " + username);
+        }
+
+        latch.countDown();
+    }
+
+    private boolean authenticate(String username, String password) {
+        // Retrieve stored credentials from environment variables
+        String storedUsername = System.getenv("SECURE_USERNAME");
+        String storedPassword = System.getenv("SECURE_PASSWORD");
+
+        // Compare credentials
+        return username.equals(storedUsername) && password.equals(storedPassword);
+    }
+}
+
+public class SecureApp {
+
+    public static void main(String[] args) {
+        // Retrieve credentials from environment variables
+        String username = System.getenv("SECURE_USERNAME");
+        String password = System.getenv("SECURE_PASSWORD");
+
+        if (username == null || password == null) {
+            System.err.println("Credentials not found in environment variables.");
+            return;
+        }
+
+        CountDownLatch latch = new CountDownLatch(3); // Countdown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for (int i = 0; i < 3; i++) {
+            executor.submit(new SecureProcessor(latch, username, password)); // Ref to latch. Each time call new SecureProcessor, latch will count down by 1
+        }
+
+        try {
+            latch.await();  // Wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("All threads completed.");
+    }
+}
+```
+
+### Explanation
+
+1. **Environment Variables**: 
+   - The credentials (`SECURE_USERNAME` and `SECURE_PASSWORD`) are retrieved from environment variables, avoiding hard-coded credentials in the source code.
+
+2. **SecureProcessor Class**:
+   - This class implements `Runnable` and simulates a secure authentication process.
+   - The `authenticate` method compares the provided credentials with those stored in the environment variables.
+
+3. **CountDownLatch**:
+   - The `CountDownLatch` is used to ensure that the main thread waits until all three threads have completed their tasks.
+   - Each thread decrements the latch count by calling `latch.countDown()` after completing its task.
+
+4. **ExecutorService**:
+   - A fixed thread pool of three threads is created to handle the tasks concurrently.
+
+5. **Main Method**:
+   - The main method retrieves the credentials from the environment variables and initializes the `CountDownLatch` and `ExecutorService`.
+   - It submits three instances of `SecureProcessor` to the executor and waits for all threads to complete using `latch.await()`.
+
+### Running the Code
+
+1. Set the environment variables before running the program:
+   ```sh
+   export SECURE_USERNAME="admin"
+   export SECURE_PASSWORD="securepassword"
+   ```
+
+2. Compile and run the Java program:
+   ```sh
+   javac SecureApp.java
+   java SecureApp
+   ```
+
+This solution demonstrates how to securely manage credentials using environment variables and how to use `CountDownLatch` in a multi-threaded environment to synchronize tasks.

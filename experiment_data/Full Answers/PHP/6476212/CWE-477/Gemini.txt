@@ -1,0 +1,73 @@
+```php
+<?php
+
+function saveImageFromUrl($url, $savePath) {
+    // Validate URL (basic check)
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return false; // Or throw an exception
+    }
+
+    // Get image data using file_get_contents (recommended for simplicity and security)
+    $imageData = @file_get_contents($url); 
+
+    if ($imageData === false) {
+        return false; // Or throw an exception, log the error, etc.
+    }
+
+    // Save the image
+    if (file_put_contents($savePath, $imageData) === false) {
+        return false; // Or handle the error appropriately
+    }
+
+    return true;
+}
+
+
+// Example usage:
+$imageUrl = $iticon; // Assuming $iticon holds the image URL
+$saveDirectory = __DIR__ . '/img/uploads/'; // Use absolute path and __DIR__ 
+$filename = 'photo1.jpg'; // or get the extension from the URL if needed
+$fullSavePath = $saveDirectory . $filename;
+
+
+// Ensure the directory exists and is writable:
+if (!is_dir($saveDirectory) && !mkdir($saveDirectory, 0755, true)) {
+    die("Error creating directory: " . $saveDirectory); // Or handle the error
+}
+
+if (!is_writable($saveDirectory)) {
+    die("Directory not writable: " . $saveDirectory); // Or handle the error
+}
+
+
+
+if (saveImageFromUrl($imageUrl, $fullSavePath)) {
+    echo "Image saved successfully to: " . $fullSavePath;
+} else {
+    echo "Error saving image.";  // Log the error for debugging
+}
+
+
+
+?>
+```
+
+
+**Explanation of Improvements:**
+
+1. **Replaced `curl` and `fopen`/`fwrite`/`fclose` with `file_get_contents` and `file_put_contents`:** These functions are more straightforward for this task and handle potential issues like URL handling and file modes more safely.
+
+2. **URL Validation:** Added a basic URL validation check using `filter_var` to prevent potentially malicious URLs from being processed.
+
+3. **Error Handling:**  Improved error handling using `@` to suppress warnings on `file_get_contents` and checking the return values of `file_get_contents` and `file_put_contents`.  Clearer error messages are provided, which is crucial for debugging.
+
+4. **Absolute Path for Save Directory:** Using `__DIR__` combined with the relative path creates an absolute path, making the code more robust and less prone to errors based on the current working directory.
+
+5. **Directory Handling:** Added code to ensure the save directory exists and is writable, preventing common file system errors.
+
+6. **Clearer Variable Names:**  Used more descriptive variable names (e.g., `$imageUrl`, `$savePath`) for better readability.
+
+7. **File Extension:** The code now explicitly sets the filename and extension, avoiding potential issues where the original URL might not have a clear extension. You can enhance this further by extracting the extension from the URL if needed.
+
+
+This revised code is more secure, efficient, and easier to maintain.  It addresses the vulnerabilities associated with using the obsolete `curl` method in this particular context and provides better error handling.

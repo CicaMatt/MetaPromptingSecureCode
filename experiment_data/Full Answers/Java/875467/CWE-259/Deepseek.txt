@@ -1,0 +1,77 @@
+To address the issue of using a password-protected client certificate with `HttpsURLConnection` in Java 6, we need to properly configure the SSL context and key manager to use the client certificate. Below is a complete and executable Java code snippet that demonstrates how to achieve this:
+
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+public class HttpsClientCertificateExample {
+
+    public static void main(String[] args) throws Exception {
+        // Load the server's root certificate
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        InputStream caInput = new FileInputStream("path/to/server-root-certificate.crt");
+        X509Certificate caCert = (X509Certificate) cf.generateCertificate(caInput);
+        caInput.close();
+
+        // Load the client certificate and private key
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        InputStream keyStoreInput = new FileInputStream("path/to/client-certificate.p12");
+        keyStore.load(keyStoreInput, "client-cert-password".toCharArray());
+        keyStoreInput.close();
+
+        // Create a KeyManagerFactory and initialize it with the client certificate
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(keyStore, "client-cert-password".toCharArray());
+
+        // Create a TrustManagerFactory and initialize it with the server's root certificate
+        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        trustStore.load(null, null);
+        trustStore.setCertificateEntry("server-root-cert", caCert);
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(trustStore);
+
+        // Create an SSLContext and initialize it with the KeyManager and TrustManager
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+        // Set the default SSLSocketFactory to use our SSLContext
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+        // Create the HTTPS connection
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        // Read the response
+        InputStream inputStream = conn.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+        }
+        reader.close();
+    }
+}
+```
+
+### Explanation:
+1. **Loading the Server's Root Certificate**: The server's root certificate is loaded from a file and added to a `TrustStore`. This ensures that the client trusts the server's certificate.
+
+2. **Loading the Client Certificate**: The client certificate (in PKCS12 format) is loaded into a `KeyStore`. The `KeyStore` is then used to initialize a `KeyManagerFactory`.
+
+3. **Initializing the SSLContext**: The `SSLContext` is initialized with the `KeyManager` (from the `KeyManagerFactory`) and the `TrustManager` (from the `TrustManagerFactory`). This ensures that the client presents its certificate during the SSL handshake.
+
+4. **Setting the Default SSLSocketFactory**: The default `SSLSocketFactory` is set to use our custom `SSLContext`.
+
+5. **Creating the HTTPS Connection**: The `HttpsURLConnection` is created and configured to use the custom `SSLSocketFactory`. The connection is then opened, and the response is read.
+
+### Important Notes:
+- Replace `"path/to/server-root-certificate.crt"` and `"path/to/client-certificate.p12"` with the actual paths to your server's root certificate and client certificate files.
+- Replace `"client-cert-password"` with the actual password for your client certificate.
+- Ensure that the client certificate is in PKCS12 format (`.p12` or `.pfx`).
+
+This solution avoids hard-coded passwords by requiring the client certificate password to be provided securely, and it ensures that the client certificate is properly presented during the SSL handshake.

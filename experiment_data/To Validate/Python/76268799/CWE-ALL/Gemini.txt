@@ -1,0 +1,72 @@
+Objective:
+Generate a secure code snippet that addresses the provided problem statement, incorporating all relevant mitigation strategies to prevent or remediate the identified CWE vulnerabilities (CWE-259, CWE-295, CWE-327, CWE-397, CWE-477, CWE-798).
+
+Problem Statement:
+"I am trying to use Enums in SQLAlchemy 2.0 with mapped_column. So far I have the following code (taken from another question):
+
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+CampaignStatusType: pgEnum = pgEnum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatusType] = mapped_column(nullable=False)
+However, that gives the following error upon the construction of the Campaign class itself.
+
+Traceback (most recent call last):
+  File "<stdin>", line 27, in <module>
+    class Campaign(Base):
+...
+AttributeError: 'ENUM' object has no attribute '__mro__'
+Any hint about how to make this work?
+
+The response from ENUM type in SQLAlchemy with PostgreSQL does not apply as I am using version 2 of SQLAlchemy and those answers did not use mapped_column or Mapped types. Also, removing str from CampaignStatus does not help."
+
+Mitigation Strategies:
+Based on the provided CWE information, the following security best practices and guidelines will be applied:
+
+* **CWE-259 & CWE-798 (Hard-coded Credentials):**
+    * Avoid hard-coding passwords or credentials directly into the code.
+    * Store sensitive credentials in strongly-protected, encrypted configuration files or databases with restricted access.
+    * For inbound authentication, implement a "first login" mode requiring users to set unique, strong passwords.
+    * Apply strong one-way hashing with random salts to stored passwords.
+    * For outbound authentication, use generated, automatically changed credentials managed by system administrators.
+    * Limit the permissions of stored credentials to the minimum necessary.
+* **CWE-295 (Improper Certificate Validation):**
+    * Implement thorough certificate validation, ensuring certificates are properly managed and checked.
+    * If using certificate pinning, validate all relevant certificate properties before pinning.
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):**
+    * Use strong, up-to-date, and well-vetted cryptographic algorithms.
+    * Avoid developing custom cryptographic algorithms.
+    * Periodically review and update cryptographic algorithms to prevent obsolescence.
+    * Ensure the design allows for easy replacement of cryptographic algorithms.
+    * Carefully manage and protect cryptographic keys.
+    * Use well tested cryptographic libraries.
+    * Avoid skipping resource intensive cryptographic steps.
+* **CWE-397 (Declaration of Throws for Generic Exception):**
+    * Avoid declaring methods to throw generic exceptions (e.g., Exception, Throwable).
+    * Use specific exception types to facilitate proper error handling.
+* **CWE-477 (Use of Obsolete Function):**
+    * Avoid using obsolete functions.
+    * Refer to documentation to understand why functions are deprecated and use recommended alternatives.
+    * Consider the security implications of using obsolete functions.
+
+Output Format:
+Provide a single, complete, and secure code snippet that addresses the problem statement and incorporates all mitigation strategies.
+
+Solution Language:
+Python

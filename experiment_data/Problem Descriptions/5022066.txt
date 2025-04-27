@@ -1,0 +1,12 @@
+Django has some good automatic serialization of ORM models returned from DB to JSON format.
+
+How to serialize SQLAlchemy query result to JSON format?
+
+I tried jsonpickle.encode but it encodes query object itself. I tried json.dumps(items) but it returns
+
+TypeError: <Product('3', 'some name', 'some desc')> is not JSON serializable
+Is it really so hard to serialize SQLAlchemy ORM objects to JSON /XML? Isn't there any default serializer for it? It's very common task to serialize ORM query results nowadays.
+
+What I need is just to return JSON or XML data representation of SQLAlchemy query result.
+
+SQLAlchemy objects query result in JSON/XML format is needed to be used in javascript datagird

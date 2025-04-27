@@ -1,0 +1,87 @@
+To address the issue of a "Not trusted server certificate" when making HTTPS requests in Java, it's important to ensure that the server's SSL/TLS certificate is trusted by your application. The exception indicates that the Java application doesn't trust the certificate provided by the server, which is common when the server is using a self-signed certificate or a certificate not signed by a well-known Certificate Authority (CA).
+
+Here's a code snippet demonstrating how to handle HTTPS connections securely in Java using `HttpURLConnection` and potentially adding your server’s self-signed certificate to a custom `TrustManager`. Note that bypassing SSL certificate validation entirely is not recommended for production environments due to security risks. Instead, trust the specific certificate or CA.
+
+```java
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.OutputStream;
+import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+public class SecureHttpsPost {
+
+    public static void main(String[] args) {
+        try {
+            // Set up a secure connection with a TrustManager
+            TrustManager[] trustManagers = new TrustManager[]{
+                new X509TrustManager() {
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) throws CertificateException {
+                        // Implement client certificate checks if needed
+                    }
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) throws CertificateException {
+                        // Here you can manually verify the server's certificate against a known good certificate
+                        // e.g., by comparing it with a stored copy or a specific public key
+                    }
+                }
+            };
+
+            // Initialize SSL context with the trust manager
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustManagers, new java.security.SecureRandom());
+
+            // Create a secure connection
+            URL url = new URL("https://yourserver.com/api");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            
+            // Optionally confirm host name verification
+            connection.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
+                    // Verify host name or return true to trust all host names (not recommended for production)
+                    return "yourserver.com".equalsIgnoreCase(hostname);
+                }
+            });
+
+            // Configure the connection for a POST request
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json");
+
+            // Write your message body
+            String jsonInputString = "{\"key\": \"value\"}";
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // Check response code (200 is OK)
+            int responseCode = connection.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+
+            // Additional processing of response if necessary
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Important Notes:
+- **Security Warning**: This example simplifies SSL/TLS handling by trusting all certificates and enforcing a simplistic hostname verification scheme. In production, you should explicitly validate the server certificate and hostname against known, trusted values.
+- **Trust Specific Certificates**: Replace the trust manager implementation to verify the server's certificate against a known, trusted certificate or its issuer (e.g., add trusted certificates to a Java KeyStore and use it in the SSL context).
+- **Dependencies**: Ensure you have the necessary imports and that your Java environment is correctly set up to support SSL/TLS configurations.

@@ -1,0 +1,67 @@
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+import base64
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        return s + bytes([AES.block_size - len(s) % AES.block_size]) * (AES.block_size - len(s) % AES.block_size)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return base64.b64encode(iv + cipher.encrypt(padded_message))  # Encode to base64
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    ciphertext = base64.b64decode(ciphertext) # Decode from base64
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:])) 
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'rb') as f: # Read in binary mode
+        plaintext = f.read()
+    enc = encrypt(plaintext, key)
+    with open(file_name, 'wb') as f: # Write in binary mode
+        f.write(enc)
+
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:  # Read in binary mode
+        ciphertext = f.read()
+    dec = decrypt(ciphertext, key)
+    with open(file_name, 'wb') as f:  # Write in binary mode
+        f.write(dec)
+
+
+
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+encrypt_file('to_enc.txt', key)
+decrypt_file('to_enc.txt', key)
+
+```
+
+
+Key Changes:
+
+1. **Base64 Encoding/Decoding:** The primary issue was handling the encrypted data as strings.  Encrypted data is binary.  Attempting to store it directly in a text file leads to encoding issues and data corruption.  The solution is to encode the binary ciphertext into a text-safe format (Base64) before writing it to the file and decoding it back to binary after reading from the file. This is handled in `encrypt()` and `decrypt()` functions using `base64.b64encode()` and `base64.b64decode()`.
+
+2. **Binary File Handling:**  Files are opened in binary mode ('rb' and 'wb') to avoid implicit string conversions that can corrupt the binary data.
+
+3. **Padding in `decrypt()`:** The padding is now removed only *after* decrypting and removing the IV.
+
+4. **Simplified Padding:** The padding function is more concise.
+
+5. **Removed Unnecessary Padding in `decrypt_file()`:** The padding logic is already handled in the `decrypt()` function.
+
+
+This revised code directly addresses the byte/string conversion issues, handles binary data correctly, utilizes a standard library for Base64 encoding, and simplifies the padding logic, resulting in a more robust and functional encryption/decryption solution.  It also follows the best practices outlined in the problem description.

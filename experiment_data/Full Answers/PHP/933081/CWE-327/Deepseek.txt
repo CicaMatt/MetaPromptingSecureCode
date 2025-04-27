@@ -1,0 +1,45 @@
+To address the problem of handling file uploads securely and using a try-catch statement in PHP, we can refactor the provided code to include exception handling. This will allow us to gracefully handle errors and provide meaningful feedback to the user if the file upload fails.
+
+Here’s the refactored code:
+
+```php
+<?php
+try {
+    // Check if the file was uploaded successfully
+    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('File upload error: No file uploaded or upload error occurred.');
+    }
+
+    // Define the target directory and file path
+    $targetDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
+    $targetFile = $targetDir . basename($_FILES['file']['name']);
+
+    // Check if the uploads directory exists, if not create it
+    if (!is_dir($targetDir)) {
+        if (!mkdir($targetDir, 0755, true)) {
+            throw new Exception('Failed to create upload directory.');
+        }
+    }
+
+    // Move the uploaded file to the target directory
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $targetFile)) {
+        throw new Exception('File upload failed: Unable to move uploaded file.');
+    }
+
+    // If everything is successful, output a success message
+    echo 'Upload Complete!';
+} catch (Exception $e) {
+    // Handle the exception and output the error message
+    die('Error: ' . $e->getMessage());
+}
+?>
+```
+
+### Explanation:
+1. **Try-Catch Block**: The code is wrapped in a `try` block, and any exceptions thrown within this block are caught in the `catch` block.
+2. **File Upload Check**: The code first checks if the file was uploaded successfully by verifying the `$_FILES['file']` array and the `error` code.
+3. **Directory Check**: It ensures that the target directory exists, and if not, it attempts to create it.
+4. **File Move Operation**: The `move_uploaded_file` function is used to move the uploaded file to the target directory. If this operation fails, an exception is thrown.
+5. **Exception Handling**: If any exception is thrown, it is caught in the `catch` block, and an error message is displayed using `die`.
+
+This approach ensures that the file upload process is handled securely and that any errors are managed gracefully, providing clear feedback to the user.

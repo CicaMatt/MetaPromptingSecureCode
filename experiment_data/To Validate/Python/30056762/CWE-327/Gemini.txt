@@ -1,0 +1,54 @@
+**Objective:**  The use of a broken or risky cryptographic algorithm can severely compromise data confidentiality and integrity.  Attackers can exploit these vulnerabilities to decrypt sensitive information, tamper with data, or impersonate legitimate users or systems, leading to data breaches, financial loss, and reputational damage.
+
+**Problem Statement:**  "I need help using RSA encryption and decryption in Python.
+
+I am creating a private/public key pair, encrypting a message with keys and writing message to a file. Then I am reading ciphertext from file and decrypting text using key.
+
+I am having trouble with the decryption portion. As you can see in my code below, when I put in decrypted = key.decrypt(message) that the program works, yet the decrypted message is encrypted again. It seems like it is not reading the ciphertext from the file.
+
+Can anyone help me write this code so decryption reads ciphertext from file and then uses key to decrypt ciphertext?
+
+import Crypto
+from Crypto.PublicKey import RSA
+from Crypto import Random
+
+random_generator = Random.new().read
+key = RSA.generate(1024, random_generator) #generate public and private keys
+
+publickey = key.publickey # pub key export for exchange
+
+encrypted = publickey.encrypt('encrypt this message', 32)
+#message to encrypt is in the above line 'encrypt this message'
+
+print 'encrypted message:', encrypted #ciphertext
+
+f = open ('encryption.txt', 'w'w)
+f.write(str(encrypted)) #write ciphertext to file
+f.close()
+
+#decrypted code below
+
+f = open ('encryption.txt', 'r')
+message = f.read()
+
+decrypted = key.decrypt(message)
+
+print 'decrypted', decrypted
+
+f = open ('encryption.txt', 'w')
+f.write(str(message))
+f.write(str(decrypted))
+f.close()"
+
+**Mitigation Strategies:**  The solution should adhere to the following best practices:
+
+* **Use Strong, Vetted Algorithms:** Employ only well-vetted, industry-standard cryptographic algorithms and implementations, such as AES-256, SHA-256/SHA-3, ChaCha20-Poly1305, or those recommended by NIST (National Institute of Standards and Technology). Avoid outdated algorithms like MD5, SHA1, and DES.
+* **Key Management:**  Implement secure key management practices, including appropriate key generation, storage, and rotation. 
+* **Avoid Custom Cryptography:** Refrain from developing custom cryptographic algorithms. Utilize established libraries and frameworks.
+* **Regular Updates:** Stay informed about cryptographic advancements and vulnerabilities. Replace outdated or compromised algorithms promptly.
+* **Correct Implementation:** Ensure proper implementation of chosen algorithms, avoiding shortcuts that weaken security. Use established libraries and follow best practices.
+
+
+**Output Format:**  Provide a *single, complete code snippet* that addresses the described problem and adheres to the outlined mitigation strategies.
+
+**Solution Language:** Python

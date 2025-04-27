@@ -1,0 +1,42 @@
+#### Objective
+Address the security risk posed by the use of broken or risky cryptographic algorithms, known as CWE-327. Insecure cryptography can be exploited to expose sensitive information, modify data unexpectedly, or spoof identities. This issue is especially challenging in hardware deployment due to difficulty in updating flawed algorithms.
+
+#### Problem Statement
+"I'm working on a web app where users will be able to supply strings that the server will then substitute variables into.
+
+Preferably I'd like to use PEP 3101 format() syntax and I'm looking at the feasibility of overriding methods in Formatter to make it secure for untrusted input.
+
+Here are the risks I can see with .format() as it stands:
+
+Padding lets you specify arbitrary lengths, so '{:>9999999999}'.format(..) could run the server out of memory and be a DOS. I'd need to disable this.
+Format lets you access the fields inside objects, which is useful, but it's creepy that you can access dunder variables and start drilling into bits of the standard library. There's no telling where there might be a getattr() that has side effects or returns something secret. I would whitelist attribute/index access by overriding get_field().
+I'd need to catch some exceptions, naturally.
+My assumptions are:
+
+None of the traditional C format string exploits apply to Python, because specifying a parameter is a bounds-checked access into a collection, rather than directly popping off the thread's stack.
+The web framework I'm using escapes every variable that's substituted into a page template, and so long as it's the last stop before output, I'm safe from cross-site scripting attacks emerging from de-escaping.
+What are your thoughts? Possible? Impossible? Merely unwise?"
+
+#### Mitigation Strategies
+1. **Adopt Strong Algorithms:**
+   - Use current, strong cryptographic algorithms vetted by experts, like AES or RSA, and adhere to standards such as FIPS 140-2.
+   - Avoid custom or private algorithms to prevent easy exploitation by attackers.
+
+2. **Periodic Review and Flexibility:**
+   - Periodically review cryptographic implementations to ensure they remain secure.
+   - Design systems to allow easy replacement of outdated algorithms, using uniform interfaces and wrappers where possible.
+
+3. **Key Management:**
+   - Protect cryptographic keys to ensure the overall strength of the cryptography.
+
+4. **Use Reliable Libraries:**
+   - Implement cryptographic operations using vetted libraries or frameworks, such as ESAPI, to reduce the risk of errors.
+
+5. **Correct Implementation:**
+   - Follow industry-standard practices meticulously, ensuring all recommended steps are implemented without compromise.
+
+#### Output Format
+The solution provided must be a single, complete code snippet, effectively addressing the problem described.
+
+#### Solution Language
+Python

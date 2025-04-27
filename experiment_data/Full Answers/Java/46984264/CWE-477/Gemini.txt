@@ -1,0 +1,77 @@
+```java
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+public class CrossPlatformAESEncryption {
+
+    private static final String ALGORITHM = "AES/ECB/PKCS5Padding"; // Important: Use consistent padding across platforms
+    private static final int KEY_SIZE = 256; // AES-256
+
+    public static String encrypt(String plainText, String key) throws Exception {
+        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+        // Ensure key is the correct length (32 bytes for AES-256)
+        if (keyBytes.length != KEY_SIZE / 8) {
+            throw new IllegalArgumentException("Key must be " + (KEY_SIZE / 8) + " bytes long");
+        }
+
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+        byte[] encryptedBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+
+        // Encode to Base64 for safe storage and cross-platform compatibility
+        return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
+
+    public static String decrypt(String encryptedText, String key) throws Exception {
+        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+        // Ensure key is the correct length (32 bytes for AES-256)
+        if (keyBytes.length != KEY_SIZE / 8) {
+            throw new IllegalArgumentException("Key must be " + (KEY_SIZE / 8) + " bytes long");
+        }
+
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+
+        // Decode from Base64
+        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedText);
+        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
+    }
+
+    public static void main(String[] args) throws Exception {
+        String key = "Your32CharacterAESKeyHere12345678"; // MUST be 32 bytes for AES-256
+        String plainText = "This is a sensitive data";
+
+        String encryptedText = encrypt(plainText, key);
+        System.out.println("Encrypted Text: " + encryptedText);
+
+        String decryptedText = decrypt(encryptedText, key);
+        System.out.println("Decrypted Text: " + decryptedText); 
+    }
+}
+
+```
+
+
+
+**Explanation and Key Improvements for Cross-Platform Compatibility:**
+
+1. **Consistent Padding:** `AES/ECB/PKCS5Padding` is specified explicitly. This ensures that both MySQL and SQL Server use the same padding scheme, avoiding decryption errors due to padding mismatches.  PKCS5Padding is recommended and handled correctly across platforms.
+
+2. **Key Size Handling:** The code explicitly checks that the key is the correct length (32 bytes for AES-256). This prevents subtle errors if an incorrect key size is used.
+
+3. **Base64 Encoding:** The encrypted bytes are encoded using Base64 before being stored.  Base64 ensures that the encrypted data can be safely stored as text and transferred between systems without issues related to character encoding or special characters. This is crucial for database migration.
+
+4. **Character Encoding:** `StandardCharsets.UTF-8` is used consistently for string-to-byte conversions. This avoids potential character encoding problems, especially during cross-platform data transfer.
+
+5. **Clearer Key Management (Example):** The `main` method provides an example of how to use the functions.  **Critically, in a real application, the key should NEVER be hardcoded.**  Use a robust key management system (e.g., Key Vault, AWS KMS) to securely store and access your encryption keys.
+
+6. **ECB Mode Caution:**  While ECB mode is used here for simplicity of demonstration, be aware that it is generally not recommended for production due to its vulnerability to known-plaintext attacks.  Consider using stronger modes like CBC or GCM for enhanced security.  If changing the mode, ensure both MySQL and SQL server use the same cipher mode and ideally an initialization vector (IV) for modes that require it. The IV should be randomly generated for each encryption operation and stored alongside the ciphertext.
+
+
+
+This Java code provides a robust and cross-platform compatible way to encrypt and decrypt data using AES-256.  You can use this code to encrypt data in MySQL and then decrypt it in SQL Server, or vice-versa, using the same key. Remember to handle your encryption keys securely!

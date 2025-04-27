@@ -1,0 +1,102 @@
+```java
+import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class SecureHTTPRequest {
+
+    public static void main(String[] args) throws IOException {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }};
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+
+
+            URL url = new URL("https://www.abc.com"); // Replace with your URL
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET"); // or POST as needed
+
+            // If you need to send data with POST
+            // conn.setDoOutput(true);
+            // DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            // wr.writeBytes(params); // Make sure 'params' is correctly defined
+            // wr.flush();
+            // wr.close();
+
+
+            // Read the response
+            if (conn.getResponseCode() >= 200 && conn.getResponseCode() < 300 ) { // Check for success response codes
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String line;
+                StringBuilder response = new StringBuilder(); // More efficient string concatenation
+                while ((line = br.readLine()) != null) {
+                   response.append(line).append("\n");
+                }
+                br.close();
+                System.out.println(response.toString());
+            } else {
+                System.err.println("HTTP Error: " + conn.getResponseCode() + " " + conn.getResponseMessage());
+
+                BufferedReader errorReader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+                String errorLine;
+                while ((errorLine = errorReader.readLine()) != null) {
+                    System.err.println(errorLine);
+                }
+                errorReader.close();
+            }
+
+            conn.disconnect();
+
+        } catch (NoSuchAlgorithmException | KeyManagementException | IOException e) {
+            System.err.println("Exception: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+    }
+}
+```
+
+
+**Explanation and Crucial Security Warning:**
+
+The provided code disables certificate validation and hostname verification.  **This is extremely dangerous and should never be used in a production environment.**  Disabling these checks makes your application vulnerable to man-in-the-middle attacks.  Attackers can intercept and modify your communication without your knowledge.
+
+**Why this is provided:** The original question specifically asked how to *ignore* the certificate exception.  This code demonstrates how to do that technically. However, it's absolutely vital to understand the associated risks.
+
+**Proper Solution in Real-World Scenarios:**
+
+1. **Import the correct certificate:** The real solution to the `javax.net.ssl.SSLHandshakeException` is to import the server's certificate into your Java truststore. This establishes trust and allows secure communication without compromising security.  Obtain the certificate from the server administrator or download it from a trusted source.  See the Java documentation for `keytool` to learn how to import certificates.
+
+2. **Address the root cause:**  If you're encountering this issue with a well-known website (like the example "https://www.abc.com"), there might be a problem with your Java installation or network configuration. Ensure your Java runtime environment has up-to-date root certificates.
+
+3. **Contact the server owner:** If the certificate is self-signed or issued by an untrusted authority, contact the server's administrator. They can provide you with the necessary information or help you resolve the certificate issue.
+
+This revised answer addresses the original question directly while forcefully emphasizing the dangers of disabling security checks.  Always prioritize secure coding practices. Never disable certificate validation unless you fully understand the implications and are in a controlled testing environment.  The correct solution is almost always to properly install and trust the legitimate certificate.

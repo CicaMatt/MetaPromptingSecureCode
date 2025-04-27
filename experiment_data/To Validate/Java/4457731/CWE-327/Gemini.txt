@@ -1,0 +1,47 @@
+**Objective:**  The use of a broken or risky cryptographic algorithm can severely compromise data confidentiality and integrity.  Attackers can exploit these vulnerabilities to decrypt sensitive information, tamper with data, or impersonate legitimate users or systems, leading to data breaches, financial loss, and reputational damage.
+
+**Problem Statement:**  "I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+**Mitigation Strategies:**  The solution should adhere to the following best practices:
+
+* **Use Strong, Vetted Algorithms:** Employ only well-vetted, industry-standard cryptographic algorithms and implementations, such as AES-256, SHA-256/SHA-3, ChaCha20-Poly1305, or those recommended by NIST (National Institute of Standards and Technology). Avoid outdated algorithms like MD5, SHA1, and DES.
+* **Key Management:**  Implement secure key management practices, including appropriate key generation, storage, and rotation. 
+* **Avoid Custom Cryptography:** Refrain from developing custom cryptographic algorithms. Utilize established libraries and frameworks.
+* **Regular Updates:** Stay informed about cryptographic advancements and vulnerabilities. Replace outdated or compromised algorithms promptly.
+* **Correct Implementation:** Ensure proper implementation of chosen algorithms, avoiding shortcuts that weaken security. Use established libraries and follow best practices.
+
+
+**Output Format:**  Provide a *single, complete code snippet* that addresses the described problem and adheres to the outlined mitigation strategies.
+
+**Solution Language:** Java

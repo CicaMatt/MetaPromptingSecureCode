@@ -1,0 +1,53 @@
+To address the issue of inconsistent encryption results across different programming languages (ColdFusion, PHP, and Perl), we need to ensure that the encryption process is standardized. The primary differences often arise from variations in padding, key handling, and encoding. Below is a PHP solution that aligns with the Perl implementation provided by the payment processor, ensuring the correct output.
+
+### PHP Solution
+
+```php
+<?php
+// PHP Solution to match Perl's TripleDES encryption
+
+function encryptTripleDES($data, $key) {
+    // Ensure the key is 24 bytes long (required for TripleDES)
+    $key = substr($key, 0, 24);
+
+    // Pad the data to be a multiple of 8 bytes (required for TripleDES)
+    $blockSize = 8;
+    $padding = $blockSize - (strlen($data) % $blockSize);
+    $data .= str_repeat(chr($padding), $padding);
+
+    // Encrypt using TripleDES in ECB mode
+    $encrypted = openssl_encrypt($data, 'DES-EDE3', $key, OPENSSL_RAW_DATA | OPENSSL_NO_PADDING);
+
+    // Base64 encode the result
+    return base64_encode($encrypted);
+}
+
+// Input data
+$theKey = "123412341234123412341234";
+$theString = "username=test123";
+
+// Encrypt the string
+$strEncodedEnc = encryptTripleDES($theString, $theKey);
+
+// Output the result
+echo $strEncodedEnc; // Should output: AYOF+kRtg239Mnyc8QIarw==
+?>
+```
+
+### Explanation
+
+1. **Key Handling**: The key is truncated to 24 bytes, which is the required length for TripleDES encryption.
+2. **Padding**: The data is padded to ensure it is a multiple of 8 bytes, which is necessary for TripleDES in ECB mode.
+3. **Encryption**: The `openssl_encrypt` function is used with the `DES-EDE3` algorithm and `OPENSSL_RAW_DATA | OPENSSL_NO_PADDING` options to match the Perl implementation.
+4. **Base64 Encoding**: The encrypted data is then base64 encoded to produce the final token.
+
+### Testing
+
+To verify the solution, you can run the PHP script and compare the output with the expected token `AYOF+kRtg239Mnyc8QIarw==`. If the output matches, the encryption process is correctly aligned with the Perl implementation.
+
+### Additional Notes
+
+- **Security Considerations**: While this solution addresses the immediate issue of encryption consistency, it is crucial to follow best practices for secure credential management, such as avoiding hard-coded keys and using secure storage mechanisms.
+- **Environment Compatibility**: Ensure that the PHP environment supports the `openssl` extension, which is typically enabled by default in most PHP installations.
+
+This solution should resolve the discrepancies observed between the different language implementations and provide a consistent encryption result.

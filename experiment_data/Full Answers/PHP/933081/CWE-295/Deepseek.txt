@@ -1,0 +1,50 @@
+Certainly! Below is a PHP code snippet that demonstrates how to use a `try-catch` statement to handle file upload errors. This example assumes that the file upload might fail due to various reasons (e.g., file size, permissions, etc.), and it uses a `try-catch` block to handle such exceptions gracefully.
+
+```php
+<?php
+try {
+    // Check if the file was uploaded without errors
+    if (!isset($_FILES['file']['error'])) {
+        throw new Exception('No file uploaded or upload error occurred.');
+    }
+
+    // Check for specific upload errors
+    if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('File upload failed with error code: ' . $_FILES['file']['error']);
+    }
+
+    // Attempt to move the uploaded file to the desired location
+    $destination = $_SERVER['DOCUMENT_ROOT'] . '/uploads/' . basename($_FILES['file']['name']);
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
+        throw new Exception('Failed to move uploaded file.');
+    }
+
+    // If everything is successful
+    echo 'Upload Complete!';
+} catch (Exception $e) {
+    // Handle the exception
+    echo 'Error: ' . $e->getMessage();
+}
+?>
+```
+
+### Explanation:
+1. **Try Block**:
+   - The code inside the `try` block attempts to perform the file upload and move operation.
+   - It first checks if the file was uploaded without errors by examining the `$_FILES['file']['error']` value.
+   - If the file upload fails, it throws an exception with a descriptive message.
+
+2. **Catch Block**:
+   - If an exception is thrown in the `try` block, the `catch` block catches it and handles the error by displaying an appropriate message.
+
+3. **Error Handling**:
+   - The code checks for specific upload errors using the `$_FILES['file']['error']` value, which provides more detailed information about what went wrong during the upload process.
+
+4. **File Movement**:
+   - The `move_uploaded_file` function is used to move the uploaded file to the desired location. If this operation fails, an exception is thrown.
+
+### Usage:
+- Replace the `$_SERVER['DOCUMENT_ROOT'] . '/uploads/'` path with the actual path where you want to store the uploaded files.
+- Ensure that the `uploads` directory has the correct permissions to allow file uploads.
+
+This code snippet provides a robust way to handle file upload errors using `try-catch` statements, making it easier to manage and debug issues related to file uploads.

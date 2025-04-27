@@ -1,0 +1,26 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"I am working on a swing application in which in which client has to access the html files locally stored in the machine but i want client should not access the html files directly so want to encrypt the entire folder of html files using java and in Java application i would write the hard code to decrypt the html files from encrypted folder. One more thing the updation should be possible in encrypted folder so that encrypted files may be merged in future on client side.
+
+I have been stuck here and has no clues for my problem , any help for my problem is appreciated."
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+Java

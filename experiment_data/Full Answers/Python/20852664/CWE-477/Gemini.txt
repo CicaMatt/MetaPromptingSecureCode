@@ -1,0 +1,68 @@
+```python
+from Crypto.Cipher import AES
+import os
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        return s + (AES.block_size - len(s) % AES.block_size) * bytes([AES.block_size - len(s) % AES.block_size])
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = os.urandom(key_size // 8)
+
+    iv = os.urandom(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    def unpad(s):
+        return s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:])) # Fixed: Removed slicing after unpadding
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:  # Fixed: Read in binary mode
+        plaintext = f.read()
+    enc = encrypt(plaintext, key)
+    with open(file_name, 'wb') as f:  # Fixed: Write in binary mode
+        f.write(enc)
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:  # Fixed: Read in binary mode
+        ciphertext = f.read()
+    dec = decrypt(ciphertext, key)
+    with open(file_name, 'wb') as f:  # Fixed: Write in binary mode
+        f.write(dec)
+
+
+
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+encrypt_file('to_enc.txt', key)
+decrypt_file('to_enc.txt', key)
+
+
+with open('to_enc.txt', 'rb') as f:
+    print(f.read())
+
+
+```
+
+
+Key Changes:
+
+1. **Binary File Handling:**  The primary issue stemmed from handling the encrypted data as strings.  The solution switches to binary mode (`'rb'` and `'wb'`) for file operations, ensuring data integrity.
+
+2. **Padding Fix in `decrypt`:** Corrected a subtle error in the original `decrypt` function where the slicing for the IV was incorrectly placed *after* the unpadding.  This led to incorrect decryption even if the file I/O were fixed.  Now, the IV is separated before unpadding.
+
+3. **Simplified Padding in `decrypt_file`:**  Removed unnecessary and erroneous re-padding in `decrypt_file`. The decryption function already handles unpadding. The original code was trying to pad a string representation of the ciphertext causing the errors.
+
+
+4. **Removed `Random` and used `os.urandom`:** `Random.new()` is considered less secure for cryptographic operations. `os.urandom` is now used, which is the recommended way to generate cryptographically secure random bytes.
+
+These changes ensure that the encryption and decryption processes handle binary data correctly, resolving the original errors and improving the security of the code.  The use of `os.urandom` further enhances the cryptographic security compared to `Random.new()`.

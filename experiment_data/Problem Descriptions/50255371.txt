@@ -1,0 +1,31 @@
+I am not certain how to do this. The specs for the SOAP service I am writing says it needs to send back an acknowledgement message even before it responds with the requested response to the request.
+
+How is this done in PHP? I have seen no examples of how to do this.
+
+From the requirements doc:
+
+One acknowledgement message is sent by Integration Partner to Vendor for every SubmitInv message request. A single acknowledgement message is also sent by Vendor to the Integration Partner from every RequestInv message respons
+
+This is NOT a standard TCP ack response. It is a custom SOAP formatted response that is their acknowledgement that the request was received. See example below.
+
+After questioning the vendor:
+
+They claim that it is a legacy system and it was written to process in that flow. They cannot, at this time, change it. I told him that in 20+ yrs programming, I have NEVER seen any SOAP system require an ACK. He claimed that it had to do with having to "wait" for the responses. Apparently they don't understand how to properly handle stateless processing.
+
+I have already attempted to do it using the PHP Output Buffering functions as outlined below by FoxVSky, it does not work in a SOAP transaction. Also, the standard SOAP library, the one built-in to PHP, nor the Zend SOAP library have a feature to do this.
+
+Example:
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" 
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <PAddRs>
+      <RqUID>f11958c8-3fde-42ca-bd94-94fdfca316ef</RqUID>
+      <PKey>46dba062-2105-4851-831f-a1d364741329</PKey>
+      <AppStatus>
+        <AppStatusCode>Accept</AppStatusCode>
+      </AppStatus>
+    </PAddRs>
+  </soap:Body>
+</soap:Envelope>

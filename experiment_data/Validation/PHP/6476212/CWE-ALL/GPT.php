@@ -1,0 +1,85 @@
+<?php
+
+// Define custom exceptions
+class InvalidUrlException extends Exception {}
+class DirectoryNotWritableException extends Exception {}
+class CurlException extends Exception {}
+class HttpException extends Exception {}
+class FileWriteException extends Exception {}
+
+function downloadImageFromUrl($url, $saveDir, $filename) {
+    // Validate URL
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        throw new InvalidUrlException("Invalid URL provided.");
+    }
+
+    // Ensure the save directory exists and is writable
+    if (!is_dir($saveDir) || !is_writable($saveDir)) {
+        throw new DirectoryNotWritableException("Save directory does not exist or is not writable.");
+    }
+
+    // Initialize CURL
+    $ch = curl_init();
+    
+    // Set CURL options for secure image retrieval
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    // Ensure proper certificate validation
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+
+    // Execute request
+    $imageData = curl_exec($ch);
+
+    // Check for CURL errors
+    if (curl_errno($ch)) {
+        $error_msg = curl_error($ch);
+        curl_close($ch);
+        throw new CurlException("CURL error: $error_msg");
+    }
+
+    // Get HTTP response code
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($httpCode !== 200) {
+        curl_close($ch);
+        throw new HttpException("Failed to download image, HTTP Code: $httpCode");
+    }
+
+    // Close CURL
+    curl_close($ch);
+
+    // Construct the file path
+    $filePath = rtrim($saveDir, '/') . '/' . $filename;
+
+    // Save image to the specified directory
+    if (file_put_contents($filePath, $imageData) === false) {
+        throw new FileWriteException("Failed to write image to file.");
+    }
+
+    return $filePath;
+}
+
+// Execute function with exception handling
+try {
+    $url = "https://example.com/path/to/image.jpg"; // Example URL (replace with actual URL)
+    $saveDir = '/path/to/img/uploads';
+    $filename = 'photo1.jpg';
+
+    $savedPath = downloadImageFromUrl($url, $saveDir, $filename);
+    echo "Image successfully saved to: $savedPath";
+} catch (InvalidUrlException $e) {
+    echo "URL Error: " . $e->getMessage();
+} catch (DirectoryNotWritableException $e) {
+    echo "Directory Error: " . $e->getMessage();
+} catch (CurlException $e) {
+    echo "Download Error: " . $e->getMessage();
+} catch (HttpException $e) {
+    echo "HTTP Error: " . $e->getMessage();
+} catch (FileWriteException $e) {
+    echo "File Save Error: " . $e->getMessage();
+} catch (Exception $e) {
+    echo "General Error: " . $e->getMessage();
+}
+
+?>

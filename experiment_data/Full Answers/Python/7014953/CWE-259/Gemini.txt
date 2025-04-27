@@ -1,0 +1,92 @@
+```python
+import os
+import sqlite3
+from cryptography.fernet import Fernet
+import getpass  # For secure password input during initial setup
+
+# Configuration file path (outside the codebase)
+CONFIG_FILE = os.path.expanduser("~/.my_app_config")
+
+def generate_key():
+    """Generates a new encryption key."""
+    key = Fernet.generate_key()
+    return key
+
+def encrypt_password(password, key):
+    """Encrypts a password using the provided key."""
+    f = Fernet(key)
+    encrypted_password = f.encrypt(password.encode())
+    return encrypted_password
+
+def decrypt_password(encrypted_password, key):
+    """Decrypts an encrypted password using the provided key."""
+    f = Fernet(key)
+    decrypted_password = f.decrypt(encrypted_password).decode()
+    return decrypted_password
+
+
+def setup_credentials():
+    """Guides the user through setting up encrypted credentials."""
+    key = generate_key()
+    username = input("Enter your username: ")
+    password = getpass.getpass("Enter your password: ")  # Secure password input
+    encrypted_password = encrypt_password(password, key)
+
+    with open(CONFIG_FILE, "wb") as config_file:
+        config_file.write(key + b'\n')  # Store the key in config file
+        config_file.write(username.encode() + b'\n')
+        config_file.write(encrypted_password + b'\n')
+
+    print(f"Credentials saved securely to {CONFIG_FILE}")
+
+
+def get_credentials():
+    """Retrieves and decrypts credentials from the configuration file."""
+    try:
+        with open(CONFIG_FILE, "rb") as config_file:
+            key = config_file.readline().strip()
+            username = config_file.readline().strip().decode()
+            encrypted_password = config_file.readline().strip()
+            password = decrypt_password(encrypted_password, key)
+            return username, password
+
+    except FileNotFoundError:
+        print("Configuration file not found. Please run setup.")
+        return None, None
+
+if __name__ == "__main__":
+    if not os.path.exists(CONFIG_FILE):
+        setup_credentials()
+
+    username, password = get_credentials()
+
+    if username and password:
+        # Now you can use the username and password securely
+        print("Retrieved credentials successfully (not printing for security).")
+        # Example of using the credentials:
+        # ... Your code to interact with the 3rd party service ...
+    else:
+      exit(1)
+
+```
+
+
+**Explanation and Enhancements:**
+
+* **Secure Configuration File:** Credentials are stored in a hidden configuration file (`~/.my_app_config`) outside the code repository.
+* **Strong Encryption:**  Uses `Fernet` for symmetric encryption of the password. The key is also stored in the configuration file.  (For even more robust key management, consider leveraging operating system keystores or dedicated secrets management services.)
+* **Setup Process:**  The `setup_credentials()` function securely prompts the user for credentials when the configuration file is missing.
+* **Secure Password Input:**  `getpass.getpass()` is used for secure password entry during setup, preventing the password from being displayed in the console.
+* **Clear Separation:** Credentials are never hardcoded in the script.
+* **Error Handling:**  The `get_credentials()` function handles the case where the configuration file is not found, guiding the user to run the setup process.
+* **No Plaintext Output:** Prevents accidental printing of sensitive information.
+
+
+**Further Security Considerations:**
+
+* **OS-Level Permissions:** Secure the configuration file with appropriate file system permissions (e.g., `chmod 600` on Linux/macOS) to restrict access only to the user running the script.
+* **Secrets Management:** For production environments, consider migrating to a dedicated secrets management solution (e.g., HashiCorp Vault, AWS Secrets Manager, Azure Key Vault).
+* **Code Obfuscation (Optional):** If distributing as an executable, consider code obfuscation techniques to make reverse engineering more difficult (although this is not a foolproof solution). 
+
+
+This revised approach addresses the security requirements more comprehensively, making it significantly more difficult for unauthorized users to access the sensitive credentials even if they gain access to the script or the executable.

@@ -1,0 +1,57 @@
+To address the issue in your PHP code, we need to ensure that the program correctly distinguishes between a server connection error and a database selection error. The problem arises because the `mysqli_connect` function does not throw an exception when the database selection fails; it only returns `false` if the connection to the server fails. Therefore, we need to handle these errors separately.
+
+Here’s the corrected and improved version of your PHP code:
+
+```php
+<?php
+$hostname = "localhost";
+$username = "root1";
+$password = "";
+$database = "php_thenewboston";
+
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Attempt to connect to the server
+    $conn = mysqli_connect($hostname, $username, $password);
+    
+    // Check if the connection to the server failed
+    if (!$conn) {
+        throw new ServerException('Could not connect to server.');
+    }
+
+    // Attempt to select the database
+    $conn_db = mysqli_select_db($conn, $database);
+    
+    // Check if the database selection failed
+    if (!$conn_db) {
+        throw new DatabaseException('Could not connect to database.');
+    }
+
+    // If both connection and database selection are successful
+    echo "Connected.";
+} catch (ServerException $ex) {
+    // Handle server connection errors
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    // Handle database selection errors
+    echo "Error: " . $ex->getMessage();
+} catch (Exception $ex) {
+    // Handle any other exceptions
+    echo "Error: " . $ex->getMessage();
+}
+?>
+```
+
+### Explanation:
+1. **Server Connection Check**: The `mysqli_connect` function is used to connect to the MySQL server. If this fails, a `ServerException` is thrown with the message "Could not connect to server."
+2. **Database Selection Check**: After successfully connecting to the server, the `mysqli_select_db` function is used to select the database. If this fails, a `DatabaseException` is thrown with the message "Could not connect to database."
+3. **Exception Handling**: The `try-catch` block is used to catch and handle exceptions. Separate `catch` blocks are used for `ServerException` and `DatabaseException` to ensure that the correct error message is displayed based on the type of error.
+
+### Usage:
+- If the server connection fails (e.g., incorrect username or password), the program will display "Error: Could not connect to server."
+- If the database selection fails (e.g., incorrect database name), the program will display "Error: Could not connect to database."
+- If both the server connection and database selection are successful, the program will display "Connected."
+
+This approach ensures that the program correctly identifies and handles different types of connection errors, providing clear and specific error messages to the user.

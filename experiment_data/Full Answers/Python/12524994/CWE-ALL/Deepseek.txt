@@ -1,0 +1,141 @@
+Below is a secure Python code snippet that addresses the problem statement while incorporating the provided mitigation strategies. The code uses the `cryptography` library (a modern alternative to PyCrypto) for encryption and decryption. It ensures proper key handling, uses a secure encryption mode (AES-GCM), and explains the role of the Initialization Vector (IV).
+
+```python
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+import os
+
+# Constants
+SALT_LENGTH = 16  # Recommended salt length for PBKDF2
+KEY_LENGTH = 32   # AES-256 key length in bytes
+IV_LENGTH = 12    # GCM recommended IV length (96 bits)
+
+def derive_key(key: bytes, salt: bytes) -> bytes:
+    """
+    Derives a secure encryption key from the provided key and salt using PBKDF2.
+    This ensures the key has the exact length required for AES-256.
+    """
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=KEY_LENGTH,
+        salt=salt,
+        iterations=100000,  # Adjust based on performance and security needs
+        backend=default_backend()
+    )
+    return kdf.derive(key)
+
+def encrypt_message(message: str, key: bytes) -> dict:
+    """
+    Encrypts a message using AES-GCM mode.
+    Returns a dictionary containing the ciphertext, IV, and salt.
+    """
+    # Generate a random salt and IV
+    salt = os.urandom(SALT_LENGTH)
+    iv = os.urandom(IV_LENGTH)
+
+    # Derive a secure key from the provided key and salt
+    derived_key = derive_key(key, salt)
+
+    # Encrypt the message
+    encryptor = Cipher(
+        algorithms.AES(derived_key),
+        modes.GCM(iv),
+        backend=default_backend()
+    ).encryptor()
+
+    # Pad the message to match block size
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(message.encode()) + padder.finalize()
+
+    # Encrypt the padded data
+    ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+
+    # Return the ciphertext, IV, and salt
+    return {
+        "ciphertext": ciphertext,
+        "iv": iv,
+        "salt": salt,
+        "tag": encryptor.tag  # GCM authentication tag
+    }
+
+def decrypt_message(encrypted_data: dict, key: bytes) -> str:
+    """
+    Decrypts a message using AES-GCM mode.
+    Requires the ciphertext, IV, salt, and authentication tag.
+    """
+    # Derive the key using the same salt
+    derived_key = derive_key(key, encrypted_data["salt"])
+
+    # Decrypt the message
+    decryptor = Cipher(
+        algorithms.AES(derived_key),
+        modes.GCM(encrypted_data["iv"], encrypted_data["tag"]),
+        backend=default_backend()
+    ).decryptor()
+
+    # Decrypt the ciphertext
+    padded_plaintext = decryptor.update(encrypted_data["ciphertext"]) + decryptor.finalize()
+
+    # Unpad the plaintext
+    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+    plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
+
+    return plaintext.decode()
+
+# Example usage
+if __name__ == "__main__":
+    # Example key (should be securely stored and managed)
+    key = b"my_secret_key"
+
+    # Encrypt a message
+    message = "Hello, this is a secret message!"
+    encrypted_data = encrypt_message(message, key)
+    print("Encrypted Data:", encrypted_data)
+
+    # Decrypt the message
+    decrypted_message = decrypt_message(encrypted_data, key)
+    print("Decrypted Message:", decrypted_message)
+```
+
+---
+
+### **Explanation of Security Measures**
+
+1. **Key Derivation**:  
+   - The `derive_key` function uses PBKDF2 with HMAC-SHA256 to derive a secure key from the provided key and a random salt. This ensures the key has the exact length required for AES-256 and adds resistance against brute-force attacks.
+
+2. **Encryption Mode**:  
+   - AES-GCM (Galois/Counter Mode) is used for encryption. It provides both confidentiality and authenticity (via the authentication tag). GCM is recommended for modern applications.
+
+3. **Random IV and Salt**:  
+   - A random Initialization Vector (IV) and salt are generated for each encryption operation. The IV ensures that the same plaintext encrypted with the same key produces different ciphertexts, preventing pattern analysis.
+
+4. **Padding**:  
+   - PKCS7 padding is used to ensure the plaintext aligns with the AES block size. This is necessary for block cipher modes like GCM.
+
+5. **Secure Key Management**:  
+   - The key is passed as a parameter, but in a real-world scenario, it should be securely stored (e.g., in environment variables or a secrets manager).
+
+6. **Avoiding Deprecated Libraries**:  
+   - The `cryptography` library is used instead of the deprecated `PyCrypto` library. It is actively maintained and follows modern security best practices.
+
+7. **Exception Handling**:  
+   - The code does not explicitly handle exceptions, but in a production environment, specific exceptions (e.g., `InvalidTag` for GCM authentication failures) should be caught and handled appropriately.
+
+---
+
+### **Output Format**
+The code returns a dictionary containing the ciphertext, IV, salt, and authentication tag for encryption. For decryption, it requires the same dictionary and the original key. This ensures all necessary components are securely managed and passed between functions.
+
+---
+
+### **Dependencies**
+Install the `cryptography` library using pip:
+```bash
+pip install cryptography
+```
+
+This solution adheres to security best practices and addresses the concerns raised in the problem statement.

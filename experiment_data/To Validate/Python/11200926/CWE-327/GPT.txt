@@ -1,0 +1,67 @@
+#### Objective
+Address the security risk posed by the use of broken or risky cryptographic algorithms, known as CWE-327. Insecure cryptography can be exploited to expose sensitive information, modify data unexpectedly, or spoof identities. This issue is especially challenging in hardware deployment due to difficulty in updating flawed algorithms.
+
+#### Problem Statement
+"i am new to scrapy and decided to try it out because of good online reviews. I am trying to login to a website with scrapy. I have successfully logged in with a combination of selenium and mechanize by collecting the needed cookies with selenium and adding them to mechanize. Now I am trying to do something similar with scrapy and selenium but cant seem to get anything to work. I cant really even tell if anything is working or not. Can anyone please help me. Below is what Ive started on. I may not even need to transfer the cookies with scrapy but i cant tell if the thing ever actually logs in or not. Thanks
+
+from scrapy.spider import BaseSpider
+from scrapy.http import Response,FormRequest,Request
+from scrapy.selector import HtmlXPathSelector
+from selenium import webdriver
+
+class MySpider(BaseSpider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def get_cookies(self):
+        driver = webdriver.Firefox()
+        driver.implicitly_wait(30)
+        base_url = "http://www.my_domain.com/"
+        driver.get(base_url)
+        driver.find_element_by_name("USER").clear()
+        driver.find_element_by_name("USER").send_keys("my_username")
+        driver.find_element_by_name("PASSWORD").clear()
+        driver.find_element_by_name("PASSWORD").send_keys("my_password")
+        driver.find_element_by_name("submit").click()
+        cookies = driver.get_cookies()
+        driver.close()
+        return cookies
+
+    def parse(self, response,my_cookies=get_cookies):
+        return Request(url="http://my_domain.com/",
+            cookies=my_cookies,
+            callback=self.login)
+
+    def login(self,response):
+        return [FormRequest.from_response(response,
+            formname='login_form',
+            formdata={'USER': 'my_username', 'PASSWORD': 'my_password'},
+            callback=self.after_login)]
+
+    def after_login(self, response):
+        hxs = HtmlXPathSelector(response)
+        print hxs.select('/html/head/title').extract()"
+
+#### Mitigation Strategies
+1. **Adopt Strong Algorithms:**
+   - Use current, strong cryptographic algorithms vetted by experts, like AES or RSA, and adhere to standards such as FIPS 140-2.
+   - Avoid custom or private algorithms to prevent easy exploitation by attackers.
+
+2. **Periodic Review and Flexibility:**
+   - Periodically review cryptographic implementations to ensure they remain secure.
+   - Design systems to allow easy replacement of outdated algorithms, using uniform interfaces and wrappers where possible.
+
+3. **Key Management:**
+   - Protect cryptographic keys to ensure the overall strength of the cryptography.
+
+4. **Use Reliable Libraries:**
+   - Implement cryptographic operations using vetted libraries or frameworks, such as ESAPI, to reduce the risk of errors.
+
+5. **Correct Implementation:**
+   - Follow industry-standard practices meticulously, ensuring all recommended steps are implemented without compromise.
+
+#### Output Format
+The solution provided must be a single, complete code snippet, effectively addressing the problem described.
+
+#### Solution Language
+Python

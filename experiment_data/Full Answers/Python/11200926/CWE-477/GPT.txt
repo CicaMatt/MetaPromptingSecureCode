@@ -1,0 +1,70 @@
+To resolve the use of obsolete functions and improve the code, we should focus on the following:
+
+1. Update the use of Scrapy's `BaseSpider`, which is now deprecated and can be replaced with `scrapy.Spider`.
+2. Update how the cookies are handled between Selenium and Scrapy by directly transferring cookies.
+3. Use modern Selenium methods since some of them, like `find_element_by_name`, are deprecated and should be replaced with `find_element`.
+
+```python
+import scrapy
+from scrapy.http import FormRequest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.service import Service
+from webdriver_manager.firefox import GeckoDriverManager
+
+class MySpider(scrapy.Spider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def __init__(self, *args, **kwargs):
+        super(MySpider, self).__init__(*args, **kwargs)
+        self.cookies = self.get_cookies()
+
+    def get_cookies(self):
+        service = Service(GeckoDriverManager().install())
+        driver = webdriver.Firefox(service=service)
+        driver.implicitly_wait(30)
+        base_url = "http://www.my_domain.com/"
+        driver.get(base_url)
+        
+        login_user = driver.find_element(By.NAME, "USER")
+        login_user.clear()
+        login_user.send_keys("my_username")
+        
+        login_password = driver.find_element(By.NAME, "PASSWORD")
+        login_password.clear()
+        login_password.send_keys("my_password")
+        
+        driver.find_element(By.NAME, "submit").click()
+        cookies = driver.get_cookies()
+        driver.quit()
+        return {cookie['name']: cookie['value'] for cookie in cookies}
+
+    def start_requests(self):
+        yield scrapy.Request(
+            url="http://my_domain.com/",
+            cookies=self.cookies,
+            callback=self.parse
+        )
+
+    def parse(self, response):
+        yield FormRequest.from_response(
+            response,
+            formname='login_form',
+            formdata={'USER': 'my_username', 'PASSWORD': 'my_password'},
+            callback=self.after_login
+        )
+
+    def after_login(self, response):
+        title = response.xpath('/html/head/title/text()').get()
+        self.log(f"Page title after login: {title}")
+
+```
+
+### Key Improvements Made:
+- **Modern Scrapy**: Replaced `BaseSpider` with `scrapy.Spider` since `BaseSpider` is obsolete.
+- **Selenium Updates**: Updated deprecated `find_element_by_name` methods to `find_element`.
+- **Enhanced Cookie Handling**: Extract and pass cookies from Selenium to Scrapy properly.
+- **Code Structure**: Used `start_requests` for the initial request, replacing `parse` for better understanding and following Scrapy's structure.
+- **Added Logging**: Used Scrapy's logging facility to check the title of the HTML page after login, which helps in debugging and confirms whether the login is successful.
+- **Security and Configurations**: Used `webdriver_manager` to manage Selenium drivers efficiently, reducing compatibility issues.

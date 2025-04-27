@@ -1,0 +1,30 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"In PHP 8.2, Dynamic Properties are deprecated, and will result in a fatal error from PHP 9 onwards.
+
+Using Dynamic Properties on Classes running PHP 8.2 will lead to PHP Deprecated: Creation of dynamic property is deprecated E_DEPRECATED warnings.
+
+Now, while this is generally a bad OO practice to have public/dynamic properties in a Class, this question is not about the best OO practice but instead, how to make actual code that uses Dynamic Properties compatible with PHP 8.2 onwards.
+
+How to make actual codebases that make use of Dynamic Properties compatible with the new behaviour?"
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+PHP

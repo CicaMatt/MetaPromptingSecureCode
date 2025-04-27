@@ -1,0 +1,49 @@
+I'm trying to create a search/filtering option in my blood donor application. Where donor can be searched by sex, name, blood group or by selecting all three. Here is my code
+
+function search_donar($_POST) {
+
+        $by_name = $_POST['by_name'];
+        $by_sex = $_POST['by_sex'];
+        $by_group = $_POST['by_group'];
+        $by_level = $_POST['by_level'];
+
+        $search_query = "SELECT * FROM donar WHERE";
+        if($by_name !="") {
+          $search_query .= " name='$by_name'";
+        }
+        if($by_sex !="") {
+          $search_query .= " sex='$by_sex'";
+        }
+        if($by_group !="") {
+          $search_query .= " blood_group='$by_group'";
+        }
+        if($by_level !="") {
+          $search_query .= " e_level='$by_level'";
+        }
+        $search_query;
+        $result = mysql_query($search_query);
+
+        return $result;
+    }
+And here is the html
+
+if(isset($_POST['submit'])) {
+
+    $retrived_result = $donar->search_donar($_POST);
+
+}
+
+   <form action="" method="post">
+    <table width="100%" border="0" style="border:none;">
+      <tr>
+        <td><label>Name:&nbsp;</label><input type="text" name="by_name" /></td>
+        <td><label>Sex:&nbsp;</label><input type="text" name="by_sex" /></td>
+        <td><label>Blood Group:&nbsp;</label><input type="text" name="by_group" /></td>
+        <td><label>Level:&nbsp;</label><input type="text" name="by_level" /></td>
+        <td><input class="button" type="submit" name="submit" value="Search" /></td>
+      </tr>
+    </table>
+    </form>
+Single filtering works very fine. But To filter with all I used AND , but it gives me error. Can anyone help ?
+
+Thanks in advance

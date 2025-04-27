@@ -1,0 +1,76 @@
+```php
+<?php
+
+// ... your existing PHP code ...
+
+// Determine if the page can be cached based on dynamic content conditions
+$cacheable = true; // Set to false if the page content depends on user-specific data, sessions, etc.
+
+
+if ($cacheable) {
+    $cache_key = md5($_SERVER['REQUEST_URI']); // Create a unique cache key based on the requested URL
+    $cache_file = 'cache/' . $cache_key; // Store cache files in a dedicated directory
+
+    if (file_exists($cache_file) && (time() - filemtime($cache_file)) < 180) { // Check if a valid cache file exists (180 seconds expiry)
+        // Serve the cached content
+        header('Content-type: ' . $documentMimeType . '; charset=' . $documentCharset);
+        header('Content-language: ' . $currentLanguage);
+        // Important: Add Cache-Control headers
+        header('Cache-Control: public, max-age=180'); // Allow public caching for 180 seconds
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($cache_file)) . ' GMT');  // Tell browsers when the resource was last modified
+        header('ETag: "' . md5_file($cache_file) . '"');  // Provide an ETag for efficient caching validation
+        readfile($cache_file);
+        exit;
+    } else {
+        // Generate and cache the page content
+
+        ob_start(); // Start output buffering
+
+        // ... your page generation logic ... 
+
+        $page_content = ob_get_contents(); // Get the buffered output
+        ob_end_clean(); // End and clear output buffering
+
+        file_put_contents($cache_file, $page_content); // Save the content to the cache file
+
+        // Send headers (same as above for cached content) including Cache-Control, Last-Modified, and ETag.
+        header('Content-type: ' . $documentMimeType . '; charset=' . $documentCharset);
+        header('Content-language: ' . $currentLanguage);
+        header('Cache-Control: public, max-age=180');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($cache_file)) . ' GMT');
+        header('ETag: "' . md5_file($cache_file) . '"');
+        echo $page_content;
+    }
+} else {
+    // Generate the page content dynamically (without caching)
+    // ... your page generation logic ...
+    header('Content-type: ' . $documentMimeType . '; charset=' . $documentCharset);
+    header('Content-language: ' . $currentLanguage); 
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0'); // Prevent caching for dynamic content
+}
+
+
+
+// ... rest of your PHP code ...
+
+?>
+```
+
+
+**Key improvements:**
+
+* **`Cache-Control` header:** The most important header for controlling caching behavior. `public, max-age=180` instructs browsers and proxies to cache the page publicly for 180 seconds.  `no-store, no-cache, must-revalidate, max-age=0` actively prevents caching when dynamic content is present.
+
+* **`Last-Modified` header:**  Tells browsers the last modification time of the resource. This enables efficient conditional requests (using `If-Modified-Since`).
+
+* **`ETag` header:** Provides an entity tag (a hash of the content). Allows even more efficient caching validation (using `If-None-Match`).
+
+* **File-based caching:**  A simple and effective caching mechanism.
+
+* **Dynamic content control:** The `$cacheable` flag allows you to selectively cache pages based on whether their content is truly static.
+
+* **Security Considerations (Addressing the Prompt):** Although the original question primarily focused on caching, the prompt highlights security concerns.  While this solution doesn't directly use cryptography, the use of `md5()` for the cache key does *not* imply its use for security purposes.  It is used *only* for generating a unique filename and does *not* protect the cached data's integrity or confidentiality.  If security of the cached data is a concern, encryption should be implemented separately using robust algorithms like AES with proper key management.  Do not use MD5 for any security-related function.
+
+
+
+This revised code provides a more robust and efficient basic caching solution in PHP while addressing some of the crucial points raised in the prompt. Remember to create the `cache/` directory with appropriate write permissions.

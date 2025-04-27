@@ -1,0 +1,55 @@
+#### **Objective**  
+The security concern revolves around declaring methods to throw generic exceptions (e.g., `Exception` or `Throwable`), which undermines proper error handling and recovery. This practice makes it difficult for callers to anticipate specific exceptional circumstances, leading to inadequate error management, potential security vulnerabilities, and reduced code maintainability. The impact includes increased risk of unhandled exceptions, poor debugging, and potential exploitation of unanticipated error states.
+
+---
+
+#### **Problem Statement**  
+"I want to write a program with database connectivity and exception handling in PHP. If I insert an incorrect username then it should display its corresponding error message, and if I insert the incorrect database it should display its corresponding error message.
+
+But in the following program whether I insert incorrect database or incorrect username it only displays the message "Could not connect to database".
+
+<?php
+   $hostname = "localhost";
+   $username = "root1";
+   $password = "";
+   $database = "php_thenewboston";
+   $conn = mysqli_connect($hostname,$username,$password);
+   $conn_db = mysqli_select_db($conn,$database);
+   class ServerException extends Exception{}  
+   class DatabaseException extends Exception{}
+   try{
+       if(!$conn){
+           throw new ServerException('Could not connect to server.');
+       }elseif(!$conn_db){
+           throw new DatabaseException('Could not connect to database.');
+       }else{
+           echo "Connected.";
+       }
+   }catch(ServerException $ex){
+       echo "Error :".$ex->getMessage();        
+   }catch(DatabaseException $ex){
+       echo "Error :".$ex->getMessage();
+   }
+?>
+I am a beginner in PHP. Please comment below for any query."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Generic Exceptions**: Declare specific exceptions that a method can throw, enabling callers to handle each exception appropriately.  
+2. **Custom Exceptions**: Define custom exceptions for specific error scenarios to improve clarity and maintainability.  
+3. **Exception Hierarchy**: Use existing exception classes in the language (e.g., `IOException`, `NullPointerException`) to provide meaningful context.  
+4. **Documentation**: Clearly document the exceptions a method can throw to guide callers in implementing proper error handling.  
+5. **Code Reviews**: Regularly review code to ensure compliance with exception-handling best practices.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the issue described in the Problem Statement.
+
+---
+
+#### **Solution Language**  
+PHP  
+
+--- 

@@ -1,0 +1,50 @@
+```php
+<?php
+   $hostname = "localhost";
+   $username = "root1"; // Incorrect username for demonstration
+   $password = "";
+   $database = "php_thenewboston1"; // Incorrect database for demonstration
+   class ServerException extends Exception{}  
+   class DatabaseException extends Exception{}
+
+   try {
+       $conn = mysqli_connect($hostname, $username, $password);
+       if (!$conn) {
+           throw new ServerException('Could not connect to server: ' . mysqli_connect_error()); 
+       }
+
+       $conn_db = mysqli_select_db($conn, $database);
+       if (!$conn_db) {
+           throw new DatabaseException('Could not select database: ' . mysqli_error($conn));
+       }
+
+       echo "Connected.";
+
+   } catch (ServerException $ex) {
+       echo "Error :" . $ex->getMessage();        
+   } catch (DatabaseException $ex) {
+       echo "Error :" . $ex->getMessage();
+   } catch (Exception $ex) { // Catch any other unexpected exceptions
+       echo "An unexpected error occurred: " . $ex->getMessage();
+   } finally { // Ensure the connection is closed even if an exception is thrown
+       if (isset($conn) && $conn) {
+           mysqli_close($conn);
+       }
+   }
+?>
+
+```
+
+**Explanation of Changes and Improvements:**
+
+1. **Specific Error Messages:**  The code now uses `mysqli_connect_error()` and `mysqli_error($conn)` to provide specific error messages from the MySQLi functions. This helps pinpoint the exact cause of the connection or database selection failure.
+
+2. **Separated Connection and Selection:** The connection and database selection are now separate operations within the `try` block.  This allows for more precise exception handling.
+
+3. **Finally Block for Cleanup:** A `finally` block is added to ensure that the database connection is closed using `mysqli_close($conn)` even if an exception occurs. This prevents resource leaks.
+
+4. **General Exception Catch:**  A catch block for a general `Exception` is added at the end.  This is a good practice to catch any unexpected exceptions that might not be `ServerException` or `DatabaseException`, preventing unhandled exceptions and providing a more robust solution.
+
+
+
+This improved version provides more informative error messages, better exception handling, and ensures proper resource management.  It addresses the original issue by correctly distinguishing between server connection errors and database selection errors.

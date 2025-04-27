@@ -1,0 +1,27 @@
+I need to decrypt a file encrypted on OpenSSL with python but I am not understanding the options of pycrypto.
+
+Here what I do in OpenSSL
+
+openssl enc -aes-256-cbc -a -salt -pbkdf2 -iter 100000 -in "clear.txt" -out "crypt.txt" -pass pass:"mypassword"
+
+openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100000 -in "crypt.txt" -out "out.txt" -pass pass:"mypassword"
+
+I tried (which obviously won't work)
+
+obj2 = AES.new("mypassword", AES.MODE_CBC)
+output = obj2.decrypt(text)
+I just want to do the second step in python, but when looking at the sample:
+
+https://pypi.org/project/pycrypto/
+
+obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+obj2.decrypt(ciphertext)
+I don't need IV, How do I specify the salt? the pbkdf2 hash? I am also looked at this thread
+
+How to decrypt OpenSSL AES-encrypted files in Python?
+
+but did not help.
+
+Can someone show me how to do this using python?
+
+thank you.

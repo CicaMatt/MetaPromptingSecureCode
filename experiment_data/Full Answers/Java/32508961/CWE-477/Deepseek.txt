@@ -1,0 +1,66 @@
+To address the problem of encrypting data in a way that is compatible with OpenSSL's `enc` command, we need to ensure that the encryption process in Java matches the OpenSSL process. OpenSSL's `enc` command uses a specific format for its output, which includes a salted header, the initialization vector (IV), and the ciphertext, all encoded in Base64.
+
+Here’s a complete and executable Java code snippet that replicates the OpenSSL encryption process:
+
+```java
+import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.AlgorithmParameters;
+import java.security.spec.KeySpec;
+import java.util.Base64;
+
+public class OpenSSLEncryption {
+
+    public static void main(String[] args) throws Exception {
+        String password = "testpass";
+        String plainText = "AMOUNT=10&TID=#19:23&CURRENCY=EUR&LANGUAGE=DE&SUCCESS_URL=http://some.url/sucess&ERROR_URL=http://some.url/error&CONFIRMATION_URL=http://some.url/confirm&NAME=customer full name";
+
+        // Generate a random salt
+        byte[] salt = new byte[8];
+        java.security.SecureRandom.getInstanceStrong().nextBytes(salt);
+
+        // Derive the key using PBKDF2 with HMAC-SHA256
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 100, 256);
+        SecretKeySpec secretKey = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
+
+        // Initialize the cipher in encryption mode
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        AlgorithmParameters params = cipher.getParameters();
+        byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+
+        // Encrypt the plaintext
+        byte[] cipherText = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+
+        // Concatenate Salted__ + salt + iv + cipherText
+        byte[] saltedHeader = "Salted__".getBytes(StandardCharsets.UTF_8);
+        byte[] combined = new byte[saltedHeader.length + salt.length + iv.length + cipherText.length];
+        System.arraycopy(saltedHeader, 0, combined, 0, saltedHeader.length);
+        System.arraycopy(salt, 0, combined, saltedHeader.length, salt.length);
+        System.arraycopy(iv, 0, combined, saltedHeader.length + salt.length, iv.length);
+        System.arraycopy(cipherText, 0, combined, saltedHeader.length + salt.length + iv.length, cipherText.length);
+
+        // Base64 encode the combined data
+        String encryptedData = Base64.getEncoder().encodeToString(combined);
+        System.out.println(encryptedData);
+    }
+}
+```
+
+### Explanation:
+1. **Salt Generation**: A random 8-byte salt is generated using `SecureRandom`.
+2. **Key Derivation**: The key is derived using PBKDF2 with HMAC-SHA256, using the password and salt.
+3. **Cipher Initialization**: The AES cipher is initialized in CBC mode with PKCS5 padding.
+4. **Encryption**: The plaintext is encrypted using the derived key and the generated IV.
+5. **Combining Data**: The `Salted__` header, salt, IV, and ciphertext are concatenated.
+6. **Base64 Encoding**: The combined data is Base64 encoded to produce the final encrypted output.
+
+### Decryption by the External System:
+The external system can decrypt the data using OpenSSL with the same password. OpenSSL will extract the salt and IV from the encrypted data and use them to derive the key and decrypt the ciphertext.
+
+This approach ensures compatibility with OpenSSL's `enc` command and adheres to modern cryptographic practices.

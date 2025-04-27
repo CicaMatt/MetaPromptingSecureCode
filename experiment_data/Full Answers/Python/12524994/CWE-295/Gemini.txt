@@ -1,0 +1,112 @@
+```python
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad, unpad
+import hashlib
+
+def encrypt(message, key):
+    """
+    Encrypts a message using AES-256 in CBC mode.
+
+    Args:
+        message: The message to encrypt (bytes).
+        key: The encryption key (string or bytes).
+
+    Returns:
+        A tuple containing the IV and ciphertext (both bytes).
+        Returns None if an error occurs.
+    """
+    try:
+        # Generate a 256-bit key from the provided key (if needed)
+        key = hashlib.sha256(key.encode() if isinstance(key, str) else key).digest()  # Ensure 256-bit key
+
+        # Generate a random IV
+        iv = get_random_bytes(AES.block_size)
+
+        # Create the cipher object
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+
+        # Pad the message to a multiple of the block size
+        padded_message = pad(message, AES.block_size)
+
+        # Encrypt the message
+        ciphertext = cipher.encrypt(padded_message)
+
+        return iv, ciphertext
+
+    except Exception as e:  # Handle potential exceptions (e.g., invalid key)
+        print(f"Encryption error: {e}")
+        return None
+
+
+
+def decrypt(ciphertext, key, iv):
+    """
+    Decrypts a message using AES-256 in CBC mode.
+
+    Args:
+        ciphertext: The ciphertext to decrypt (bytes).
+        key: The decryption key (string or bytes).
+        iv: The initialization vector (bytes).
+
+    Returns:
+        The decrypted message (bytes) or None if decryption fails.
+    """
+
+    try:
+        # Generate a 256-bit key from the provided key (if needed)
+        key = hashlib.sha256(key.encode() if isinstance(key, str) else key).digest()
+
+        # Create the cipher object
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        
+        # Decrypt the ciphertext
+        plaintext_padded = cipher.decrypt(ciphertext)
+
+        # Unpad the message
+        plaintext = unpad(plaintext_padded, AES.block_size)
+
+        return plaintext
+
+    except Exception as e: # Handle potential exceptions (e.g., padding errors, incorrect key/IV)
+        print(f"Decryption error: {e}")
+        return None
+
+
+
+
+# Example usage:
+message = b"This is my secret message."
+key = "mysecretpassword"
+
+
+encryption_result = encrypt(message, key)
+if encryption_result:
+    iv, ciphertext = encryption_result
+    print("Ciphertext:", ciphertext.hex())  # Print ciphertext in hexadecimal for easier handling/storage
+
+
+    decrypted_message = decrypt(ciphertext, key, iv)
+    if decrypted_message:
+        print("Decrypted message:", decrypted_message)
+
+
+```
+
+
+**Explanation and Addressing Concerns:**
+
+1. **Key Length:** The code uses `hashlib.sha256()` to create a 256-bit key from any provided key (string or bytes). This ensures a consistent key length suitable for AES-256, even if the original key is shorter or longer.
+
+2. **Secure Randomness:** It uses `Crypto.Random.get_random_bytes()` for generating the IV, which is cryptographically secure.
+
+3. **Recommended Mode:**  AES-256 in CBC (Cipher Block Chaining) mode is used.  CBC is a widely used and generally recommended mode for symmetric encryption. It provides good security when used correctly (with a random IV).
+
+4. **IV (Initialization Vector):** The IV is a random value that is used to ensure that encrypting the same message with the same key produces a different ciphertext each time.  It's crucial for security.  The IV *must* be the same for decryption as it was for encryption.  The code stores and passes the IV correctly.  Different IVs for encryption/decryption will result in incorrect decryption.
+
+5. **Padding:**  The code uses `Crypto.Util.Padding` to handle padding. Padding is necessary because block cipher modes like CBC require the input to be a multiple of the block size. PKCS#7 padding is used, which is a standard and secure padding scheme.
+
+6. **Error Handling:** Includes basic `try...except` blocks to catch potential errors during encryption and decryption and provide more informative error messages.  This helps in debugging and prevents unexpected program crashes.
+
+
+7. **Ciphertext representation:** The ciphertext is printed in hexadecimal format making it easier to store, transmit, or copy/paste.  This is a best practice when dealing with binary data.

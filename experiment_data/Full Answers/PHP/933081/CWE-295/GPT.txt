@@ -1,0 +1,73 @@
+To address improper certificate validation and demonstrate the use of a try-catch block in PHP, we first modify your code example to use a try-catch statement. Then, we illustrate how to enhance the security of a connection by implementing robust certificate validation.
+
+```php
+<?php
+
+function uploadFileSecurely($file) {
+    try {
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
+        $uploadFilePath = $uploadDir . basename($file['name']);
+
+        if (!move_uploaded_file($file['tmp_name'], $uploadFilePath)) {
+            throw new Exception("File didn't upload");
+        }
+
+        echo 'Upload Complete!';
+    } catch (Exception $e) {
+        echo 'Error: ' . $e->getMessage();
+    }
+}
+
+// Simulate an upload file process
+uploadFileSecurely($_FILES['file']);
+
+// Secure Connection Function with Certificate Validation
+function secureCurlConnection($url) {
+    $ch = curl_init($url);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    // Validate certificate
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+
+    // Set a CA path or a CA bundle to validate the certificate
+    curl_setopt($ch, CURLOPT_CAINFO, '/path/to/cacert.pem');
+
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        throw new Exception('Curl error: ' . curl_error($ch));
+    }
+
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($httpCode !== 200) {
+        throw new Exception('Server returned status code ' . $httpCode);
+    }
+
+    curl_close($ch);
+
+    return $response;
+}
+
+try {
+    $response = secureCurlConnection('https://your-secure-api.com');
+    echo 'Secure API Response: ' . $response;
+} catch (Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+
+?>
+```
+
+### Key Points:
+1. **File Upload Handling:**
+    - We wrapped the file upload logic in a `try-catch` block to handle any exceptions gracefully.
+    - If the file upload fails, an exception is thrown, and the error message is displayed.
+
+2. **Certificate Validation in HTTP Requests:**
+    - Utilized `curl` to demonstrate how to set up a secure HTTP request with certificate validation.
+    - `CURLOPT_SSL_VERIFYPEER` ensures the certificate is checked against the issuer's CA.
+    - `CURLOPT_SSL_VERIFYHOST` checks that the Common Name field or Subject Alternate Name field of the certificate matches the hostname.
+    - The `CURLOPT_CAINFO` option sets the path to the certificate authority's public key (`cacert.pem`), which is essential for verifying the SSL certificate.
+
+These strategies bolster your PHP application's resistance to connection spoofing and data interception by ensuring proper certificate validation and error handling mechanisms.

@@ -1,0 +1,82 @@
+To address the issue of hard-coded passwords and improve the security of your Scrapy project, we can implement the following changes:
+
+1. **Avoid Hard-coded Passwords**: Store the credentials in a secure configuration file or environment variables.
+2. **Use Environment Variables**: Store sensitive information like usernames and passwords in environment variables.
+3. **Secure Authentication**: Use secure methods to handle authentication and cookies.
+
+Below is the revised code that incorporates these changes:
+
+```python
+import os
+from scrapy.spider import BaseSpider
+from scrapy.http import Response, FormRequest, Request
+from scrapy.selector import HtmlXPathSelector
+from selenium import webdriver
+
+class MySpider(BaseSpider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def get_cookies(self):
+        # Retrieve credentials from environment variables
+        username = os.getenv('MY_USERNAME')
+        password = os.getenv('MY_PASSWORD')
+
+        if not username or not password:
+            raise ValueError("Username or password not set in environment variables")
+
+        driver = webdriver.Firefox()
+        driver.implicitly_wait(30)
+        base_url = "http://www.my_domain.com/"
+        driver.get(base_url)
+        driver.find_element_by_name("USER").clear()
+        driver.find_element_by_name("USER").send_keys(username)
+        driver.find_element_by_name("PASSWORD").clear()
+        driver.find_element_by_name("PASSWORD").send_keys(password)
+        driver.find_element_by_name("submit").click()
+        cookies = driver.get_cookies()
+        driver.close()
+        return cookies
+
+    def parse(self, response):
+        my_cookies = self.get_cookies()
+        return Request(url="http://my_domain.com/",
+            cookies=my_cookies,
+            callback=self.login)
+
+    def login(self, response):
+        # Retrieve credentials from environment variables
+        username = os.getenv('MY_USERNAME')
+        password = os.getenv('MY_PASSWORD')
+
+        if not username or not password:
+            raise ValueError("Username or password not set in environment variables")
+
+        return [FormRequest.from_response(response,
+            formname='login_form',
+            formdata={'USER': username, 'PASSWORD': password},
+            callback=self.after_login)]
+
+    def after_login(self, response):
+        hxs = HtmlXPathSelector(response)
+        print(hxs.select('/html/head/title').extract())
+```
+
+### Explanation:
+1. **Environment Variables**: The username and password are retrieved from environment variables using `os.getenv()`. This ensures that sensitive information is not hard-coded in the script.
+2. **Error Handling**: If the environment variables are not set, the script raises a `ValueError` to alert the user.
+3. **Secure Authentication**: The `get_cookies` method uses Selenium to log in and retrieve cookies, which are then used in the Scrapy request.
+
+### Steps to Set Environment Variables:
+1. **Linux/MacOS**:
+   ```bash
+   export MY_USERNAME='your_username'
+   export MY_PASSWORD='your_password'
+   ```
+2. **Windows**:
+   ```cmd
+   set MY_USERNAME='your_username'
+   set MY_PASSWORD='your_password'
+   ```
+
+By following these steps, you can securely handle authentication in your Scrapy project without hard-coding sensitive information.

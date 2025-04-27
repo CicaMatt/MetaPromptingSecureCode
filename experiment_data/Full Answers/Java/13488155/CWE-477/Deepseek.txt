@@ -1,0 +1,114 @@
+To address the problem of encrypting and decrypting HTML files stored locally in a Swing application, we can use Java's built-in cryptographic libraries. The goal is to encrypt the HTML files so that they cannot be accessed directly by the client, and then decrypt them within the Java application when needed. Additionally, the solution should allow for updates to the encrypted files.
+
+Here’s a complete and executable Java code snippet that demonstrates how to encrypt and decrypt a folder of HTML files:
+
+```java
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.Key;
+
+public class FileEncryptorDecryptor {
+
+    private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES";
+
+    public static void main(String[] args) {
+        try {
+            // Generate a secret key for encryption and decryption
+            Key secretKey = generateKey();
+
+            // Path to the folder containing HTML files
+            String inputFolderPath = "path/to/html/folder";
+            String encryptedFolderPath = "path/to/encrypted/folder";
+            String decryptedFolderPath = "path/to/decrypted/folder";
+
+            // Encrypt the entire folder
+            encryptFolder(inputFolderPath, encryptedFolderPath, secretKey);
+
+            // Decrypt the entire folder
+            decryptFolder(encryptedFolderPath, decryptedFolderPath, secretKey);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Key generateKey() throws Exception {
+        KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
+        keyGen.init(128); // 128-bit key size
+        return keyGen.generateKey();
+    }
+
+    public static void encryptFolder(String inputFolderPath, String encryptedFolderPath, Key secretKey) throws Exception {
+        File inputFolder = new File(inputFolderPath);
+        File[] files = inputFolder.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    encryptFile(file.getAbsolutePath(), encryptedFolderPath + "/" + file.getName(), secretKey);
+                }
+            }
+        }
+    }
+
+    public static void decryptFolder(String encryptedFolderPath, String decryptedFolderPath, Key secretKey) throws Exception {
+        File encryptedFolder = new File(encryptedFolderPath);
+        File[] files = encryptedFolder.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    decryptFile(file.getAbsolutePath(), decryptedFolderPath + "/" + file.getName(), secretKey);
+                }
+            }
+        }
+    }
+
+    public static void encryptFile(String inputFilePath, String outputFilePath, Key secretKey) throws Exception {
+        doCrypto(Cipher.ENCRYPT_MODE, secretKey, inputFilePath, outputFilePath);
+    }
+
+    public static void decryptFile(String inputFilePath, String outputFilePath, Key secretKey) throws Exception {
+        doCrypto(Cipher.DECRYPT_MODE, secretKey, inputFilePath, outputFilePath);
+    }
+
+    private static void doCrypto(int cipherMode, Key secretKey, String inputFilePath, String outputFilePath) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(cipherMode, secretKey);
+
+        FileInputStream inputStream = new FileInputStream(inputFilePath);
+        byte[] inputBytes = new byte[(int) new File(inputFilePath).length()];
+        inputStream.read(inputBytes);
+
+        byte[] outputBytes = cipher.doFinal(inputBytes);
+
+        FileOutputStream outputStream = new FileOutputStream(outputFilePath);
+        outputStream.write(outputBytes);
+
+        inputStream.close();
+        outputStream.close();
+    }
+}
+```
+
+### Explanation:
+1. **Key Generation**: The `generateKey()` method generates a 128-bit AES key for encryption and decryption.
+2. **Folder Encryption**: The `encryptFolder()` method iterates through all files in the input folder, encrypts each file, and saves the encrypted files to the specified output folder.
+3. **Folder Decryption**: The `decryptFolder()` method iterates through all files in the encrypted folder, decrypts each file, and saves the decrypted files to the specified output folder.
+4. **File Encryption/Decryption**: The `encryptFile()` and `decryptFile()` methods handle the actual encryption and decryption of individual files using the AES algorithm.
+5. **Crypto Operation**: The `doCrypto()` method performs the encryption or decryption operation using the `Cipher` class.
+
+### Usage:
+- Replace `"path/to/html/folder"`, `"path/to/encrypted/folder"`, and `"path/to/decrypted/folder"` with the actual paths to your folders.
+- Run the program to encrypt the HTML files. The encrypted files will be stored in the specified encrypted folder.
+- When the application needs to access the HTML files, it can decrypt them using the `decryptFolder()` method.
+
+This solution ensures that the HTML files are securely encrypted and can only be accessed by the Java application, which has the secret key for decryption. Additionally, the encrypted files can be updated and merged as needed.

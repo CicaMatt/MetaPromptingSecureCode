@@ -1,0 +1,15 @@
+How can you create a temporary FIFO (named pipe) in Python? This should work:
+
+import tempfile
+
+temp_file_name = mktemp()
+os.mkfifo(temp_file_name)
+open(temp_file_name, os.O_WRONLY)
+# ... some process, somewhere, will read it ...
+However, I'm hesitant because of the big warning in Python Docs 11.6 and potential removal because it's deprecated.
+
+EDIT: It's noteworthy that I've tried tempfile.NamedTemporaryFile (and by extension tempfile.mkstemp), but os.mkfifo throws:
+
+OSError -17: File already exists
+
+when you run it on the files that mkstemp/NamedTemporaryFile have created.

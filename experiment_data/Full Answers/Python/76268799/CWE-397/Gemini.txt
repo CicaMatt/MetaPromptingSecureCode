@@ -1,0 +1,67 @@
+```python
+import datetime as dt
+from uuid import uuid4
+
+import enum
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+
+engine = create_engine("postgresql+psycopg2://user:password@host:port/database") # Replace with your DB connection string
+CampaignStatusType = pgEnum(CampaignStatus, name="campaignstatus", create_constraint=True, metadata=Base.metadata)
+
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[uuid4] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatus] = mapped_column(CampaignStatusType, nullable=False)
+
+
+Base.metadata.create_all(engine)
+
+
+
+# Example usage and exception handling:
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+
+try:
+    with Session(engine) as session:
+        new_campaign = Campaign(status=CampaignStatus.activated) # Must use Enum member
+        session.add(new_campaign)
+        session.commit()
+        print("Campaign created successfully.")
+
+except ValueError as e:  # Handle specific exceptions like ValueError if enum is incorrect
+    print(f"Invalid campaign status: {e}")
+    # Implement specific recovery logic for ValueError
+except SQLAlchemyError as e:  # Catch SQLAlchemy specific exceptions
+    print(f"Database error: {e}")
+    session.rollback()  # Roll back the transaction in case of database errors
+    # Implement specific recovery logic for database errors
+except Exception as e: # Catch any other unexpected errors
+    print(f"An unexpected error occurred: {e}")
+    # Implement general error handling or re-raise if necessary
+```
+
+**Explanation of Changes and Mitigation:**
+
+1. **Database Connection:** The code now includes a `create_engine` call to establish a connection to a PostgreSQL database.  This is essential for creating the enum type in the database.  **Replace the placeholder connection string with your actual database credentials.**
+2. **Enum Type Definition:** The `CampaignStatusType` is correctly defined using `pgEnum` and associated with the `Base.metadata`. This ensures that the enum type is created in the database.
+3. **Mapped Column Type:** The crucial change is using `CampaignStatus` directly as the type argument for the `Mapped` type hint and using the `CampaignStatusType` as the type argument for the `mapped_column` function. This tells SQLAlchemy to map the column to the Python enum *and* the database enum type.
+4. **Example Usage and Exception Handling:**  The code demonstrates how to create a `Campaign` instance and use the enum values.  It includes example `try-except` blocks to handle `ValueError`, `SQLAlchemyError`, and a general `Exception`. This demonstrates the principle of catching specific exceptions and providing tailored error handling.
+5. **Rollback on Error:** The `SQLAlchemyError` handling includes a `session.rollback()` to ensure data integrity in case of database errors.
+
+This solution addresses the original error, provides a working example with a database connection, and demonstrates proper exception handling practices by catching specific exceptions related to database operations and enum usage.  Remember to replace the placeholder database connection string with your actual credentials.

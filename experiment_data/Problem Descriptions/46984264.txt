@@ -1,0 +1,1 @@
+We have aes-256 encryption for some data in one of the tables and we are migrating this to sql server. The problem is that we cannot decrypt the data in sql server due to incompatibility. Is there any way we can encrypt data in MYSQL in a way which is compatible with sql server aswell. Any advise ?

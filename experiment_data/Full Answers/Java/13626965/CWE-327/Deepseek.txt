@@ -1,0 +1,74 @@
+The exception you're encountering, `javax.net.ssl.SSLHandshakeException`, indicates that the Java application is unable to establish a secure connection to the server because it cannot validate the server's SSL certificate. This typically happens when the server's certificate is not trusted by the Java runtime environment (JRE), either because the certificate is self-signed or because the certificate chain is incomplete.
+
+To address this issue, you have two options:
+
+1. **Add the Server's Certificate to the Java Truststore**: This is the recommended approach if you have control over the server or can obtain its certificate. You would add the server's certificate to the Java truststore, which will allow the JRE to trust the server's certificate.
+
+2. **Bypass SSL Certificate Validation**: This approach is **not recommended** for production environments as it compromises security by ignoring SSL certificate validation. However, it can be useful for testing purposes.
+
+Below is a Java code snippet that demonstrates how to bypass SSL certificate validation. This should only be used in a controlled testing environment:
+
+```java
+import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.cert.X509Certificate;
+
+public class SSLHandshakeBypass {
+
+    public static void main(String[] args) throws Exception {
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }
+        };
+
+        // Install the all-trusting trust manager
+        SSLContext sc = SSLContext.getInstance("SSL");
+        sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+        // Create all-trusting host name verifier
+        HostnameVerifier allHostsValid = (hostname, session) -> true;
+
+        // Install the all-trusting host verifier
+        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+        // Now you can make your request
+        URL url = new URL("https://www.abc.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setDoOutput(true);
+
+        DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+        wr.flush();
+        wr.close();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String line;
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
+        }
+    }
+}
+```
+
+### Explanation:
+1. **TrustManager**: A custom `TrustManager` is created that trusts all certificates, effectively bypassing SSL certificate validation.
+2. **SSLContext**: The `SSLContext` is initialized with the custom `TrustManager`.
+3. **HostnameVerifier**: A custom `HostnameVerifier` is created that accepts all hostnames.
+4. **Request Execution**: The HTTPS request is made as usual, but now the SSL certificate validation is bypassed.
+
+### Important Note:
+- **Security Risk**: This approach should **never** be used in production environments as it makes the application vulnerable to man-in-the-middle (MITM) attacks.
+- **Recommended Approach**: For production, ensure that the server's certificate is properly configured and trusted by the JRE. You can add the server's certificate to the Java truststore using the `keytool` utility.

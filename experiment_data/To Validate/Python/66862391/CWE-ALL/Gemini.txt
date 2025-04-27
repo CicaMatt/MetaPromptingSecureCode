@@ -1,0 +1,60 @@
+Objective:
+Generate a secure code snippet that addresses the provided problem statement, incorporating all relevant mitigation strategies to prevent or remediate the identified CWE vulnerabilities (CWE-259, CWE-295, CWE-327, CWE-397, CWE-477, CWE-798).
+
+Problem Statement:
+"I am trying to get rid of the openssl call below and replace it with pure python code.
+
+import os
+    
+iv = "7bde5a0f3f39fd658efc45de143cbc94"
+password = "3e83b13d99bf0de6c6bde5ac5ca4ae68"
+msg = "this is a message"
+
+out = os.popen(f'printf "{msg}" | openssl aes-128-cbc -base64 -K {password} -iv {iv}').read()
+
+print(f"IV: {iv}")    
+print(f"PWD: {password}")     
+print(f"MSG: {msg}")   
+print(f"OUT: {out}")   
+yields:
+
+IV: 7bde5a0f3f39fd658efc45de143cbc94
+PWD: 3e83b13d99bf0de6c6bde5ac5ca4ae68
+MSG: this is a message
+OUT: ukMTwxkz19qVPiwU8xa/YM9ENqklbZtB86AaVPULHLE=
+Between the 3 different libraries that people seem to suggest and various other code excerpts that don't seem to work anymore, I haven't been able to replicate it in pure python reliably. Would anyone have a working code example for the above?"
+
+Mitigation Strategies:
+Based on the provided CWE information, the following security best practices and guidelines will be applied:
+
+* **CWE-259 & CWE-798 (Hard-coded Credentials):**
+    * Avoid hard-coding passwords or credentials directly into the code.
+    * Store sensitive credentials in strongly-protected, encrypted configuration files or databases with restricted access.
+    * For inbound authentication, implement a "first login" mode requiring users to set unique, strong passwords.
+    * Apply strong one-way hashing with random salts to stored passwords.
+    * For outbound authentication, use generated, automatically changed credentials managed by system administrators.
+    * Limit the permissions of stored credentials to the minimum necessary.
+* **CWE-295 (Improper Certificate Validation):**
+    * Implement thorough certificate validation, ensuring certificates are properly managed and checked.
+    * If using certificate pinning, validate all relevant certificate properties before pinning.
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):**
+    * Use strong, up-to-date, and well-vetted cryptographic algorithms.
+    * Avoid developing custom cryptographic algorithms.
+    * Periodically review and update cryptographic algorithms to prevent obsolescence.
+    * Ensure the design allows for easy replacement of cryptographic algorithms.
+    * Carefully manage and protect cryptographic keys.
+    * Use well tested cryptographic libraries.
+    * Avoid skipping resource intensive cryptographic steps.
+* **CWE-397 (Declaration of Throws for Generic Exception):**
+    * Avoid declaring methods to throw generic exceptions (e.g., Exception, Throwable).
+    * Use specific exception types to facilitate proper error handling.
+* **CWE-477 (Use of Obsolete Function):**
+    * Avoid using obsolete functions.
+    * Refer to documentation to understand why functions are deprecated and use recommended alternatives.
+    * Consider the security implications of using obsolete functions.
+
+Output Format:
+Provide a single, complete, and secure code snippet that addresses the problem statement and incorporates all mitigation strategies.
+
+Solution Language:
+Python

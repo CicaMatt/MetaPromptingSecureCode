@@ -1,0 +1,47 @@
+## Objective
+The use of obsolete functions in code can lead to security vulnerabilities, inefficiencies, and maintenance challenges. These outdated functions may lack important security enhancements provided by newer alternatives and can pose risks such as unexpected behavior or compatibility issues. Addressing the use of obsolete functions is crucial for ensuring the security and robustness of software applications.
+
+## Problem Statement
+"I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+## Mitigation Strategies
+1. **Documentation Review**: Thoroughly examine the documentation related to the obsolete function to understand the reasons for its deprecation. Identify alternative functions or approaches recommended by the language maintainers or community.
+2. **Consider Security Implications**: Assess the security outcomes of continuing to use the deprecated function. Prioritize finding and implementing a more secure and efficient alternative to eliminate potential risks and enhance application security.
+3. **Adopt New Conventions**: Familiarize yourself with the best practices and modern conventions that have replaced the obsolete function to ensure the application complies with up-to-date security standards and operational efficiency.
+
+## Output Format
+The solution must be presented as a single, complete code snippet that effectively replaces the obsolete function while addressing the identified security concerns.
+
+## Solution Language
+Java

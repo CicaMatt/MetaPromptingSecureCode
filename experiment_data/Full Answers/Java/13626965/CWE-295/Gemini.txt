@@ -1,0 +1,67 @@
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class UnsafeHttpsClient {
+
+    public static void main(String[] args) throws Exception {
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[] { 
+            new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }
+        };
+
+        // Install the all-trusting trust manager
+        SSLContext sc = SSLContext.getInstance("SSL");
+        sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+        // Create all-trusting host name verifier
+        HostnameVerifier allHostsValid = new HostnameVerifier() {
+            public boolean verify(String hostname, SSLSession session) {
+                return true;
+            }
+        };
+
+        // Install the all-trusting host verifier
+        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+
+        URL url = new URL("https://www.abc.com"); // Replace with your target URL
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+        conn.setRequestMethod("GET");
+
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
+        }
+        br.close();
+    }
+}
+
+
+```
+
+
+**Explanation and Crucial Security Warning:**
+
+This code bypasses certificate validation and hostname verification.  **This is extremely dangerous and should never be used in production code or for handling sensitive data.** It makes your application vulnerable to man-in-the-middle attacks.
+
+This solution is provided solely for testing or interacting with development servers with self-signed certificates where security is not a primary concern.  For any production-level application, proper certificate validation is paramount.  
+
+If you encounter certificate issues in a production setting, the correct solution is to address the underlying certificate problem, not to disable validation.  This might involve obtaining a valid certificate from a trusted CA, configuring your trust store correctly, or fixing network connectivity issues.  Never bypass these security measures in real-world applications.

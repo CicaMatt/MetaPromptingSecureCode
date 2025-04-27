@@ -1,0 +1,41 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"I need to save an image file from a url using CURL and save it to a folder on my server. I've been battling with this code to no avail. Ideally I'd like to grab the image and save it as "photo1" or something. Help!
+
+function GetImageFromUrl($link)
+{
+     
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_POST, 0);
+    curl_setopt($ch,CURLOPT_URL,$link);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    return $result;
+}
+    
+$sourcecode = GetImageFromUrl($iticon);
+$savefile = fopen(' /img/uploads/' . $iconfilename, 'w');
+fwrite($savefile, $sourcecode);
+fclose($savefile);"
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+PHP

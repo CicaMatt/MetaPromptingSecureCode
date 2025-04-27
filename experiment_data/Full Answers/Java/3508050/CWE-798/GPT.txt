@@ -1,0 +1,55 @@
+To address the problem of accessing trusted root certificates in a Java application, we can leverage the Java Security API to programmatically retrieve certificates from the default trust store used by the Java Runtime Environment (JRE). The solution does not involve hard-coded credentials and aligns with best practices for secure data handling.
+
+Below is the code snippet demonstrating how to access and list all trusted root certificates from the default Java trust store:
+
+```java
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+
+public class TrustedRootCertificates {
+
+    public static void main(String[] args) {
+        try {
+            // Load the default trust store
+            String defaultTrustStoreType = KeyStore.getDefaultType();
+            KeyStore trustStore = KeyStore.getInstance(defaultTrustStoreType);
+
+            // Load the trust store; null means using the default configuration (system trust store)
+            InputStream trustStoreStream = null;
+            trustStore.load(trustStoreStream, null);
+            
+            // Enumerate over all aliases to list certificates
+            Enumeration<String> aliases = trustStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate certificate = trustStore.getCertificate(alias);
+                
+                // Check if the certificate is an X509Certificate
+                if (certificate instanceof X509Certificate) {
+                    X509Certificate x509Cert = (X509Certificate) certificate;
+                    System.out.println("Alias: " + alias);
+                    System.out.println("Subject: " + x509Cert.getSubjectDN());
+                    System.out.println("Issuer: " + x509Cert.getIssuerDN());
+                    System.out.println("Serial Number: " + x509Cert.getSerialNumber());
+                    System.out.println("-----------------------------------------------------------");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+- **KeyStore.getDefaultType():** Retrieves the default keystore type. For most installations of the JDK, this is typically "JKS".
+- **KeyStore.getInstance():** Creates a `KeyStore` instance of the specified type.
+- **KeyStore.load():** Loads the keystore from the specified InputStream. Passing `null` for both the InputStream and password parameters lets Java load the system's default trust store.
+- **KeyStore.aliases():** Returns an enumeration of the alias names in this keystore.
+- **KeyStore.getCertificate():** Retrieves the certificate for the given alias.
+- **X509Certificate:** An interface representing X.509 certificates, which are used for identity authentication and message encryption.
+
+This code extracts and displays the details of each trusted root certificate found in the system's default trust store. Ensure your application has the necessary permissions to access this information, especially in a restricted environment.

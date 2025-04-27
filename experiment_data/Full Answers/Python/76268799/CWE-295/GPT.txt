@@ -1,0 +1,49 @@
+To resolve the error you're encountering with SQLAlchemy 2.0 and `mapped_column`, we need to address the use of the `ENUM` type for your `CampaignStatus` enum. The error `AttributeError: 'ENUM' object has no attribute '__mro__'` typically arises because the `ENUM` type isn't directly used as expected within the mapped column context provided by SQLAlchemy 2.0. 
+
+Before proceeding, it's essential to understand that the code error and certificate validation are unrelated topics. However, I am focusing on providing a solution for the SQLAlchemy issue as per the problem statement. Here's how you can define your SQLAlchemy model using enums:
+
+```python
+from sqlalchemy import Column, Enum
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
+import sqlalchemy as sa
+import enum
+import datetime as dt
+import uuid
+
+Base = declarative_base()
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id = Column(sa.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(sa.DateTime, default=dt.datetime.utcnow)
+    status = Column(PgEnum(CampaignStatus, name="campaignstatus", create_type=False), nullable=False)
+
+# Example to create the table
+from sqlalchemy import create_engine
+
+engine = create_engine('postgresql://user:password@localhost/mydatabase')
+
+# Create the table
+Base.metadata.create_all(engine)
+```
+
+### Explanation:
+
+- **Enum Definition**: First, we define an enumeration `CampaignStatus` inheriting from `str` and `enum.Enum`, which accurately reflects the states, `activated` and `deactivated`.
+
+- **Database Column Types**:
+  - For `id`, we're using `sa.UUID` to store UUID types.
+  - For `created_at`, the column uses `sa.DateTime`, defaulting to the current UTC time.
+  - For `status`, instead of `pgEnum`, we directly utilize `PgEnum` from `sqlalchemy.dialects.postgresql`, which is compatible directly with PostgreSQL and properly handles the enum.
+
+- **Create Table and Engine**: This snippet shows initializing a database engine and creating tables within the database. Adjust the `create_engine` connection string to fit your environment setup.
+
+Using this pattern should not only resolve the error related to the `ENUM` object but also align with SQLAlchemy 2.0's new features and expectations.
+
+Remember, this solution is focused on resolving your SQLAlchemy enum and model creation issue, not on certificate validation. For secure certificate validation practices in Python, you typically use libraries such as `ssl` or tools like `requests` that internally handle HTTPS requests with appropriate validations.

@@ -1,0 +1,60 @@
+To address the issue of proper certificate validation in PHP, we can use the `cURL` library. This snippet demonstrates how to implement secure certificate validation, ensuring that the application only connects to trusted hosts. Follow the code example below:
+
+```php
+<?php
+
+// URL to connect to
+$url = 'https://example.com/api/endpoint';
+
+// Initialize a cURL session
+$ch = curl_init();
+
+// Set the cURL options
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+// Enable certificate verification
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Verify the peer's SSL certificate
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);    // Verify that the certificate's name matches the host
+
+// Specify the path to your trusted CA certificate bundle (`cacert.pem`).
+// Make sure to download `cacert.pem` from a trusted source, like https://curl.se/docs/caextract.html
+curl_setopt($ch, CURLOPT_CAINFO, '/path/to/cacert.pem');
+
+// Execute the cURL request
+$response = curl_exec($ch);
+
+// Check for SSL certificate or cURL errors
+if (curl_errno($ch)) {
+    // Handle the error
+    echo 'cURL error: ' . curl_error($ch);
+} else {
+    // Check the HTTP status code
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($http_code == 200) {
+        echo 'Success: Valid certificate and connection established.' . PHP_EOL;
+        echo 'Response: ' . $response;
+    } else {
+        echo "HTTP Error: Status Code $http_code" . PHP_EOL;
+    }
+}
+
+// Close the cURL session
+curl_close($ch);
+
+?>
+```
+
+### Key Points:
+1. **Enable SSL Certificate Validation:**
+   - `CURLOPT_SSL_VERIFYPEER`: Ensures the peer's SSL certificate is verified.
+   - `CURLOPT_SSL_VERIFYHOST`: Verifies that the certificate's name matches the host.
+
+2. **CA Certificate Bundle:**
+   - It's critical to provide a valid CA certificate bundle (`cacert.pem`) for cURL to establish trust.
+   - You must use an up-to-date bundle to prevent any validation issues with expired or revoked certificates.
+
+3. **Error Handling:**
+   - Properly manage errors to identify issues either with the SSL connection or with the HTTP response.
+
+When integrating this code, ensure all configurations align with your security policy and compliance requirements. Always keep your CA certificates updated to mitigate risks associated with SSL/TLS vulnerabilities.

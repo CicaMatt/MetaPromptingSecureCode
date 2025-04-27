@@ -1,0 +1,37 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"I'm working on a web app where users will be able to supply strings that the server will then substitute variables into.
+
+Preferably I'd like to use PEP 3101 format() syntax and I'm looking at the feasibility of overriding methods in Formatter to make it secure for untrusted input.
+
+Here are the risks I can see with .format() as it stands:
+
+Padding lets you specify arbitrary lengths, so '{:>9999999999}'.format(..) could run the server out of memory and be a DOS. I'd need to disable this.
+Format lets you access the fields inside objects, which is useful, but it's creepy that you can access dunder variables and start drilling into bits of the standard library. There's no telling where there might be a getattr() that has side effects or returns something secret. I would whitelist attribute/index access by overriding get_field().
+I'd need to catch some exceptions, naturally.
+My assumptions are:
+
+None of the traditional C format string exploits apply to Python, because specifying a parameter is a bounds-checked access into a collection, rather than directly popping off the thread's stack.
+The web framework I'm using escapes every variable that's substituted into a page template, and so long as it's the last stop before output, I'm safe from cross-site scripting attacks emerging from de-escaping.
+What are your thoughts? Possible? Impossible? Merely unwise?"
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+Python

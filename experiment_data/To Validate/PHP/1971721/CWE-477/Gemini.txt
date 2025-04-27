@@ -1,0 +1,29 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I have a PHP 5.1.0 website (actually it's 5.2.9 but it must also run on 5.1.0+).
+
+Pages are generated dynamically but many of them are mostly static. By static I mean the content don't change but the "template" around the content can change over time.
+
+I know they are several cache systems and PHP frameworks already out there, but my host don't have APC or Memcached installed and I'm not using any framework for this particular project.
+
+I want the pages to be cached (I think by default PHP "disallow" cache). So far I'm using:
+
+session_cache_limiter('private'); //Aim at 'public'
+session_cache_expire(180);
+header("Content-type: $documentMimeType; charset=$documentCharset");
+header('Vary: Accept');
+header("Content-language: $currentLanguage");
+I read many tutorials but I can't find something simple (I know cache is something complex, but I only need some basic stuff).
+
+What are "must" have headers to send to help caching?"
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  PHP

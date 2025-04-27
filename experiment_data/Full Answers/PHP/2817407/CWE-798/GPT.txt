@@ -1,0 +1,38 @@
+To match the encryption expected by the payment processor using TripleDES in Perl, you need to ensure that your PHP implementation closely follows the same encryption settings, especially in terms of padding, block mode, and key usage.
+
+Here's a revised PHP code snippet to achieve the desired result using OpenSSL which is the recommended approach since the `mcrypt` extension is deprecated:
+
+```php
+<?php
+
+$theKey = "123412341234123412341234";
+$theString = "username=test123";
+
+// Required to do the same as Crypt::TripleDES->new() in Perl
+// Set up OpenSSL to use TripleDES in ECB mode with correct padding
+
+// OpenSSL expects keys of specific lengths. Ensure the key is 24 bytes
+if (strlen($theKey) !== 24) {
+    throw new Exception("Key length must be 24 bytes.");
+}
+
+// Use openssl_encrypt for the encryption process
+$encrypted = openssl_encrypt($theString, 'des-ede3', $theKey, OPENSSL_RAW_DATA | OPENSSL_NO_PADDING);
+// OpenSSL requires manual padding. Perl likely adds PKCS7 padding.
+$blockSize = 8;  // Block size for 3DES
+$pad = $blockSize - (strlen($theString) % $blockSize);
+$theString .= str_repeat(chr($pad), $pad);
+$encrypted = openssl_encrypt($theString, 'des-ede3', $theKey, OPENSSL_RAW_DATA);
+
+echo base64_encode($encrypted);  // Encodes the encrypted data to base64 as expected
+
+?>
+```
+
+### Explanation:
+- **OpenSSL**: The updated PHP code utilizes `openssl_encrypt`, which is the more modern and preferred way to handle encryption in PHP.
+- **Padding**: We add PKCS7 padding manually to ensure the input string is padded to the correct block size, similar to how Perl's Crypt::TripleDES would handle it.
+- **Key Length**: The key length is crucial for TripleDES (`24 bytes`), and it should be carefully ensured.
+- **Encryption Settings**: The function uses `'des-ede3'` with `OPENSSL_RAW_DATA` to ensure raw encrypted data output, avoiding any further auto-encoding, followed by `base64_encode` to match the expected format. 
+
+This approach should align PHP's TripleDES encryption output to match with the Perl implementation provided by the payment processor, resulting in the token `AYOF+kRtg239Mnyc8QIarw==`.

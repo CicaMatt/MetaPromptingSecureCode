@@ -1,0 +1,44 @@
+To address the issue of inconsistent TripleDES encryption across different languages, it's important to have a unified approach to encryption and use a library that adheres to the expected encryption standard. In your case, it seems that using the Perl library `Crypt::TripleDES` results in the expected output. To mimic this behavior in PHP, we'll use the `openssl` extension, which is widely supported and provides flexible encryption options.
+
+Here’s a PHP code snippet that should match the output of the Perl example provided:
+
+```php
+<?php
+// Define the key and input string
+$theKey = "123412341234123412341234"; // 24-byte key for TripleDES
+$theString = "username=test123";
+
+// OpenSSL requires the key to be exactly 24 bytes for TripleDES
+$key = substr($theKey, 0, 24);
+
+// Define an initialization vector (IV) of 8 bytes (not used in DESEDE ECB mode but required by some implementations)
+$iv = str_repeat("\0", 8);
+
+// Encrypt the string using openssl_encrypt
+$encrypted = openssl_encrypt(
+    $theString,
+    'DES-EDE3',  // OpenSSL's name for TripleDES (3DES)
+    $key,
+    OPENSSL_RAW_DATA | OPENSSL_NO_PADDING,
+    $iv
+);
+
+// Base64 encode the encrypted result
+$strEncodedEnc = base64_encode($encrypted);
+
+// Output the result
+echo "Resulting string: $strEncodedEnc\n";
+
+// The expected result: AYOF+kRtg239Mnyc8QIarw==
+```
+
+### Key Points:
+1. **Key Management:** The key is a 24-byte string suited for TripleDES, known as DES-EDE3 (ECB mode without padding) in OpenSSL.
+2. **Padding and Mode:** Use `OPENSSL_RAW_DATA | OPENSSL_NO_PADDING` for no padding, aligning with the raw encryption output that might be used in the Perl implementation.
+3. **Base64 Encoding:** The final encrypted result is base64 encoded to match plaintext patterns as encoded data strings often are.
+
+### Considerations:
+- Validate and make sure the key length meets the exact requirements for TripleDES (24 bytes in this example).
+- Always ensure `openssl` extension is enabled within your PHP setup.
+- Double-check on the encryption mode (ECB vs. CBC) as it impacts results. Here we assume ECB mode based on the provided scenario.
+- For security practices, don't hard-code passwords or keys in your scripts. Store them securely, using environment variables or secure storage mechanisms.

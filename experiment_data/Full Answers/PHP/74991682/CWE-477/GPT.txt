@@ -1,0 +1,74 @@
+To handle the deprecation of dynamic properties in PHP 8.2, you need to transition away from using dynamic properties within your classes. Instead, use defined properties or magic methods like `__set` and `__get` to manage inaccessible properties dynamically if necessary.
+
+Here's a refactored approach using defined properties with setter and getter methods:
+
+### Original Problem
+
+Consider you have the following class using dynamic properties:
+
+```php
+<?php
+class User {
+    // Initially, dynamic properties would be assigned like this:
+    // public $name;
+}
+
+// Using dynamic properties like this:
+// $user = new User();
+// $user->email = 'user@example.com'; // Deprecated from PHP 8.2
+```
+
+### Refactored Solution
+
+To handle this deprecation, define your properties explicitly or use magic methods to safely access and modify them:
+
+```php
+class User {
+    // Define private properties
+    private $properties = [];
+
+    // Magic setter method
+    public function __set($name, $value) {
+        $this->properties[$name] = $value;
+    }
+
+    // Magic getter method
+    public function __get($name) {
+        if (array_key_exists($name, $this->properties)) {
+            return $this->properties[$name];
+        }
+
+        trigger_error("Undefined property: " . __CLASS__ . "::$name", E_USER_NOTICE);
+        return null;
+    }
+
+    // Optional: to check if a property is set
+    public function __isset($name) {
+        return isset($this->properties[$name]);
+    }
+
+    // Optional: to unset a property
+    public function __unset($name) {
+        unset($this->properties[$name]);
+    }
+}
+
+// Example usage
+$user = new User();
+$user->email = 'user@example.com'; // This will now set the 'email' in the internal array
+echo $user->email; // This will retrieve 'user@example.com' from the internal array
+```
+
+### Explanation
+
+1. **Private Properties Array**: You maintain an associative array `$properties` within the `User` class to store property values. This approach avoids the issue of dynamic properties by using an internal mechanism to store data that behaves similarly.
+
+2. **Magic Methods**:
+   - `__set($name, $value)`: Stores values in the `$properties` array.
+   - `__get($name)`: Retrieves values from the `$properties` array.
+   - `__isset($name)`: Allows checking if a property is set.
+   - `__unset($name)`: Allows removal of a property.
+
+3. **Encapsulation**: This solution encapsulates property management, allowing for additional logic or validation to be added within the magic methods if needed.
+
+This approach maintains compatibility with the current property access syntax while adhering to new standards introduced in PHP 8.2 and beyond.

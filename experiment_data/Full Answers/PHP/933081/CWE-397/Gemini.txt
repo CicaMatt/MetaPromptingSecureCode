@@ -1,0 +1,66 @@
+```php
+<?php
+
+try {
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$_FILES['file']['name'])) {
+        // Throw a specific exception.  Since PHP's built-in exception handling for file uploads is limited, we create a custom one for clarity
+        throw new Exception('File upload failed.'); // Could be a more specialized exception like UploadException
+    }
+
+    echo 'Upload Complete!';
+
+
+} catch (Exception $e) {  // Catch the specific exception(s)
+    // Log the error for debugging.
+    error_log("File upload error: " . $e->getMessage()); 
+
+    //  Provide a user-friendly error message. Don't expose sensitive details in production.
+    die ('File didn\'t upload. Please try again later.'); 
+
+    // Alternative: You could retry the upload, or perform other error handling actions.
+    // If the error can't be handled here, re-throw it:
+    // throw $e;
+} 
+
+
+//  The following code demonstrates creating a custom exception. While not strictly
+// necessary for this simple example, it's best practice for larger applications:
+
+class UploadException extends Exception {} //  Inherit from the base Exception class
+
+
+// Example usage of the custom exception:
+
+/*
+try {
+    // .... upload logic ...
+    if (--upload fails--) {
+       throw new UploadException("Error uploading file: Reason X");
+    }
+} catch (UploadException $e) {  // Catch the specific upload exception
+     // Handle UploadException specifically
+} catch (Exception $e) { // Catch other general exceptions
+     // Generic exception handling
+}
+*/
+
+?>
+```
+
+
+**Explanation of Improvements:**
+
+1. **Try-Catch Block:** The file upload logic is now enclosed in a `try-catch` block. This allows us to handle potential exceptions that might occur during the upload process.
+
+2. **Specific Exception:** Instead of `die()`, which halts execution and provides limited error information, a specific `Exception` is thrown when the `move_uploaded_file` function fails. Using custom exceptions like `UploadException` (demonstrated in the commented-out code) allows even more granular error handling as your application grows.
+
+3. **Targeted Catch Block:**  The `catch` block is designed to catch `Exception` (and `UploadException` if you implement it).  This is more specific than catching `Throwable` (in Java or similar general exception types), which would catch everything, including errors that should not be caught.
+
+4. **Error Logging:** The `error_log` function records the error details, which is crucial for debugging.  
+
+5. **User-Friendly Error Message:** A user-friendly message (`File didn\'t upload. Please try again later.`) is provided to the user. This prevents exposing internal error details that might be a security risk.
+
+6. **Custom Exception (Example):**  The code demonstrates how to define a custom `UploadException` which allows you to handle upload-specific errors differently from other exceptions. This becomes very useful in more complex applications.
+
+
+This improved code demonstrates a more robust and informative error handling approach compared to the original `die()` statement. It provides better error messages for users, valuable debugging information for developers, and allows for more sophisticated error recovery strategies.

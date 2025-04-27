@@ -1,0 +1,74 @@
+```java
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+import java.util.Base64;
+
+public class SecurePasswordHandling {
+
+    private static final int ITERATIONS = 65536;
+    private static final int KEY_LENGTH = 256;
+    private static final String ALGORITHM = "PBKDF2WithHmacSHA256"; // Strong, standard algorithm
+
+    public static String hashPassword(String password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        if (password == null || password.isEmpty() || salt == null || salt.length == 0) {
+            throw new IllegalArgumentException("Password and salt cannot be null or empty.");
+        }
+
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
+        SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
+        byte[] hash = factory.generateSecret(spec).getEncoded();
+        // Clear the sensitive data from memory
+        Arrays.fill(spec.getPassword(), ' ');
+
+        return Base64.getEncoder().encodeToString(hash);
+    }
+
+    public static byte[] generateSalt() {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        return salt;
+    }
+
+
+    public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        // Example usage (Salt should be stored securely, e.g., database)
+        byte[] salt = generateSalt(); //  In real app, retrieve salt from storage.
+        String password = "user_provided_password";  //  Get password from user input.
+
+        try {
+            String hashedPassword = hashPassword(password, salt);
+            System.out.println("Hashed Password: " + hashedPassword);
+            // ... store salt and hashedPassword securely ...
+
+        } finally {
+            // Clear the sensitive data from memory
+            Arrays.fill(password.toCharArray(), ' '); 
+        }
+    }
+}
+
+```
+
+
+Explanation and addressing CWEs:
+
+* **CWE-259 & CWE-798 (Hard-coded Credentials):** The example code does *not* store the password directly.  It demonstrates hashing a user-provided password. The salt is randomly generated and should be stored securely alongside the hashed password (e.g., in a database).
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):**  `PBKDF2WithHmacSHA256` is a strong, industry-standard key derivation function designed to be resistant to brute-force and rainbow table attacks.  The code uses a high iteration count and key length.
+* **CWE-295, CWE-397, CWE-477**: These are addressed by using up-to-date, standard Java cryptographic libraries and best practices. No deprecated or obsolete functions are used. Specific exceptions are handled (e.g., `NoSuchAlgorithmException`, `InvalidKeySpecException`).  The code is designed to work with proper certificate validation if transmitting the hashed password over HTTPS (though the example doesn't include network code).
+
+
+
+Critical Security Notes:
+
+* **Salt Storage:** The salt must be unique per user and stored securely. Never reuse salts.
+* **Iteration Count:** The iteration count (`ITERATIONS`) should be as high as computationally feasible while maintaining acceptable performance.
+* **Password Complexity:** Enforce strong password policies on the user-provided password.
+* **Secure Storage:** The hashed password and salt should be stored in a secure environment (e.g., a database with appropriate access controls).
+* **Transport Security:** If sending the hashed password over a network, use HTTPS with proper certificate validation.
+
+This example focuses on secure password hashing. A complete solution might involve other security measures (e.g., multi-factor authentication, input validation).  Adapt this example to your specific requirements.

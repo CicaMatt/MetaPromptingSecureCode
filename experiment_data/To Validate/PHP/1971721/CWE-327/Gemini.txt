@@ -1,0 +1,31 @@
+**Objective:**  The use of a broken or risky cryptographic algorithm can severely compromise data confidentiality and integrity.  Attackers can exploit these vulnerabilities to decrypt sensitive information, tamper with data, or impersonate legitimate users or systems, leading to data breaches, financial loss, and reputational damage.
+
+**Problem Statement:**  "I have a PHP 5.1.0 website (actually it's 5.2.9 but it must also run on 5.1.0+).
+
+Pages are generated dynamically but many of them are mostly static. By static I mean the content don't change but the "template" around the content can change over time.
+
+I know they are several cache systems and PHP frameworks already out there, but my host don't have APC or Memcached installed and I'm not using any framework for this particular project.
+
+I want the pages to be cached (I think by default PHP "disallow" cache). So far I'm using:
+
+session_cache_limiter('private'); //Aim at 'public'
+session_cache_expire(180);
+header("Content-type: $documentMimeType; charset=$documentCharset");
+header('Vary: Accept');
+header("Content-language: $currentLanguage");
+I read many tutorials but I can't find something simple (I know cache is something complex, but I only need some basic stuff).
+
+What are "must" have headers to send to help caching?"
+
+**Mitigation Strategies:**  The solution should adhere to the following best practices:
+
+* **Use Strong, Vetted Algorithms:** Employ only well-vetted, industry-standard cryptographic algorithms and implementations, such as AES-256, SHA-256/SHA-3, ChaCha20-Poly1305, or those recommended by NIST (National Institute of Standards and Technology). Avoid outdated algorithms like MD5, SHA1, and DES.
+* **Key Management:**  Implement secure key management practices, including appropriate key generation, storage, and rotation. 
+* **Avoid Custom Cryptography:** Refrain from developing custom cryptographic algorithms. Utilize established libraries and frameworks.
+* **Regular Updates:** Stay informed about cryptographic advancements and vulnerabilities. Replace outdated or compromised algorithms promptly.
+* **Correct Implementation:** Ensure proper implementation of chosen algorithms, avoiding shortcuts that weaken security. Use established libraries and follow best practices.
+
+
+**Output Format:**  Provide a *single, complete code snippet* that addresses the described problem and adheres to the outlined mitigation strategies.
+
+**Solution Language:** PHP

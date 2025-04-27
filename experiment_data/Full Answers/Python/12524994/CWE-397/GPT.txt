@@ -1,0 +1,99 @@
+To build secure encryption and decryption functions using PyCrypto that address the concerns you mentioned, we can follow these steps:
+
+1. **Key Management:** Ensure the key length matches the required length for the AES algorithm (16, 24, or 32 bytes) by using a key derivation function.
+2. **Mode Selection:** Use a recommended and secure mode like `AES.MODE_CBC`, which combines confidentiality and integrity.
+3. **Initialization Vector (IV):** Use a secure random method to generate an IV. The IV should be unique and unpredictable for each encryption operation.
+4. **Exception Handling:** Raise specific exceptions with detailed error messages to enable precise error handling.
+
+Here's a complete and secure implementation using the `cryptography` library (a more modern alternative to PyCrypto) for AES encryption and decryption in Python:
+
+```python
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from base64 import b64encode, b64decode
+import os
+
+class EncryptionError(Exception):
+    """Custom exception for encryption errors"""
+    pass
+
+class DecryptionError(Exception):
+    """Custom exception for decryption errors"""
+    pass
+
+def derive_key(key, salt):
+    """Derive a secure AES key using PBKDF2HMAC, ensure correct length"""
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,  # AES key length: 16, 24, 32 bytes
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    return kdf.derive(key.encode())
+
+def encrypt_message(message, key):
+    try:
+        salt = os.urandom(16)  # Securely generate a random salt
+        derived_key = derive_key(key, salt)
+
+        # Pad the message to ensure it's a multiple of block size
+        padder = padding.PKCS7(algorithms.AES.block_size).padder()
+        padded_data = padder.update(message.encode()) + padder.finalize()
+
+        iv = os.urandom(16)  # Securely generate a random IV
+        cipher = Cipher(algorithms.AES(derived_key), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        encrypted_message = encryptor.update(padded_data) + encryptor.finalize()
+
+        # Include the salt and iv with the encrypted message for decryption
+        return b64encode(salt + iv + encrypted_message).decode()
+    except Exception as e:
+        raise EncryptionError(f"Encryption failed: {str(e)}")
+
+def decrypt_message(encrypted_message, key):
+    try:
+        encrypted_data = b64decode(encrypted_message)
+        salt = encrypted_data[:16]
+        iv = encrypted_data[16:32]
+        ciphertext = encrypted_data[32:]
+
+        derived_key = derive_key(key, salt)
+
+        cipher = Cipher(algorithms.AES(derived_key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        padded_data = decryptor.update(ciphertext) + decryptor.finalize()
+
+        # Unpad the message
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        unpadded_message = unpadder.update(padded_data) + unpadder.finalize()
+
+        return unpadded_message.decode()
+    except Exception as e:
+        raise DecryptionError(f"Decryption failed: {str(e)}")
+
+# Example usage:
+message = "Secret Message"
+key = "SecurePassword"
+
+try:
+    encrypted_message = encrypt_message(message, key)
+    print("Encrypted:", encrypted_message)
+
+    decrypted_message = decrypt_message(encrypted_message, key)
+    print("Decrypted:", decrypted_message)
+except (EncryptionError, DecryptionError) as e:
+    print(e)
+```
+
+### Key Points:
+
+- **Key Derivation and Salt:** We use PBKDF2HMAC with a salt to securely derive the AES key from the provided password.
+- **IV:** A random IV is generated for each encryption to ensure security even if the same message is encrypted multiple times with the same key.
+- **Padding:** We use PKCS7 padding to ensure the plaintext is the correct length for AES.
+- **Exception Handling:** Custom exceptions `EncryptionError` and `DecryptionError` are thrown with contextual information for better error handling and debugging.
+
+This solution provides robust encryption/decryption with secure practices and proper exception handling in Python.

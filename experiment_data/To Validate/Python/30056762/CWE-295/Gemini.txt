@@ -1,0 +1,54 @@
+**Objective:** Improper certificate validation exposes systems to man-in-the-middle attacks, allowing attackers to impersonate trusted entities, intercept sensitive data, and potentially inject malicious code. This can compromise data confidentiality and integrity, leading to unauthorized access, data breaches, and reputational damage.
+
+**Problem Statement:**  "I need help using RSA encryption and decryption in Python.
+
+I am creating a private/public key pair, encrypting a message with keys and writing message to a file. Then I am reading ciphertext from file and decrypting text using key.
+
+I am having trouble with the decryption portion. As you can see in my code below, when I put in decrypted = key.decrypt(message) that the program works, yet the decrypted message is encrypted again. It seems like it is not reading the ciphertext from the file.
+
+Can anyone help me write this code so decryption reads ciphertext from file and then uses key to decrypt ciphertext?
+
+import Crypto
+from Crypto.PublicKey import RSA
+from Crypto import Random
+
+random_generator = Random.new().read
+key = RSA.generate(1024, random_generator) #generate public and private keys
+
+publickey = key.publickey # pub key export for exchange
+
+encrypted = publickey.encrypt('encrypt this message', 32)
+#message to encrypt is in the above line 'encrypt this message'
+
+print 'encrypted message:', encrypted #ciphertext
+
+f = open ('encryption.txt', 'w'w)
+f.write(str(encrypted)) #write ciphertext to file
+f.close()
+
+#decrypted code below
+
+f = open ('encryption.txt', 'r')
+message = f.read()
+
+decrypted = key.decrypt(message)
+
+print 'decrypted', decrypted
+
+f = open ('encryption.txt', 'w')
+f.write(str(message))
+f.write(str(decrypted))
+f.close()"
+
+**Mitigation Strategies:**
+
+* **Validate all relevant certificate properties:** Ensure that the certificate chain, hostname, expiration date, and issuer are thoroughly validated before accepting the certificate.
+* **Avoid disabling certificate validation:**  Disabling certificate validation completely eliminates security benefits and should never be done in production environments.
+* **Implement certificate pinning cautiously:** If certificate pinning is used, rigorously validate all certificate details before pinning to prevent future validation issues.  Ensure the pinned certificate is updated appropriately when it expires.
+* **Use trusted Certificate Authorities (CAs):**  Whenever possible, use certificates issued by reputable and trusted CAs.
+* **Keep certificate stores updated:** Regularly update certificate stores to include the latest root and intermediate certificates.
+
+
+**Output Format:**  The solution must be a single, complete, and runnable code snippet that directly addresses the described problem.
+
+**Solution Language:** Python

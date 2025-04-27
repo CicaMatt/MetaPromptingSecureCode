@@ -1,0 +1,50 @@
+To address the deprecation of dynamic properties in PHP 8.2, we can make codebases compatible by explicitly defining properties within the class. Instead of creating properties dynamically, we should declare them as part of the class definition. This follows object-oriented best practices and avoids the deprecation warnings in PHP 8.2 and future errors in PHP 9.
+
+Here's an example of how you can refactor a class using dynamic properties to be compatible with PHP 8.2+:
+
+### Original Code with Dynamic Properties
+
+```php
+<?php
+class User {
+    // Dynamic properties will cause deprecation warnings in PHP 8.2 and fatal errors in PHP 9.
+}
+
+$user = new User();
+$user->name = "Alice"; // Dynamic property
+$user->email = "alice@example.com"; // Dynamic property
+```
+
+### Refactored Code
+
+```php
+class User {
+    // Explicit property declarations
+    public string $name;
+    public string $email;
+
+    // Constructor to initialize properties
+    public function __construct(string $name, string $email) {
+        $this->name = $name;
+        $this->email = $email;
+    }
+}
+
+$user = new User("Alice", "alice@example.com");
+
+echo "Name: {$user->name}\n";
+echo "Email: {$user->email}\n";
+```
+
+### Explanation:
+
+1. **Declare Properties:**
+   - We explicitly declare the `name` and `email` properties as part of the `User` class. This eliminates the need for dynamic properties.
+
+2. **Use a Constructor:**
+   - A constructor initializes these properties when creating a new `User` object. This practice enhances code readability and enforces property validation.
+
+3. **Property Type Declarations:**
+   - By using type declarations (e.g., `string`), you enhance the robustness of your code, allowing for early detection of type-related bugs.
+
+This approach not only aligns with object-oriented best practices but also prepares your code to run smoothly in PHP 8.2 and beyond, avoiding deprecated functionality and ensuring future compatibility.

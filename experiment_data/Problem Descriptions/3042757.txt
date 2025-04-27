@@ -1,0 +1,9 @@
+So I'm trying to make a Python script that downloads webcomics and puts them in a folder on my desktop. I've found a few similar programs on here that do something similar, but nothing quite like what I need. The one that I found most similar is right here (http://bytes.com/topic/python/answers/850927-problem-using-urllib-download-images). I tried using this code:
+
+>>> import urllib
+>>> image = urllib.URLopener()
+>>> image.retrieve("http://www.gunnerkrigg.com//comics/00000001.jpg","00000001.jpg")
+('00000001.jpg', <httplib.HTTPMessage instance at 0x1457a80>)
+I then searched my computer for a file "00000001.jpg", but all I found was the cached picture of it. I'm not even sure it saved the file to my computer. Once I understand how to get the file downloaded, I think I know how to handle the rest. Essentially just use a for loop and split the string at the '00000000'.'jpg' and increment the '00000000' up to the largest number, which I would have to somehow determine. Any reccomendations on the best way to do this or how to download the file correctly?
+
+Thanks!

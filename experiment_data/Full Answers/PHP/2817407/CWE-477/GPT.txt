@@ -1,0 +1,36 @@
+To address the problem with the obsolete use of `mcrypt_ecb` in PHP, we need to employ a more modern and supported encryption library. PHP has deprecated the mcrypt extension as of PHP 7.1 and removed it as of PHP 7.2. Instead, we should use the OpenSSL extension, which is well-supported and provides a secure alternative.
+
+Here's how you can securely implement Triple DES (3DES) encryption in PHP using the `openssl_encrypt` function:
+
+```php
+<?php
+// Define the key and string to be encrypted
+$theKey = "123412341234123412341234";
+$theString = "username=test123";
+
+// Need to use a key length of 24 bytes for TripleDES (3DES)
+if (strlen($theKey) !== 24) {
+    die("Key must be 24 bytes long.");
+}
+
+// Set encryption method to Triple DES (3DES)
+$cipherMethod = 'des-ede3';
+
+// Encrypt the string
+$encryptedString = openssl_encrypt($theString, $cipherMethod, $theKey, OPENSSL_RAW_DATA);
+
+// Encode the result in base64 as expected by the external system
+$base64Encoded = base64_encode($encryptedString);
+
+// Output the encrypted and encoded string
+echo "Base64 Encoded Encrypted String: " . $base64Encoded . "\n";
+?>
+```
+### Key Points:
+1. **OpenSSL**: We use the `openssl_encrypt()` function with the cipher method `'des-ede3'` for the Triple DES encryption standard. This uses 24-byte keys for three 8-byte DES keys.
+2. **Base64 Encoding**: The encrypted binary data is encoded using `base64_encode()` to produce the expected string format for data exchange.
+3. **Key Length**: Ensure the key is exactly 24 bytes (192 bits) for Triple DES when not using any IV (Initialization Vector). Adjust your key management practices if necessary to handle this key size.
+4. **Security Consideration**: Ensure that your key is stored securely and not hard-coded into your production scripts. Use environment variables or secure vaults for key management.
+5. **Removal of Deprecated Functions**: By employing OpenSSL, you avoid deprecated functions and future migration concerns, maintaining security compliance. 
+
+This updated implementation should help you meet the expected requirement from the payment processor while using supported and secure methodologies.

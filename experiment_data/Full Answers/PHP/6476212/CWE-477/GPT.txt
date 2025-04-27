@@ -1,0 +1,76 @@
+Certainly! Given the issues you've outlined and the desire to securely download an image and save it to your server using more modern PHP practices, we can enhance your code to handle errors, sanitize inputs, and ensure that the destination folder exists before saving the file.
+
+Here’s an updated and complete solution using `curl` that improves upon the original code:
+
+```php
+<?php
+
+function saveImageFromUrl($url, $savePath) {
+    // Initialize a cURL session
+    $ch = curl_init($url);
+
+    // Check if the URL is valid
+    if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+        throw new Exception("Invalid URL.");
+    }
+
+    // Set cURL options
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Follow redirects
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Verify the SSL certificate
+    curl_setopt($ch, CURLOPT_CAINFO, __DIR__ . '/path/to/cacert.pem'); // Path to a certificate file
+
+    // Execute the cURL request
+    $data = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    // Check for cURL errors
+    if (curl_errno($ch)) {
+        throw new Exception("cURL Error: " . curl_error($ch));
+    }
+
+    // Check for valid HTTP response
+    if ($httpCode != 200) {
+        throw new Exception("Failed to download image, HTTP Status Code: " . $httpCode);
+    }
+
+    // Close the cURL session
+    curl_close($ch);
+
+    // Ensure save directory exists
+    $saveDir = dirname($savePath);
+    if (!is_dir($saveDir)) {
+        if (!mkdir($saveDir, 0755, true)) {
+            throw new Exception("Failed to create directory: " . $saveDir);
+        }
+    }
+
+    // Save the file
+    if (file_put_contents($savePath, $data) === false) {
+        throw new Exception("Failed to save image to: " . $savePath);
+    }
+
+    return true;
+}
+
+try {
+    $imageUrl = "http://example.com/image.jpg"; // Replace with the actual image URL
+    $saveAs = __DIR__ . '/img/uploads/photo1.jpg'; // Path where the image will be saved
+
+    saveImageFromUrl($imageUrl, $saveAs);
+
+    echo "Image downloaded and saved successfully.";
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
+```
+
+### Key Enhancements:
+
+1. **Input Validation**: The URL is validated using `filter_var()` to ensure it’s a well-formed URL.
+2. **SSL Verification**: Enhanced security with SSL verification using `CURLOPT_SSL_VERIFYPEER`.
+3. **Error Handling**: Implemented exception handling to catch and report various errors such as invalid URLs, cURL failures, and problems making directories or saving files.
+4. **Directory Management**: The code checks if the directory exists and creates it if necessary. This avoids failures when attempting to save files to non-existent paths.
+5. **Code Clarity**: More descriptive and modular code structure, enhancing readability and maintenance.
+
+Ensure to have `openssl` enabled if you are downloading via `HTTPS` and you have the certification path set correctly for `CURLOPT_CAINFO`. Adjust the filesystem paths where necessary, especially the path for the CA certificate.

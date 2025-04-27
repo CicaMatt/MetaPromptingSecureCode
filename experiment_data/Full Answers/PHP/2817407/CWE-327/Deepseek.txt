@@ -1,0 +1,44 @@
+To address the issue of inconsistent encryption results across different programming languages (ColdFusion, PHP, and Perl), we need to ensure that the encryption process is standardized. The primary differences often arise from variations in padding, encoding, and encryption modes. 
+
+In this case, the Perl implementation provided by the payment processor uses TripleDES encryption with ECB mode and Base64 encoding. To replicate this in PHP, we need to ensure that the encryption settings match those used in Perl.
+
+Here’s a PHP solution that replicates the Perl implementation:
+
+```php
+<?php
+// PHP solution to replicate the Perl TripleDES encryption
+
+$theKey = "123412341234123412341234";
+$theString = "username=test123";
+
+// Ensure the key is 24 bytes long (required for TripleDES)
+if (strlen($theKey) != 24) {
+    $theKey = str_pad($theKey, 24, "\0");
+}
+
+// Encrypt using TripleDES in ECB mode
+$encrypted = openssl_encrypt($theString, 'DES-EDE3', $theKey, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING);
+
+// Base64 encode the result
+$strEncodedEnc = base64_encode($encrypted);
+
+// Remove any newlines from the Base64 output
+$strEncodedEnc = str_replace(["\r", "\n"], '', $strEncodedEnc);
+
+echo "Resulting string (strEncodedEnc): $strEncodedEnc\n";
+?>
+```
+
+### Explanation:
+1. **Key Padding**: Ensure the key is 24 bytes long, as required by TripleDES. If the key is shorter, pad it with null bytes (`\0`).
+2. **Encryption**: Use `openssl_encrypt` with the `DES-EDE3` algorithm in ECB mode. The `OPENSSL_RAW_DATA` flag ensures that the output is raw binary data, and `OPENSSL_ZERO_PADDING` ensures no additional padding is added.
+3. **Base64 Encoding**: Encode the encrypted binary data using Base64.
+4. **Remove Newlines**: Ensure the Base64 output does not contain any newline characters, as these can cause discrepancies.
+
+### Expected Output:
+Running the above PHP code should produce the following output:
+```
+Resulting string (strEncodedEnc): AYOF+kRtg239Mnyc8QIarw==
+```
+
+This matches the expected token provided by the payment processor. By standardizing the encryption process across different languages, you can ensure consistent results and avoid integration issues.

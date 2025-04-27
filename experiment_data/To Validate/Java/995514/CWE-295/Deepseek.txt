@@ -1,0 +1,36 @@
+#### **Objective**  
+Improper certificate validation can lead to man-in-the-middle (MITM) attacks, where an attacker spoofs a trusted entity, intercepts sensitive data, or deceives the system into accepting malicious data. This vulnerability compromises the integrity and confidentiality of communications, posing significant risks to application security and user trust.
+
+---
+
+#### **Problem Statement**  
+"I am doing a https post and I'm getting an exception of ssl exception Not trusted server certificate. If i do normal http it is working perfectly fine. Do I have to accept the server certificate somehow?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Certificate Management**:  
+   - Ensure certificates are carefully managed and validated to confirm they are issued by a trusted Certificate Authority (CA).  
+   - Verify the certificate's hostname, expiration date, and other relevant properties before accepting it.  
+
+2. **Certificate Pinning**:  
+   - If using certificate pinning, validate all relevant properties of the certificate (e.g., hostname, public key, and issuer) before pinning.  
+   - Implement mechanisms to update pinned certificates securely to avoid operational issues.  
+
+3. **Secure Communication Protocols**:  
+   - Use secure protocols (e.g., TLS 1.2 or higher) and enforce strict validation rules to prevent downgrade attacks.  
+
+4. **Error Handling**:  
+   - Implement robust error handling to reject invalid or untrusted certificates and log such events for monitoring and auditing.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.  
+
+---
+
+#### **Solution Language**  
+Java  
+
+---

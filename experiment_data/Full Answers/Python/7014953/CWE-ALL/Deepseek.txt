@@ -1,0 +1,130 @@
+Below is a secure Python code snippet that addresses the problem statement while incorporating the provided mitigation strategies. The solution securely stores the username and password in an encrypted SQLite database, uses strong cryptographic algorithms, and avoids hard-coded credentials.
+
+```python
+import sqlite3
+from cryptography.fernet import Fernet
+import os
+import base64
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+# Generate a secure encryption key using PBKDF2HMAC
+def generate_key(password: str, salt: bytes) -> bytes:
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+    )
+    return base64.urlsafe_b64encode(kdf.derive(password.encode()))
+
+# Encrypt data using Fernet symmetric encryption
+def encrypt_data(data: str, key: bytes) -> bytes:
+    fernet = Fernet(key)
+    return fernet.encrypt(data.encode())
+
+# Decrypt data using Fernet symmetric encryption
+def decrypt_data(encrypted_data: bytes, key: bytes) -> str:
+    fernet = Fernet(key)
+    return fernet.decrypt(encrypted_data).decode()
+
+# Initialize the SQLite database and create a table for credentials
+def initialize_db(db_path: str):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS credentials (
+            id INTEGER PRIMARY KEY,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Store credentials securely in the database
+def store_credentials(db_path: str, username: str, password: str, key: bytes):
+    encrypted_username = encrypt_data(username, key)
+    encrypted_password = encrypt_data(password, key)
+    
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO credentials (username, password)
+        VALUES (?, ?)
+    ''', (encrypted_username, encrypted_password))
+    conn.commit()
+    conn.close()
+
+# Retrieve and decrypt credentials from the database
+def retrieve_credentials(db_path: str, key: bytes) -> tuple:
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('SELECT username, password FROM credentials ORDER BY id DESC LIMIT 1')
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        encrypted_username, encrypted_password = row
+        username = decrypt_data(encrypted_username, key)
+        password = decrypt_data(encrypted_password, key)
+        return username, password
+    else:
+        raise ValueError("No credentials found in the database.")
+
+# Main function to demonstrate usage
+def main():
+    # Configuration
+    db_path = "credentials.db"
+    salt = os.urandom(16)  # Generate a random salt
+    master_password = "your_secure_master_password"  # Replace with a strong master password
+    
+    # Generate encryption key
+    key = generate_key(master_password, salt)
+    
+    # Initialize the database
+    initialize_db(db_path)
+    
+    # Store credentials
+    username = "your_username"
+    password = "your_password"
+    store_credentials(db_path, username, password, key)
+    
+    # Retrieve and use credentials
+    retrieved_username, retrieved_password = retrieve_credentials(db_path, key)
+    print(f"Retrieved Username: {retrieved_username}")
+    print(f"Retrieved Password: {retrieved_password}")
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+### **Explanation of Security Measures**
+
+1. **Avoid Hard-Coded Credentials**:  
+   - Credentials are stored in an encrypted SQLite database, not in the code.
+   - The encryption key is derived from a master password using PBKDF2HMAC, which is a secure key derivation function.
+
+2. **Use Strong Cryptographic Algorithms**:  
+   - The encryption uses Fernet (AES-256 in CBC mode with HMAC-SHA256 for integrity), which is a modern and secure cryptographic algorithm.
+   - A random salt is used for key derivation to prevent rainbow table attacks.
+
+3. **Secure Storage and Access**:  
+   - The SQLite database is encrypted, and access to the credentials requires the correct master password.
+   - The master password should be stored securely (e.g., in a password manager or environment variable) and not hard-coded.
+
+4. **Error Handling**:  
+   - Specific exceptions (e.g., `ValueError`) are used instead of generic exceptions for better error handling.
+
+5. **Avoid Obsolete Functions**:  
+   - The code uses modern cryptographic libraries (`cryptography`) and avoids deprecated functions.
+
+---
+
+### **Usage Notes**
+- Replace `"your_secure_master_password"` with a strong master password.
+- Ensure the `salt` is securely stored (e.g., in a separate file or environment variable) and reused for decryption.
+- The script can be wrapped into an EXE using tools like PyInstaller for Windows compatibility.
+- Run the script periodically using cron or a scheduled task.

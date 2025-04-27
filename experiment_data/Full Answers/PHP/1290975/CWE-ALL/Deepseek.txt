@@ -1,0 +1,71 @@
+Certainly! Below is a secure PHP code snippet that uses prepared statements with MySQLi to retrieve data from a database based on URL parameters. The code incorporates the mitigation strategies provided and includes comments to explain the security measures and logic.
+
+```php
+<?php
+// Database connection parameters
+$host = 'localhost'; // Replace with your database host
+$dbname = 'your_database_name'; // Replace with your database name
+$username = 'your_username'; // Replace with your database username
+$password = 'your_password'; // Replace with your database password
+
+// Create a new MySQLi connection
+$mysqli = new mysqli($host, $username, $password, $dbname);
+
+// Check for connection errors
+if ($mysqli->connect_error) {
+    die("Connection failed: " . $mysqli->connect_error);
+}
+
+// Prepare the SQL statement with placeholders
+$sql = "SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC";
+
+// Prepare the statement
+if ($stmt = $mysqli->prepare($sql)) {
+    // Bind the URL parameters to the prepared statement
+    $stmt->bind_param("ss", $_GET['userid'], $_GET['category']);
+
+    // Execute the prepared statement
+    $stmt->execute();
+
+    // Get the result set
+    $result = $stmt->get_result();
+
+    // Fetch and display the results
+    while ($row = $result->fetch_assoc()) {
+        echo "ID: " . $row['id'] . " - UserID: " . $row['userid'] . " - Category: " . $row['category'] . "<br>";
+    }
+
+    // Close the statement
+    $stmt->close();
+} else {
+    // Handle errors in preparing the statement
+    die("Error preparing statement: " . $mysqli->error);
+}
+
+// Close the database connection
+$mysqli->close();
+?>
+```
+
+### **Explanation of Security Measures and Logic**
+
+1. **Prepared Statements**:  
+   - The SQL query uses placeholders (`?`) for the `userid` and `category` parameters. This prevents SQL injection attacks by separating SQL code from user input.
+   - The `bind_param` method binds the URL parameters to the placeholders, ensuring that the input is treated as data, not executable code.
+
+2. **Avoid Hard-Coded Credentials**:  
+   - Database credentials are stored in variables (`$host`, `$dbname`, `$username`, `$password`). In a real-world application, these should be stored in environment variables or a secure configuration file outside the web root.
+
+3. **Error Handling**:  
+   - The code checks for connection errors and errors in preparing the statement. It uses `die` to stop execution and display an error message if something goes wrong. This prevents generic exception handling and provides specific error information.
+
+4. **Avoid Obsolete Functions**:  
+   - The code uses MySQLi (MySQL Improved) instead of the deprecated `mysql_*` functions. MySQLi supports prepared statements and provides better security and performance.
+
+5. **Performance Consideration**:  
+   - Prepared statements can increase speed, especially when the same query is executed multiple times with different parameters. The database server can optimize the execution plan for the prepared statement, reducing overhead.
+
+### **Bonus Answer**
+Prepared statements can indeed increase overall speed, especially when the same query is executed multiple times on a page. The database server compiles the query once and reuses the execution plan, which reduces the overhead of parsing and optimizing the query each time. Therefore, using prepared statements three or four times on a page can lead to performance improvements, particularly in high-load scenarios.
+
+This code snippet is secure, efficient, and adheres to best practices for database interactions in PHP.

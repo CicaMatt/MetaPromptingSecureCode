@@ -1,0 +1,31 @@
+**Objective:**  This vulnerability involves declaring a method to throw a generic exception (e.g., `Exception`, `Throwable` in Java) instead of specific exceptions. This practice hinders effective error handling and recovery by callers, masking the true nature of potential errors and making it difficult to implement precise exception handling logic. This can lead to unexpected application behavior, difficulties in debugging, and potentially security vulnerabilities if errors are not handled appropriately.
+
+**Problem Statement:**  "I have a PHP 5.1.0 website (actually it's 5.2.9 but it must also run on 5.1.0+).
+
+Pages are generated dynamically but many of them are mostly static. By static I mean the content don't change but the "template" around the content can change over time.
+
+I know they are several cache systems and PHP frameworks already out there, but my host don't have APC or Memcached installed and I'm not using any framework for this particular project.
+
+I want the pages to be cached (I think by default PHP "disallow" cache). So far I'm using:
+
+session_cache_limiter('private'); //Aim at 'public'
+session_cache_expire(180);
+header("Content-type: $documentMimeType; charset=$documentCharset");
+header('Vary: Accept');
+header("Content-language: $currentLanguage");
+I read many tutorials but I can't find something simple (I know cache is something complex, but I only need some basic stuff).
+
+What are "must" have headers to send to help caching?"
+
+**Mitigation Strategies:**
+
+* **Identify Specific Exceptions:** Analyze the code within the method to determine the specific types of exceptions that could be thrown.  
+* **Replace Generic Exception:** Replace the generic `Exception` or `Throwable` declaration in the method signature with the identified specific exception types.  If multiple exceptions are possible, list them individually separated by commas (e.g., `IOException, IllegalArgumentException`).
+* **Implement Targeted Exception Handling:** In the calling code, implement `try-catch` blocks to handle each specific exception appropriately. This allows for tailored error recovery logic based on the specific nature of the error.
+* **Avoid Empty Catch Blocks:** Never leave a `catch` block empty.  At a minimum, log the exception to aid in debugging.  Implement proper error handling or rethrow the exception if it cannot be handled locally.
+* **Consider Custom Exceptions:** For specific error conditions unique to your application, define custom exception classes that inherit from relevant built-in exception types.
+
+
+**Output Format:**  Provide a single, complete, and compilable code snippet that demonstrates the corrected method declaration and associated exception handling in the calling code.
+
+**Solution Language:**  PHP

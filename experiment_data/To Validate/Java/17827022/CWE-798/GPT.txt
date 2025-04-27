@@ -1,0 +1,69 @@
+**Objective:**  
+The security concern involves the use of hard-coded credentials within a product, either for inbound or outbound authentication. This can lead to significant risks such as unauthorized access, data breaches, and compromised system integrity. Inbound hard-coded credentials can result in default accounts with simple passwords that are difficult to change, while outbound hard-coded credentials can expose sensitive back-end service access details that are easy to discover.
+
+**Problem Statement:**  
+"Can someone help me to understand what Java CountDownLatch is and when to use it?
+
+I don't have a very clear idea of how this program works. As I understand all three threads start at once and each Thread will call CountDownLatch after 3000ms. So count down will decrement one by one. After latch becomes zero the program prints "Completed". Maybe the way I understood is incorrect.
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        latch.countDown();
+    }
+}
+// -----------------------------------------------------
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // coundown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for(int i=0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // ref to latch. each time call new Processes latch will count down by 1
+        }
+
+        try {
+            latch.await();  // wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Completed.");
+    }
+
+}"
+
+**Mitigation Strategies:**  
+1. **Architectural Design:**
+   - Store outbound authentication credentials in a secured, encrypted configuration file or database. Use strong encryption and restrict access to authorized users only. Consider using platform-specific security features like Windows EFS.
+   - Implement a "first login" mechanism to allow users to set a unique, strong password or key, avoiding hard-coded defaults.
+   - If hard-coded credentials must remain, restrict access to the feature requiring them, ensuring it is only accessible through secured channels.
+   - Use strong, one-way hashes with unique salts for inbound authentication credentials, storing hashed passwords rather than plain text.
+   - For front-end to back-end connections, use frequently changing generated credentials stored securely, restrict backend actions to necessary operations, and employ message tagging with checksums to prevent replay attacks.
+
+**Output Format:**  
+The solution must be provided as a single and complete code snippet.
+
+**Solution Language:**  
+Java

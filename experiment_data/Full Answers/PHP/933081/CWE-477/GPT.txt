@@ -1,0 +1,50 @@
+To address the use of the `move_uploaded_file` function within a `try-catch` block, we will transform the provided code to manage possible exceptions gracefully. 
+
+Although `move_uploaded_file` itself does not throw exceptions, you can still manually throw an exception when an error occurs to illustrate how `try-catch` works. PHP's exception handling mechanism will allow us to consciously decide how to handle the error.
+
+Here's how you can implement this using `try-catch`:
+
+```php
+<?php
+
+// Function to handle file upload
+function uploadFile($file, $destination) {
+    // Attempt to move the uploaded file
+    $move = move_uploaded_file($file['tmp_name'], $destination);
+
+    // If the move wasn't successful, throw an exception
+    if (!$move) {
+        throw new Exception('File didn\'t upload');
+    }
+    
+    // If successful, return confirmation message
+    return 'Upload Complete!';
+}
+
+try {
+    // Define the destination path
+    $destination = $_SERVER['DOCUMENT_ROOT'] . '/uploads/' . $_FILES['file']['name'];
+
+    // Attempt to upload the file
+    $message = uploadFile($_FILES['file'], $destination);
+
+    // If successful, echo the upload completion message
+    echo $message;
+
+} catch (Exception $e) {
+    // Catch and display the exception message if an error occurs
+    echo $e->getMessage();
+}
+
+?>
+```
+
+### Explanation:
+
+1. **Function Encapsulation**: We encapsulate the file uploading logic inside a function `uploadFile` to improve readability and maintenance.
+2. **Try-Catch Implementation**: We use a `try` block to attempt the file upload:
+   - If `move_uploaded_file` returns `false`, indicating failure, an exception is thrown with a relevant message.
+3. **Exception Handling**: The `catch` block will capture and process any exceptions thrown within the `try` block, displaying the error message using `$e->getMessage()`.
+4. **Separation of Concerns**: By defining the uploading logic within a function, we ensure better separation of concerns, enhancing code modularity and testability.
+
+This code correctly uses exception handling to manage potential errors in file uploads, providing better error management and feedback to the user in the event of a failure.

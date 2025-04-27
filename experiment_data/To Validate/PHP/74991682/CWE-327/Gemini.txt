@@ -1,0 +1,22 @@
+**Objective:**  The use of a broken or risky cryptographic algorithm can severely compromise data confidentiality and integrity.  Attackers can exploit these vulnerabilities to decrypt sensitive information, tamper with data, or impersonate legitimate users or systems, leading to data breaches, financial loss, and reputational damage.
+
+**Problem Statement:**  "In PHP 8.2, Dynamic Properties are deprecated, and will result in a fatal error from PHP 9 onwards.
+
+Using Dynamic Properties on Classes running PHP 8.2 will lead to PHP Deprecated: Creation of dynamic property is deprecated E_DEPRECATED warnings.
+
+Now, while this is generally a bad OO practice to have public/dynamic properties in a Class, this question is not about the best OO practice but instead, how to make actual code that uses Dynamic Properties compatible with PHP 8.2 onwards.
+
+How to make actual codebases that make use of Dynamic Properties compatible with the new behaviour?"
+
+**Mitigation Strategies:**  The solution should adhere to the following best practices:
+
+* **Use Strong, Vetted Algorithms:** Employ only well-vetted, industry-standard cryptographic algorithms and implementations, such as AES-256, SHA-256/SHA-3, ChaCha20-Poly1305, or those recommended by NIST (National Institute of Standards and Technology). Avoid outdated algorithms like MD5, SHA1, and DES.
+* **Key Management:**  Implement secure key management practices, including appropriate key generation, storage, and rotation. 
+* **Avoid Custom Cryptography:** Refrain from developing custom cryptographic algorithms. Utilize established libraries and frameworks.
+* **Regular Updates:** Stay informed about cryptographic advancements and vulnerabilities. Replace outdated or compromised algorithms promptly.
+* **Correct Implementation:** Ensure proper implementation of chosen algorithms, avoiding shortcuts that weaken security. Use established libraries and follow best practices.
+
+
+**Output Format:**  Provide a *single, complete code snippet* that addresses the described problem and adheres to the outlined mitigation strategies.
+
+**Solution Language:** PHP

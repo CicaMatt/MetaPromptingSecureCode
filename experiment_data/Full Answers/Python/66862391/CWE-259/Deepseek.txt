@@ -1,0 +1,43 @@
+To replace the `openssl` call with pure Python code, you can use the `cryptography` library, which provides a high-level interface for encryption and decryption. Below is a complete Python code snippet that replicates the functionality of the provided `openssl` command:
+
+```python
+import base64
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+
+# Hard-coded values (for demonstration purposes only; avoid hard-coding in production)
+iv = bytes.fromhex("7bde5a0f3f39fd658efc45de143cbc94")
+password = bytes.fromhex("3e83b13d99bf0de6c6bde5ac5ca4ae68")
+msg = b"this is a message"
+
+# Create a cipher object using AES-128-CBC mode
+cipher = Cipher(algorithms.AES(password), modes.CBC(iv), backend=default_backend())
+
+# Encrypt the message
+encryptor = cipher.encryptor()
+padded_msg = msg + b'\0' * (16 - len(msg) % 16)  # Padding to make the message length a multiple of 16
+ciphertext = encryptor.update(padded_msg) + encryptor.finalize()
+
+# Encode the ciphertext in base64
+encoded_ciphertext = base64.b64encode(ciphertext).decode('utf-8')
+
+# Output the results
+print(f"IV: {iv.hex()}")
+print(f"PWD: {password.hex()}")
+print(f"MSG: {msg.decode('utf-8')}")
+print(f"OUT: {encoded_ciphertext}")
+```
+
+### Explanation:
+1. **Imports**: The necessary modules from the `cryptography` library are imported.
+2. **Hard-coded Values**: The IV and password are converted from hex strings to bytes. The message is also converted to bytes.
+3. **Cipher Object**: A cipher object is created using AES-128-CBC mode with the provided key and IV.
+4. **Encryption**: The message is padded to ensure its length is a multiple of 16 bytes (required for AES-CBC). The padded message is then encrypted.
+5. **Base64 Encoding**: The encrypted ciphertext is encoded in base64 to match the output format of the `openssl` command.
+6. **Output**: The IV, password, message, and encrypted output are printed.
+
+### Important Notes:
+- **Avoid Hard-coding Credentials**: In a real-world scenario, avoid hard-coding credentials in your code. Use secure methods to store and retrieve them, such as environment variables, secure vaults, or configuration files with restricted access.
+- **Padding**: The padding used here is a simple null-byte padding. In production, consider using a more secure padding scheme like PKCS7.
+
+This code should replicate the behavior of the `openssl` command you provided, using pure Python.

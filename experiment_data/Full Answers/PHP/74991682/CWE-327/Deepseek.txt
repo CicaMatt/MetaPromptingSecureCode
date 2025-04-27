@@ -1,0 +1,90 @@
+To address the issue of dynamic properties being deprecated in PHP 8.2 and to ensure compatibility with PHP 9 onwards, we need to refactor the code to avoid the use of dynamic properties. Instead, we can use explicit class properties or magic methods like `__get` and `__set` to handle dynamic property access in a controlled manner.
+
+Below is a PHP code snippet that demonstrates how to refactor a class to avoid dynamic properties while maintaining compatibility with PHP 8.2 and beyond:
+
+```php
+<?php
+
+class SecureDataHandler
+{
+    // Explicitly define properties to avoid dynamic properties
+    private array $data = [];
+
+    // Magic method to handle dynamic property access
+    public function __get(string $name)
+    {
+        if (array_key_exists($name, $this->data)) {
+            return $this->data[$name];
+        }
+        trigger_error("Undefined property: $name", E_USER_NOTICE);
+        return null;
+    }
+
+    // Magic method to handle dynamic property assignment
+    public function __set(string $name, $value): void
+    {
+        $this->data[$name] = $value;
+    }
+
+    // Magic method to check if a property is set
+    public function __isset(string $name): bool
+    {
+        return isset($this->data[$name]);
+    }
+
+    // Magic method to unset a property
+    public function __unset(string $name): void
+    {
+        unset($this->data[$name]);
+    }
+
+    // Example method to demonstrate secure data handling
+    public function encryptData(string $data, string $key): string
+    {
+        // Use a strong, up-to-date cryptographic algorithm (e.g., AES-256)
+        $cipher = "aes-256-cbc";
+        $ivlen = openssl_cipher_iv_length($cipher);
+        $iv = openssl_random_pseudo_bytes($ivlen);
+        $encrypted = openssl_encrypt($data, $cipher, $key, OPENSSL_RAW_DATA, $iv);
+        return base64_encode($iv . $encrypted);
+    }
+
+    // Example method to demonstrate secure data decryption
+    public function decryptData(string $encryptedData, string $key): string
+    {
+        $cipher = "aes-256-cbc";
+        $encryptedData = base64_decode($encryptedData);
+        $ivlen = openssl_cipher_iv_length($cipher);
+        $iv = substr($encryptedData, 0, $ivlen);
+        $encrypted = substr($encryptedData, $ivlen);
+        return openssl_decrypt($encrypted, $cipher, $key, OPENSSL_RAW_DATA, $iv);
+    }
+}
+
+// Example usage
+$handler = new SecureDataHandler();
+
+// Setting dynamic properties using __set
+$handler->sensitiveData = "This is a secret message.";
+$handler->encryptionKey = "supersecretkey";
+
+// Accessing dynamic properties using __get
+echo "Original Data: " . $handler->sensitiveData . "\n";
+
+// Encrypting data
+$encrypted = $handler->encryptData($handler->sensitiveData, $handler->encryptionKey);
+echo "Encrypted Data: " . $encrypted . "\n";
+
+// Decrypting data
+$decrypted = $handler->decryptData($encrypted, $handler->encryptionKey);
+echo "Decrypted Data: " . $decrypted . "\n";
+
+?>
+```
+
+### Explanation:
+1. **Explicit Properties**: The class `SecureDataHandler` uses an associative array `$data` to store dynamic properties, avoiding the use of dynamic properties directly on the class.
+2. **Magic Methods**: The `__get`, `__set`, `__isset`, and `__unset` magic methods are implemented to handle dynamic property access in a controlled manner.
+3. **Secure Cryptography**: The class includes methods to encrypt and decrypt data using the AES-256 algorithm, ensuring secure data handling.
+
+This approach ensures compatibility with PHP 8.2 and future versions while maintaining secure and controlled access to dynamic properties.

@@ -1,0 +1,73 @@
+To address the problem of using hard-coded credentials and insecure SQL queries in PHP, we will implement a secure solution using prepared statements with MySQLi. This approach will prevent SQL injection attacks and improve the security of your application. Additionally, we will ensure that credentials are not hard-coded and are stored securely.
+
+Here is a complete PHP code snippet that demonstrates how to use prepared statements to securely retrieve data from a MySQL database:
+
+```php
+<?php
+// Database credentials should be stored in environment variables or a secure configuration file
+$servername = getenv('DB_SERVER'); // e.g., 'localhost'
+$username = getenv('DB_USERNAME'); // e.g., 'root'
+$password = getenv('DB_PASSWORD'); // e.g., 'password'
+$dbname = getenv('DB_NAME'); // e.g., 'mydatabase'
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Prepare and bind
+$stmt = $conn->prepare("SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC");
+if ($stmt === false) {
+    die("Prepare failed: " . $conn->error);
+}
+
+// Bind parameters
+$userid = $_GET['userid'];
+$category = $_GET['category'];
+$stmt->bind_param("ss", $userid, $category);
+
+// Execute the statement
+$stmt->execute();
+
+// Get the result
+$result = $stmt->get_result();
+
+// Fetch data
+while ($row = $result->fetch_assoc()) {
+    // Process each row
+    echo "ID: " . $row["id"] . " - User ID: " . $row["userid"] . " - Category: " . $row["category"] . "<br>";
+}
+
+// Close statement and connection
+$stmt->close();
+$conn->close();
+?>
+```
+
+### Explanation:
+
+1. **Database Credentials**:
+   - Credentials are retrieved from environment variables (`getenv('DB_SERVER')`, etc.), which is a secure way to handle sensitive information.
+
+2. **Prepared Statements**:
+   - The SQL query uses placeholders (`?`) for user inputs, which are then bound to the statement using `bind_param`. This prevents SQL injection attacks.
+
+3. **Binding Parameters**:
+   - The `bind_param` method binds the URL parameters (`$_GET['userid']` and `$_GET['category']`) to the SQL query securely.
+
+4. **Executing the Query**:
+   - The `execute` method runs the prepared statement, and `get_result` retrieves the result set.
+
+5. **Fetching Data**:
+   - The `fetch_assoc` method fetches each row as an associative array, allowing you to process and display the data securely.
+
+6. **Closing Resources**:
+   - The statement and connection are closed properly to free up resources.
+
+### Bonus: Performance Consideration
+Using prepared statements can improve performance, especially when the same query is executed multiple times with different parameters. The database server can optimize the execution plan for the prepared statement, reducing overhead. Even if you use the prepared statement only three or four times on a page, you may still see a performance benefit, particularly in high-load scenarios.
+
+This approach ensures that your application is secure from SQL injection and follows best practices for handling sensitive information.

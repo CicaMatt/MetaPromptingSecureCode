@@ -1,0 +1,10 @@
+NOTE: How to use basic authorization in PHP curl Does not work for me.
+
+Trying to Curl into Electrum, but it looks like my access is denied. Electrum is on the same server as the php script. I have purposefully left out any command for the wallet for simplification purpose. Focusing on connecting first.
+
+When trying to CURL in terminal
+
+curl --data-binary '{"id":"curltext","method":"addrequest","params":{"amount":"3.14","memo":"test"}}' http://user:pass@127.0.0.1:7777
+Error Message
+
+curl: (7) Failed to connect to 127.0.0.1 port 7777: Connection refused

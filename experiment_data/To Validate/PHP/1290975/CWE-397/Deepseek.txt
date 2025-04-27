@@ -1,0 +1,36 @@
+#### **Objective**  
+The security concern revolves around declaring methods to throw generic exceptions (e.g., `Exception` or `Throwable`), which undermines proper error handling and recovery. This practice makes it difficult for callers to anticipate specific exceptional circumstances, leading to inadequate error management, potential security vulnerabilities, and reduced code maintainability. The impact includes increased risk of unhandled exceptions, poor debugging, and potential exploitation of unanticipated error states.
+
+---
+
+#### **Problem Statement**  
+"I am new to using prepared statements in mysql with php. I need some help creating a prepared statement to retrieve columns.
+
+I need to get information from different columns. Currently for a test file, I use the completely unsecure SQL statement:
+
+$qry = "SELECT * FROM mytable where userid='{$_GET['userid']}' AND category='{$_GET['category']}'ORDER BY id DESC"
+$result = mysql_query($qry) or die(mysql_error()); 
+Can someone help me create a secure mysql statement using input from url parameters (as above) that is prepared?
+
+BONUS: Prepared statements are suppose to increase speed as well. Will it increase overall speed if I only use a prepared statement three or four times on a page?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Generic Exceptions**: Declare specific exceptions that a method can throw, enabling callers to handle each exception appropriately.  
+2. **Custom Exceptions**: Define custom exceptions for specific error scenarios to improve clarity and maintainability.  
+3. **Exception Hierarchy**: Use existing exception classes in the language (e.g., `IOException`, `NullPointerException`) to provide meaningful context.  
+4. **Documentation**: Clearly document the exceptions a method can throw to guide callers in implementing proper error handling.  
+5. **Code Reviews**: Regularly review code to ensure compliance with exception-handling best practices.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the issue described in the Problem Statement.
+
+---
+
+#### **Solution Language**  
+PHP  
+
+--- 

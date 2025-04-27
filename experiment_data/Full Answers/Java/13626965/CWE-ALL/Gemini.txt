@@ -1,0 +1,100 @@
+```java
+import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class SecureHTTPSRequest {
+
+    public static void main(String[] args) {
+        try {
+            // Configure TLS settings to trust all certificates (INSECURE - FOR TESTING ONLY)
+            // In a production environment, properly validate certificates as shown below
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, new TrustManager[]{new TrustAllX509TrustManager()}, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(new TrustAllHostnameVerifier());
+
+
+            URL url = new URL("https://www.abc.com");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+
+            // Proper Certificate Validation (RECOMMENDED FOR PRODUCTION)
+            // validateCertificates(conn);
+
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+            br.close();
+            conn.disconnect();
+
+
+        } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
+            // Handle specific exceptions
+            if (e instanceof SSLHandshakeException) {
+                System.err.println("SSL Handshake failed: " + e.getMessage());
+                // Log the detailed exception and potentially retry with a custom TrustManager
+                // after further investigation of the certificate issue.
+            } else {
+                System.err.println("Error during HTTPS request: " + e.getMessage());
+                e.printStackTrace(); //Only for debugging, remove in production.
+            }
+            
+        } 
+    }
+
+     //Example (INCOMPLETE - Requires proper TrustStore configuration) 
+     private static void validateCertificates(HttpsURLConnection conn) throws SSLHandshakeException {
+        try {
+            SSLSocketFactory factory = HttpsURLConnection.getDefaultSSLSocketFactory(); // Replace with custom factory if needed.
+            conn.setSSLSocketFactory(factory);
+        } catch (Exception ex) {
+           throw new SSLHandshakeException("Certificate validation failed: " + ex.getMessage());
+        }
+     }
+
+    // INSECURE - FOR TESTING ONLY
+    private static class TrustAllX509TrustManager implements X509TrustManager {
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
+
+        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+        }
+
+        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+        }
+    }
+
+    // INSECURE - FOR TESTING ONLY
+    private static class TrustAllHostnameVerifier implements HostnameVerifier {
+        public boolean verify(String hostname, SSLSession session) {
+            return true; // Accept all hostnames
+        }
+    }
+
+}
+
+
+```
+
+Explanation and Mitigation Strategies Applied:
+
+* **CWE-295 (Improper Certificate Validation):** The solution demonstrates both insecure (for testing ONLY) and a placeholder for proper certificate validation.  The `validateCertificates` function is a starting point, but needs to be fleshed out with loading a proper `TrustStore` containing the trusted root certificates. This approach ensures that the server's certificate is verified against a trusted authority.  The insecure example using `TrustAllX509TrustManager` and `TrustAllHostnameVerifier` should **NEVER** be used in production.
+* **CWE-397 (Declaration of Throws for Generic Exception):**  The code uses specific `catch` blocks for `IOException`, `NoSuchAlgorithmException`, `KeyManagementException`, and `SSLHandshakeException`. This allows for targeted error handling and logging specific error information.
+* **CWE-259 & CWE-798 (Hard-coded Credentials):** This code does not handle credentials, so these CWEs are not directly relevant.  However, if credentials were needed, they should be stored securely and retrieved without hardcoding.
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):** The solution uses `TLS` which is a secure and up-to-date protocol. Ensure your Java environment is up-to-date to leverage the latest security patches for TLS. Using a custom `SSLSocketFactory` would allow even finer-grained control over the cipher suites used.
+* **CWE-477 (Use of Obsolete Function):**  The code uses modern, non-obsolete methods for HTTPS communication.
+
+
+
+Crucially:  The provided `TrustAllX509TrustManager` and `TrustAllHostnameVerifier` bypass certificate validation. **This is extremely dangerous and should only be used for testing in controlled environments where you fully understand the risks.**  In a production environment, **always implement proper certificate validation.**  This involves creating a `TrustStore` with the necessary root and intermediate CA certificates and configuring your application to use it.  Never accept self-signed certificates or disable certificate validation in production code.  This is the most important security aspect of the fix for the original problem.

@@ -1,0 +1,54 @@
+To replace the OpenSSL call with pure Python while ensuring secure cryptographic practices, we should use a well-maintained library such as `cryptography`. This library provides tools for working with cryptographic protocols and primitives effectively, and it is widely considered safe and reliable for production use.
+
+Below is a Python code snippet that replicates the behavior of your OpenSSL command using the `cryptography` library:
+
+```python
+from base64 import b64encode
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+import binascii
+
+# Given inputs
+iv_hex = "7bde5a0f3f39fd658efc45de143cbc94"
+password_hex = "3e83b13d99bf0de6c6bde5ac5ca4ae68"
+msg = "this is a message"
+
+# Convert hex strings to bytes
+iv = binascii.unhexlify(iv_hex)
+password = binascii.unhexlify(password_hex)
+message = msg.encode('utf-8')
+
+# Setup cipher
+cipher = Cipher(algorithms.AES(password), modes.CBC(iv), backend=default_backend())
+encryptor = cipher.encryptor()
+
+# Pad the message to be AES block size (16 bytes)
+pad = 16 - len(message) % 16
+message_padded = message + bytes([pad] * pad)
+
+# Encrypt the message
+encrypted = encryptor.update(message_padded) + encryptor.finalize()
+
+# Encode in base64 to match OpenSSL output
+encrypted_b64 = b64encode(encrypted).decode('utf-8')
+
+# Output results
+print(f"IV: {iv_hex}")
+print(f"PWD: {password_hex}")
+print(f"MSG: {msg}")
+print(f"OUT: {encrypted_b64}")
+```
+
+### Explanation:
+
+1. **Initialization Vector (IV) and Key (Password):** They are first converted from hex strings to bytes using `binascii.unhexlify`.
+
+2. **Padding:** AES requires the data to be encrypted in blocks of 16 bytes. If your data isn't a multiple of 16 bytes, you need to pad it. Here, PKCS7 padding is implemented manually by appending bytes to the message as per the required padding length.
+
+3. **Cipher Object:** A `Cipher` object is created using the AES algorithm in CBC mode with the given key and IV. We utilize a secure backend provided by the `cryptography` library.
+
+4. **Encryption Process:** The message is encrypted by updating the cipher with the padded message and finalized to ensure all data is processed.
+
+5. **Base64 Encoding:** The result is base64-encoded to match the output from the OpenSSL command.
+
+This approach ensures that the cryptographic operations are secure and adheres to best practices, leveraging the `cryptography` library's functionalities.

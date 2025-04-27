@@ -1,0 +1,68 @@
+To address the issue of creating an HTTPS connection using a client certificate in Java 6, especially given the use of an obsolete default `SSLSocketFactory`, you will need to customize the SSL context to load the client certificate and trust the server's self-signed certificate. Here’s how you can create a secure HTTPS connection using a custom SSL context:
+
+```java
+import javax.net.ssl.*;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+
+public class SecureHttpsConnection {
+
+    public static void main(String[] args) {
+        try {
+            String keystorePath = "/path/to/keystore";  // Change this path to your keystore location
+            char[] keystorePassword = "keystorePassword".toCharArray(); // Use the actual password for your keystore
+            char[] keyPassword = "keyPassword".toCharArray(); // Use the actual password for your key
+
+            // Load the keystore containing the client certificate
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+            try (FileInputStream keyStoreFile = new FileInputStream(keystorePath)) {
+                keyStore.load(keyStoreFile, keystorePassword);
+            }
+
+            // Initialize KeyManagerFactory
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, keyPassword);
+
+            // Initialize TrustManagerFactory
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(keyStore);
+
+            // Create the SSLContext with the key managers and trust managers
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+            // Open HTTPS connection with custom SSLSocketFactory
+            URL url = new URL("https://somehost.dk:3049");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setSSLSocketFactory(sslContext.getSocketFactory());
+
+            // Optional: Set other connection parameters like timeout, request method, etc.
+            conn.setRequestMethod("GET");
+            conn.connect();
+
+            InputStream inputStream = conn.getInputStream();
+            // Read and process the input stream (e.g., print or save the content)
+            // Important: Close the input stream and the connection after processing
+            inputStream.close();
+            conn.disconnect();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Key Points:
+
+1. **Custom SSL Context**: This solution uses a custom `SSLContext` initialized with both `KeyManager` and `TrustManager`. The `KeyManager` manages the client certificate, while the `TrustManager` handles the server’s certificates, including self-signed ones.
+   
+2. **Use of KeyStore**: The keystore containing both the client and server certificates needs to be loaded and used to initialize both `KeyManagerFactory` and `TrustManagerFactory`.
+
+3. **Secure Configuration**: The `SSLContext` is configured with `TLS`, which is the modern standard, replacing older protocols.
+
+4. **HTTPS Connection**: Uses `HttpsURLConnection` for making HTTP requests over SSL, ensuring that the connection is secured and the client certificate is presented as required by the server.
+
+Make sure to replace placeholder values like the keystore path and passwords with actual values specific to your setup. Also, handle exceptions appropriately for robustness and security in production code.

@@ -1,0 +1,104 @@
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Base64;
+
+public class SecureHttpsPost {
+
+    private static final String SERVER_CERTIFICATE_PATH = "path/to/server.cer"; // Replace with the path to your server certificate
+    private static final String USERNAME = ""; // Retrieve username from secure configuration (e.g., environment variable)
+    private static final String PASSWORD = "";  // Retrieve password from secure configuration (e.g., secrets manager)
+
+    public static void main(String[] args) throws Exception {
+
+        // Load the server's certificate
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(null, null); // Initialize an empty keystore
+
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        FileInputStream fis = new FileInputStream(SERVER_CERTIFICATE_PATH);
+        X509Certificate certificate = (X509Certificate) cf.generateCertificate(fis);
+        fis.close();
+
+        keyStore.setCertificateEntry("server", certificate);
+
+        // Create a TrustManager that trusts the custom certificate
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(keyStore);
+
+        // Create an SSLContext using the custom TrustManager
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, tmf.getTrustManagers(), null);
+
+
+        // Create URL and connection
+        URL url = new URL("https://your-server-url");  // Replace with your server URL
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
+        // Set SSLSocketFactory
+        connection.setSSLSocketFactory(sslContext.getSocketFactory());
+
+        // Set basic authentication (if required)
+        String auth = USERNAME + ":" + PASSWORD;
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+        connection.setRequestProperty("Authorization", "Basic " + encodedAuth);
+
+        // Set request method and headers
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json"); // Or appropriate content type
+
+
+        // Write request body (if any)
+        String requestBody = "{ \"key\": \"value\" }"; // Example JSON request body
+        connection.setDoOutput(true);
+        try (OutputStream os = connection.getOutputStream()) {
+            byte[] input = requestBody.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        // Read the response
+        int responseCode = connection.getResponseCode();
+        System.out.println("Response Code : " + responseCode);
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+            String response = br.readLine();
+            System.out.println("Response: " + response);
+        } catch (IOException e) {
+            // Handle error response (e.g., 4xx or 5xx codes)
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
+                String errorResponse = br.readLine();
+                System.err.println("Error Response: " + errorResponse);
+            }
+        }
+    }
+}
+```
+
+
+**Explanation and Key Improvements:**
+
+1. **Secure Certificate Handling:**  The code now loads the server's certificate from a file (replace `"path/to/server.cer"` with the actual path). This avoids the insecure `setHostnameVerifier` approach that would blindly accept any certificate.
+
+2. **Secure Credential Storage (Placeholder):**  The code includes placeholders for username and password retrieval from secure configuration mechanisms (e.g., environment variables, secrets management systems). *Implement your specific secure credential storage solution here.*
+
+3. **Basic Authentication (Optional):**  The code demonstrates how to add Basic Authentication if your server requires it. Be sure credentials are retrieved securely as mentioned above.
+
+4. **Error Handling:**  Includes improved error handling to read and print error responses from the server, which aids in debugging.
+
+5. **Clear Comments and Structure:**  The code is well-commented and structured for readability and maintainability.
+
+6. **Externalized Certificate Path:** The path to the server certificate is now a constant, making it easier to manage and update.
+
+**To run this code:**
+
+1. **Replace placeholders:** Update `SERVER_CERTIFICATE_PATH`, `USERNAME`, `PASSWORD`, and the server URL.
+2. **Obtain Server Certificate:**  Get the server's certificate file (`.cer` or `.crt`).  Your server administrator can provide this.
+3. **Compile and Run:**  Compile and run the Java code.
+
+
+This revised solution addresses the security concerns by demonstrating how to handle server certificates properly and providing a structure for securely managing credentials.  Remember to implement a robust secrets management solution to replace the placeholder comments for credential retrieval.

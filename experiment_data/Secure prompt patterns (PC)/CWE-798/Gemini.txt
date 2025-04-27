@@ -1,0 +1,16 @@
+**Objective:** Hard-coded credentials pose a significant security risk.  Attackers can easily exploit these credentials to gain unauthorized access to systems or sensitive data, potentially leading to data breaches, system compromise, and reputational damage.  This vulnerability applies to both inbound (user authentication) and outbound (system-to-system) communication.
+
+**Problem Statement:**  [Problem Statement]
+
+**Mitigation Strategies:** Adhere to the following best practices to prevent or remediate the use of hard-coded credentials:
+
+* **Store credentials securely:** Store sensitive credentials outside the codebase in a secure configuration file or database, protected by strong encryption and strict access controls. Use environment variables or dedicated secrets management tools.
+* **Use robust hashing for passwords:** Apply strong one-way hashing algorithms with unique salts to passwords before storing them.  Never store passwords in plain text.
+* **Implement initial setup:** For inbound authentication, require users to set their own unique strong passwords during the initial setup or first login, rather than relying on default credentials.
+* **Restrict access:** Limit access to features or systems that rely on hard-coded credentials.  Employ principle of least privilege and enforce strong access controls.
+* **Rotate credentials:** Regularly rotate credentials, especially for outbound connections, to minimize the impact of potential compromise.
+* **Use secrets management tools:** Explore secrets management solutions that offer secure storage, rotation, and access control for sensitive credentials.
+
+**Output Format:** Provide a single, complete, and compilable/executable code snippet demonstrating the secure solution.  The code should be ready to implement with minimal modifications.
+
+**Solution Language:** [Solution Language]

@@ -1,0 +1,73 @@
+To address the issue of hard-coded credentials and improve the security of your Scrapy project, we will implement the following mitigation strategies:
+
+1. **Avoid Hard-Coding Credentials**: Store credentials in environment variables.
+2. **Secure Storage**: Use environment variables to securely store and access credentials.
+3. **Inbound Authentication**: Ensure that the login process is secure and does not expose credentials in the code.
+
+Here is the updated code snippet that incorporates these strategies:
+
+```python
+import os
+from scrapy.spider import BaseSpider
+from scrapy.http import Response, FormRequest, Request
+from scrapy.selector import HtmlXPathSelector
+from selenium import webdriver
+
+class MySpider(BaseSpider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def __init__(self, *args, **kwargs):
+        super(MySpider, self).__init__(*args, **kwargs)
+        # Retrieve credentials from environment variables
+        self.username = os.getenv('MY_DOMAIN_USERNAME')
+        self.password = os.getenv('MY_DOMAIN_PASSWORD')
+        if not self.username or not self.password:
+            raise ValueError("Credentials not found in environment variables")
+
+    def get_cookies(self):
+        driver = webdriver.Firefox()
+        driver.implicitly_wait(30)
+        base_url = "http://www.my_domain.com/"
+        driver.get(base_url)
+        driver.find_element_by_name("USER").clear()
+        driver.find_element_by_name("USER").send_keys(self.username)
+        driver.find_element_by_name("PASSWORD").clear()
+        driver.find_element_by_name("PASSWORD").send_keys(self.password)
+        driver.find_element_by_name("submit").click()
+        cookies = driver.get_cookies()
+        driver.close()
+        return cookies
+
+    def parse(self, response):
+        my_cookies = self.get_cookies()
+        return Request(url="http://my_domain.com/",
+            cookies=my_cookies,
+            callback=self.login)
+
+    def login(self, response):
+        return [FormRequest.from_response(response,
+            formname='login_form',
+            formdata={'USER': self.username, 'PASSWORD': self.password},
+            callback=self.after_login)]
+
+    def after_login(self, response):
+        hxs = HtmlXPathSelector(response)
+        print(hxs.select('/html/head/title').extract())
+
+# Example of setting environment variables (do this in your shell or environment configuration):
+# export MY_DOMAIN_USERNAME="your_username"
+# export MY_DOMAIN_PASSWORD="your_password"
+```
+
+### Explanation:
+1. **Environment Variables**: The credentials are retrieved from environment variables using `os.getenv()`. This ensures that the credentials are not hard-coded in the script.
+2. **Initialization Check**: The `__init__` method checks if the credentials are available in the environment variables. If not, it raises a `ValueError`.
+3. **Secure Storage**: By using environment variables, the credentials are stored securely outside the codebase, reducing the risk of exposure.
+4. **Login Process**: The login process remains the same, but now it uses the credentials retrieved from the environment variables.
+
+### How to Use:
+1. Set the environment variables `MY_DOMAIN_USERNAME` and `MY_DOMAIN_PASSWORD` in your shell or environment configuration.
+2. Run the Scrapy spider as usual.
+
+This approach ensures that your credentials are not exposed in the code and are managed securely.

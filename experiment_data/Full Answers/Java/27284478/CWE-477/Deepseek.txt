@@ -1,0 +1,80 @@
+#### **Solution**
+
+In Java, using a `String` to store sensitive information like passwords is not secure because `String` objects are immutable and remain in memory until garbage collected, making them vulnerable to memory dumps. Using a `char[]` is a better approach because you can explicitly clear the array after use, reducing the window of exposure. However, if you want to further enhance security, you can use a `byte[]` and encrypt the sensitive data before storing or transmitting it.
+
+Below is a complete and executable Java code snippet that demonstrates how to securely handle sensitive information like passwords using a `byte[]` and encryption:
+
+```java
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+public class SecurePasswordHandling {
+
+    public static void main(String[] args) throws Exception {
+        // Example password
+        String password = "super_password";
+
+        // Convert password to byte array
+        byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
+
+        // Generate a secret key for encryption
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(128); // 128-bit key size
+        SecretKey secretKey = keyGen.generateKey();
+
+        // Encrypt the password
+        byte[] encryptedPassword = encrypt(passwordBytes, secretKey);
+
+        // Decrypt the password (for demonstration purposes)
+        byte[] decryptedPassword = decrypt(encryptedPassword, secretKey);
+
+        // Convert decrypted bytes back to String
+        String decryptedPasswordString = new String(decryptedPassword, StandardCharsets.UTF_8);
+
+        // Output the results
+        System.out.println("Original Password: " + password);
+        System.out.println("Encrypted Password: " + Base64.getEncoder().encodeToString(encryptedPassword));
+        System.out.println("Decrypted Password: " + decryptedPasswordString);
+
+        // Clear sensitive data from memory
+        clearArray(passwordBytes);
+        clearArray(encryptedPassword);
+        clearArray(decryptedPassword);
+    }
+
+    private static byte[] encrypt(byte[] data, SecretKey secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        return cipher.doFinal(data);
+    }
+
+    private static byte[] decrypt(byte[] encryptedData, SecretKey secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        return cipher.doFinal(encryptedData);
+    }
+
+    private static void clearArray(byte[] array) {
+        if (array != null) {
+            for (int i = 0; i < array.length; i++) {
+                array[i] = 0;
+            }
+        }
+    }
+}
+```
+
+---
+
+#### **Explanation**
+
+1. **Encryption**: The password is encrypted using AES encryption, which is a secure and widely-used encryption algorithm.
+2. **Byte Array**: The password is stored in a `byte[]` instead of a `String` or `char[]`, and the array is explicitly cleared after use to minimize exposure.
+3. **Memory Safety**: The `clearArray` method ensures that sensitive data is wiped from memory after use.
+4. **Base64 Encoding**: The encrypted password is encoded in Base64 for safe storage or transmission.
+
+This approach ensures that sensitive information is securely handled and minimizes the risk of exposure through memory dumps.

@@ -1,0 +1,56 @@
+Certainly! Let's transform your file upload code into a `try-catch` statement to handle potential errors more gracefully. The `move_uploaded_file` function itself is not obsolete, but using `die` for error handling is not ideal. Instead, we can use exceptions to handle errors in a more structured way.
+
+Here’s how you can implement a `try-catch` block for your file upload scenario:
+
+```php
+<?php
+try {
+    // Check if the file was uploaded without errors
+    if (!isset($_FILES['file']['error']) || is_array($_FILES['file']['error'])) {
+        throw new RuntimeException('Invalid parameters.');
+    }
+
+    // Check for specific upload errors
+    switch ($_FILES['file']['error']) {
+        case UPLOAD_ERR_OK:
+            break;
+        case UPLOAD_ERR_NO_FILE:
+            throw new RuntimeException('No file sent.');
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            throw new RuntimeException('Exceeded filesize limit.');
+        default:
+            throw new RuntimeException('Unknown errors.');
+    }
+
+    // Check the file size (optional)
+    if ($_FILES['file']['size'] > 1000000) {
+        throw new RuntimeException('Exceeded filesize limit.');
+    }
+
+    // Move the uploaded file to the desired location
+    $destination = $_SERVER['DOCUMENT_ROOT'] . '/uploads/' . basename($_FILES['file']['name']);
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
+        throw new RuntimeException('Failed to move uploaded file.');
+    }
+
+    // If everything is successful
+    echo 'Upload Complete!';
+
+} catch (RuntimeException $e) {
+    // Handle the exception
+    echo 'Error: ' . $e->getMessage();
+}
+?>
+```
+
+### Explanation:
+1. **Error Checking**: Before attempting to move the file, we check if the file was uploaded without errors using `$_FILES['file']['error']`. If there are any errors, we throw a `RuntimeException` with an appropriate message.
+  
+2. **File Size Check**: We optionally check the file size to ensure it doesn't exceed a certain limit (1MB in this case). If it does, we throw an exception.
+
+3. **Moving the File**: We attempt to move the uploaded file to the desired location using `move_uploaded_file`. If this fails, we throw an exception.
+
+4. **Exception Handling**: If any exception is thrown, it is caught in the `catch` block, and an error message is displayed.
+
+This approach ensures that your code is more robust and handles errors gracefully without abruptly terminating the script using `die`. It also makes your code more maintainable and easier to debug.

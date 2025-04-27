@@ -1,0 +1,79 @@
+To address the issue with the `decrypt_file()` function, the primary problem lies in the handling of bytes and strings when reading and writing the encrypted data to and from the file. The error occurs because the encrypted data is being treated as a string when it should be handled as bytes. Below is the corrected version of your code:
+
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + ((bytes([x])) * x)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext))[AES.block_size:]
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        plaintext = f.read()
+    
+    enc = encrypt(plaintext, key)
+    
+    with open(file_name, 'wb') as f:
+        f.write(enc)
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        ciphertext = f.read()
+    
+    dec = decrypt(ciphertext, key)
+    
+    with open(file_name, 'wb') as f:
+        f.write(dec)
+
+# Example usage
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+# Encrypt the file
+encrypt_file('to_enc.txt', key)
+
+# Decrypt the file
+decrypt_file('to_enc.txt', key)
+```
+
+### Explanation of Changes:
+1. **File Handling**:
+   - Changed file opening modes to `'rb'` (read binary) and `'wb'` (write binary) to handle bytes instead of strings.
+   - This ensures that the data read from and written to the file is treated as binary data, which is necessary for AES encryption and decryption.
+
+2. **Padding Removal**:
+   - The padding logic in `decrypt_file()` was incorrect and unnecessary. The `decrypt()` function already handles padding removal, so no additional padding logic is needed in `decrypt_file()`.
+
+3. **Error Handling**:
+   - The code now correctly handles the conversion between bytes and strings, avoiding the `TypeError` and `ValueError` that were previously encountered.
+
+### Mitigation Strategies Implemented:
+1. **Avoid Hard-Coding Credentials**:
+   - The key is still hard-coded in this example, but in a real-world scenario, you should store the key in a secure environment variable or a secure credential management tool.
+
+2. **Secure Storage**:
+   - The encrypted data is stored in a file, and the file is handled in binary mode to ensure that the data is not corrupted during read/write operations.
+
+3. **Access Control**:
+   - Ensure that the file permissions are set correctly to restrict access to authorized users only.
+
+This solution should resolve the issues you were facing with the `decrypt_file()` function and ensure that the encryption and decryption processes work correctly.

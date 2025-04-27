@@ -1,0 +1,77 @@
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + (bytes([x]) * x)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:])) # Removed slicing here
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:  # Read in binary mode
+        plaintext = f.read()
+    enc = encrypt(plaintext, key)
+    with open(file_name, 'wb') as f: # Write in binary mode
+        f.write(enc)
+
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f: # Read in binary mode
+        ciphertext = f.read()
+    dec = decrypt(ciphertext, key)
+    with open(file_name, 'wb') as f: # Write in binary mode
+        f.write(dec)
+
+
+
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+# Create a sample file for testing
+with open('to_enc.txt', 'wb') as f:
+    f.write(b"This is a test file.")
+
+
+encrypt_file('to_enc.txt', key)
+decrypt_file('to_enc.txt', key)
+
+# Verify decryption
+with open('to_enc.txt', 'rb') as f:
+    decrypted_content = f.read()
+    print(decrypted_content.decode('utf-8')) # Decode for printing
+```
+
+
+Key Changes:
+
+1. **Binary File Handling:** The primary issue was handling the encrypted data as text.  Encrypted data is binary, and attempting to read/write it as a string corrupts it.  The solution uses `'rb'` and `'wb'` modes for file operations to handle binary data correctly.
+
+2. **Removed Unnecessary Padding in `decrypt_file`:** The padding was already handled in the `encrypt` and `decrypt` functions.  The extra padding attempt in `decrypt_file` caused the `ValueError`.
+
+3. **Corrected Decryption Slicing:**  The `decrypt` function was slicing the ciphertext incorrectly, losing the first block. This has been corrected to remove only the IV before decryption and to apply the unpad function *after* decrypting and removing the IV.
+
+4. **Simplified File Handling:** Using `with open(...)` ensures files are closed automatically, even if errors occur.
+
+5. **Added Test File Creation:** A simple test file creation is included for easy execution and verification.
+
+6. **Decoded Output for Printing:** Added `.decode('utf-8')` after reading the decrypted file content to print the human-readable string.
+
+
+This revised code handles encryption and decryption correctly and demonstrates how to work with binary data in files.  The mitigation strategies provided in the prompt are generally good practices for secure certificate handling and are relevant to preventing man-in-the-middle attacks, but they don't directly address the coding problem presented. This solution focuses specifically on resolving the file encryption/decryption issue.

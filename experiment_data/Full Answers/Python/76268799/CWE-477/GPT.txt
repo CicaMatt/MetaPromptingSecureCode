@@ -1,0 +1,56 @@
+To address the issue with using Enums in SQLAlchemy 2.0 and the error you're encountering, you need to ensure that you're setting up the `ENUM` type correctly and using it with SQLAlchemy's new ORM syntax, including `Mapped` columns. In SQLAlchemy 2.0, the way you define and use enums and other types with the ORM has changed. Here's a refined approach that addresses the error by using SQLAlchemy's new `Enum` type from `sqlalchemy` directly rather than `pgEnum`.
+
+Here's how you can implement this in a way that is compatible with SQLAlchemy 2.0:
+
+```python
+from sqlalchemy import Enum, create_engine, Column, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Mapped, mapped_column, sessionmaker
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+import datetime as dt
+from uuid import uuid4
+import uuid
+
+# Define the declarative base for ORM modeling
+Base = declarative_base()
+
+# Define the enumeration for the campaign status
+class CampaignStatus(enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+# Define the Campaign model with correct mapped_column usage in SQLAlchemy 2.0
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[uuid.UUID] = mapped_column(default=uuid4, primary_key=True, nullable=False)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now, nullable=False)
+    status: Mapped[CampaignStatus] = mapped_column(Enum(CampaignStatus), nullable=False)
+
+# Example configuration for a PostgreSQL database URL
+DATABASE_URL = "postgresql://user:password@localhost/testdb"
+
+# Set up the engine and session
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+
+# Create the database tables
+Base.metadata.create_all(engine)
+
+# Now you can use the session to add and query Campaign objects from the database
+```
+
+### Explanation:
+
+1. **Enum Definition**: We use the `enum.Enum` class to define an enumeration for campaign status. The `CampaignStatus` enum is associated with two string values, `activated` and `deactivated`.
+
+2. **`Enum` Usage in SQLAlchemy**: We utilize SQLAlchemy's built-in `Enum` type (from `sqlalchemy` package, not `sqlalchemy.dialects.postgresql`) to define the `status` column in the `Campaign` class, which maps directly to the `CampaignStatus` enum.
+
+3. **`mapped_column`**: Instead of using `pgEnum`, you apply `Enum` directly within `mapped_column` to ensure compatibility with SQLAlchemy 2.0's `Mapped` types.
+
+4. **Database Setup**: The code assumes PostgreSQL as the target database. Set `DATABASE_URL` to match the credentials and database of your local or remote PostgreSQL setup.
+
+5. **Session Management**: Create an engine and session to connect to and interact with your database. This allows you to perform operations like inserting and querying data.
+
+By refactoring the code this way, you align it with SQLAlchemy 2.0's modern practices, resolving the issue and maintaining best practices for ORM mapping and type management.

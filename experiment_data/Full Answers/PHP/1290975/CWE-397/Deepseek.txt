@@ -1,0 +1,58 @@
+To address the security concern of using unsecured SQL statements and to implement a secure prepared statement in PHP, we can use the `PDO` (PHP Data Objects) extension. Prepared statements not only enhance security by preventing SQL injection but also improve performance when the same query is executed multiple times with different parameters.
+
+Here’s a complete and executable PHP code snippet that demonstrates how to use prepared statements to securely retrieve data from a MySQL database:
+
+```php
+<?php
+// Database connection parameters
+$host = 'localhost';
+$dbname = 'your_database_name';
+$username = 'your_username';
+$password = 'your_password';
+
+try {
+    // Create a PDO instance (database connection)
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    
+    // Set the PDO error mode to exception
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Prepare the SQL statement with placeholders
+    $sql = "SELECT * FROM mytable WHERE userid = :userid AND category = :category ORDER BY id DESC";
+    $stmt = $pdo->prepare($sql);
+
+    // Bind the input parameters to the prepared statement
+    $stmt->bindParam(':userid', $_GET['userid'], PDO::PARAM_STR);
+    $stmt->bindParam(':category', $_GET['category'], PDO::PARAM_STR);
+
+    // Execute the prepared statement
+    $stmt->execute();
+
+    // Fetch all results as an associative array
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Output the results
+    foreach ($results as $row) {
+        echo "ID: " . $row['id'] . " - UserID: " . $row['userid'] . " - Category: " . $row['category'] . "<br>";
+    }
+} catch (PDOException $e) {
+    // Handle any exceptions (errors) that occur during the process
+    die("Error: " . $e->getMessage());
+}
+
+// Close the connection (optional, as it will be closed automatically when the script ends)
+$pdo = null;
+?>
+```
+
+### Explanation:
+1. **Database Connection**: We use `PDO` to connect to the MySQL database. This is more secure and flexible than the older `mysql_*` functions.
+2. **Prepared Statement**: The SQL query is prepared with placeholders (`:userid` and `:category`) to prevent SQL injection.
+3. **Binding Parameters**: The `bindParam` method binds the URL parameters (`$_GET['userid']` and `$_GET['category']`) to the placeholders in the prepared statement.
+4. **Execution and Fetching**: The prepared statement is executed, and the results are fetched as an associative array.
+5. **Error Handling**: Any exceptions (errors) that occur during the process are caught and handled using a `try-catch` block.
+
+### Bonus: Performance Consideration
+Using prepared statements can indeed increase performance, especially when the same query is executed multiple times with different parameters. This is because the database server only needs to parse and compile the query once, and then it can execute the precompiled statement multiple times with different parameters. Even if you only use the prepared statement three or four times on a page, you may still see a performance improvement, especially in high-load scenarios.
+
+This approach ensures that your application is secure, maintainable, and efficient.

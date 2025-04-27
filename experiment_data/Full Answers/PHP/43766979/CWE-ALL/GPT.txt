@@ -1,0 +1,73 @@
+To address the problem statement and implement the required mitigation strategies, here's a secure PHP code snippet with explanations:
+
+```php
+<?php
+// Note: For this example, assume the credentials are securely stored in an external configuration
+// file and retrieved here for demonstration purposes.
+
+// Load credentials and sensitive information from a secure location or environment variables
+$hostname = getenv('DB_HOST');
+$username = getenv('DB_USER');
+$password = getenv('DB_PASS');
+$database = getenv('DB_NAME');
+
+// Custom exception classes for better error handling
+class ServerException extends Exception {}  
+class DatabaseException extends Exception {}
+
+try {
+    // Attempt to connect to the MySQL server
+    $conn = mysqli_connect($hostname, $username, $password);
+    
+    if (!$conn) {
+        // Differentiate between server and authentication errors
+        if (mysqli_connect_errno() === 1045) {
+            // Error number 1045 indicates access denied for user (bad username/password)
+            throw new ServerException('Invalid username/password. Could not connect to server.');
+        } else {
+            throw new ServerException('Could not connect to server. Error: ' . mysqli_connect_error());
+        }
+    }
+
+    // Select the database
+    $conn_db = mysqli_select_db($conn, $database);
+
+    if (!$conn_db) {
+        // Database selection error handling
+        throw new DatabaseException('Could not connect to database. Please check the database name.');
+    }
+
+    echo "Connected.";
+
+} catch (ServerException $ex) {
+    // Specific error message for server connection issues
+    error_log('Server connection error: ' . $ex->getMessage()); // Log error for auditing
+    echo "Error: " . $ex->getMessage();        
+} catch (DatabaseException $ex) {
+    // Specific error message for database selection issues
+    error_log('Database connection error: ' . $ex->getMessage()); // Log error for auditing
+    echo "Error: " . $ex->getMessage();
+}
+
+// Close the connection if successful
+if ($conn) {
+    mysqli_close($conn);
+}
+?>
+```
+
+### Explanation and Mitigation Strategies:
+
+1. **Avoid Hard-Coded Passwords (CWE-259/798):**
+   - This code retrieves the database credentials from environment variables (`getenv`) instead of hard-coding them directly. In a real-world scenario, you'd store these in a secure configuration or vault.
+
+2. **Specific Exception Types (CWE-397):**
+   - Two specific custom exceptions (`ServerException` and `DatabaseException`) are used to handle errors related to server connection and database selection distinctly. This avoids using generic exceptions and provides clearer error messages.
+
+3. **Error Logging:**
+   - Errors are logged using `error_log`. It is important to log errors instead of showing detailed information to end-users. This helps comply with security best practices by avoiding information leaks.
+
+4. **Safe Resource Handling:**
+   - Connections are closed properly if opened successfully, which is a key resource management practice to prevent resource leaks.
+
+This code provides a more secure and clear way of handling database connections in PHP, addressing specified security vulnerabilities and handling exceptions intelligently.

@@ -1,0 +1,51 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I'm not a cryptography profi and specially due to the fact that OpenSSL has lots of missing documentation, I'm not sure how can I solve this problem.
+
+I have an external system which expects to receive encrypted messages. The only example provided uses OpenSSL in this way:
+
+$ openssl enc -aes-256-cbc -a -in t.txt -k testpass
+U2FsdGVkX1/RUdaSJKRXhHv3zUyTsQwu5/ar2ECKDlrNyH5GL4xRR4fgxkiWqkS1
+cQstcoSIgWfRPSOFj/5OtdNLeNXiVR6MxSKJ+NvS9LyUD8+Rg6XIcYUvxR4gHi3w
+DWT44LAMCpRAh1Q0t4Z2g7rwb0D05T6ygLaWvB5zD/xGZD3brTqSlWmiJb9Imgda
+M6soZO7BhbYdqWqEUl5r6+EbkD21f6L3NX3hJFo+BJ+VFctiAlBO8NwT5l4ogo/s
+GErm8gqRr57XoX/kvKAimg==
+Where the t.txt file contains this string on one line:
+
+AMOUNT=10&TID=#19:23&CURRENCY=EUR&LANGUAGE=DE&SUCCESS_URL=http://some.url/sucess&ERROR_URL=http://some.url/error&CONFIRMATION_URL=http://some.url/confirm&NAME=customer full name`
+I have found this other question and I have been able to do the encryption using following code:
+
+String password = "passPhrase";
+String salt = "15charRandomSalt";
+int iterations = 100;
+
+/* Derive the key, given password and salt. */
+SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(Charset.forName("UTF8")), iterations, 256);
+SecretKey tmp = factory.generateSecret(spec);
+SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+/* Encrypt the message. */
+Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+cipher.init(Cipher.ENCRYPT_MODE, secret);
+AlgorithmParameters params = cipher.getParameters();
+byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+byte[] cipherText = cipher.doFinal(toBeEncrypted.getBytes("UTF-8"));
+encryptedData = Base64.getEncoder().encodeToString(cipherText);
+encryptedData += Base64.getEncoder().encodeToString(iv);
+What I can not understand is how should I generate similar output (encryptedData) to what OpenSSL does. I have the salt, iv and cipherText, is the OpenSSL output Base64 encoded result of a concatenation of these? or only one single of them?
+
+The only thing I share with that other system before encryption is the pass phrase. How could they decrypt the result if salt and number of iterations is not known to them?
+
+Can somebody give answers to those unknown parameters and also tell me if the above code is the equivalent of OpenSSL process?"
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  Java

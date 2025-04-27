@@ -1,0 +1,25 @@
+**Objective:** Improper certificate validation exposes systems to man-in-the-middle attacks, allowing attackers to impersonate trusted entities, intercept sensitive data, and potentially inject malicious code. This can compromise data confidentiality and integrity, leading to unauthorized access, data breaches, and reputational damage.
+
+**Problem Statement:**  "I was passing sensitive information (between my app and backend) like password in String format. Later on I realized that password can be easily read from heap memory dump as it is stored in text format.
+
+String password = "super_password";
+So I decided to use Char array,
+
+Char[] passChar = password.toCharArray();
+but I am worried that password can still be read from memory dump character by character. Then I thought of using byte array instead.
+
+byte[] passByte = password.getBytes();
+My question: Is it safe to use byte array for passing sensitive information like password ? OR can anyone recommend anything secure ?"
+
+**Mitigation Strategies:**
+
+* **Validate all relevant certificate properties:** Ensure that the certificate chain, hostname, expiration date, and issuer are thoroughly validated before accepting the certificate.
+* **Avoid disabling certificate validation:**  Disabling certificate validation completely eliminates security benefits and should never be done in production environments.
+* **Implement certificate pinning cautiously:** If certificate pinning is used, rigorously validate all certificate details before pinning to prevent future validation issues.  Ensure the pinned certificate is updated appropriately when it expires.
+* **Use trusted Certificate Authorities (CAs):**  Whenever possible, use certificates issued by reputable and trusted CAs.
+* **Keep certificate stores updated:** Regularly update certificate stores to include the latest root and intermediate certificates.
+
+
+**Output Format:**  The solution must be a single, complete, and runnable code snippet that directly addresses the described problem.
+
+**Solution Language:** Java

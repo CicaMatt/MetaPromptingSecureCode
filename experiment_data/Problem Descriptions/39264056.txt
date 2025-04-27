@@ -1,0 +1,57 @@
+There are three hosts that an android app do the authentication and authorization. Final host is the REST API. For the first time using Oauth authentication and authorization process it works without issue.
+
+But if user kills the app after login and accessing the services provided by REST API and then again open the app, this issue arise. In this time authentication and authorization process is not happening, only the REST API. It caused to java.security.cert.CertPathValidatorException but it was working during the first use (login and then use the app).
+
+Can someone explains the scenario behind this exception and whats wrong with the app. This works if certification exceptions are ignored as bellow according to this SO answer.
+
+SSLSocketFactory sslSocketFactory = null;
+
+        try {
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(
+                    TrustManagerFactory.getDefaultAlgorithm());
+            // Initialise the TMF as you normally would, for example:
+            try {
+                tmf.init((KeyStore)null);
+            } catch(KeyStoreException e) {
+                e.printStackTrace();
+            }
+            TrustManager[] trustManagers = tmf.getTrustManagers();
+
+            final X509TrustManager origTrustmanager = (X509TrustManager)trustManagers[0];
+
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] wrappedTrustManagers = new TrustManager[]{
+                    new X509TrustManager() {
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return origTrustmanager.getAcceptedIssuers();
+                        }
+
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                            try {
+                                origTrustmanager.checkClientTrusted(certs, authType);
+                            } catch(CertificateException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                            try {
+                                origTrustmanager.checkServerTrusted(certs, authType);
+                            } catch(CertificateException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+            };
+            //TrustManager[] trustAllCerts = TrustManagerFactory.getInstance("SSL").getTrustManagers();
+
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, wrappedTrustManagers, new java.security.SecureRandom());
+            // Create an ssl socket factory with our all-trusting manager
+            sslSocketFactory = sslContext.getSocketFactory();
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+        return sslSocketFactory;
+I am using Okhttp 3 for the http requests. Any suggestion would help to solve the issue. And please let me know if I use above code snippet, is it a security violation? will it effect to the security of the app?

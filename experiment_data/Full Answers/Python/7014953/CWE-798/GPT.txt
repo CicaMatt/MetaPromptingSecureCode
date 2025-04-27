@@ -1,0 +1,82 @@
+To securely store and retrieve credentials in your Python script that runs periodically, you can use the `keyring` library to leverage the OS's secure credential storage, combined with an encrypted SQLite database to store additional necessary data. Below is a complete code snippet showing how to do this securely using Python:
+
+### Step-by-step Explanation:
+1. **Keyring Usage**: Utilize the `keyring` library to securely store and retrieve credentials. This library interfaces with the system's native password manager, ensuring a higher level of security.
+2. **SQLite for Other Data**: Continue using SQLite to store other data or metadata, but not for sensitive information like passwords.
+
+### Python Code Solution
+
+```python
+import keyring
+import sqlite3
+
+SERVICE_NAME = 'my_service'
+USERNAME = 'user123'
+
+def set_credentials(username, password):
+    # Set credentials using the system's keyring
+    keyring.set_password(SERVICE_NAME, username, password)
+
+def get_credentials(username):
+    # Get credentials from the system's keyring
+    password = keyring.get_password(SERVICE_NAME, username)
+    return username, password
+
+def create_and_connect_db(db_name):
+    # Connect to an SQLite database (or create it if it doesn't exist)
+    connection = sqlite3.connect(db_name)
+    return connection
+
+def setup_database(connection):
+    # Setup your SQLite database with necessary tables, exclude sensitive data
+    cursor = connection.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_data (
+            id INTEGER PRIMARY KEY,
+            data TEXT NOT NULL
+        )
+    ''')
+    connection.commit()
+
+def insert_data(connection, data):
+    # Insert non-sensitive data into SQLite database
+    cursor = connection.cursor()
+    cursor.execute('INSERT INTO user_data (data) VALUES (?)', (data,))
+    connection.commit()
+
+def fetch_data(connection):
+    # Fetch non-sensitive data from the database
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM user_data')
+    rows = cursor.fetchall()
+    return rows
+
+def main():
+    # Example usage: set credentials
+    set_credentials(USERNAME, 'secure_password_here')
+
+    # Retrieve credentials for use
+    username, password = get_credentials(USERNAME)
+    print(f"Retrieved credentials: {username}, {password}")
+
+    # Setup SQLite and enter some dummy data
+    db_conn = create_and_connect_db('example.db')
+    setup_database(db_conn)
+    insert_data(db_conn, 'Sample data')
+
+    # Fetch and print non-sensitive data
+    rows = fetch_data(db_conn)
+    for row in rows:
+        print(row)
+
+    # Remember to close the connection when done
+    db_conn.close()
+
+if __name__ == "__main__":
+    main()
+```
+
+### Key Points:
+- **Security**: By utilizing `keyring`, you're leveraging the OS's secure storage for sensitive credentials and reducing the risk associated with storing them in plain text or manually encrypted files.
+- **SQLite Database**: Continue to use SQLite for storing non-sensitive application data as required.
+- **OS Integration**: This solution works seamlessly on different operating systems, as `keyring` automatically handles the integration with the system's native password manager.

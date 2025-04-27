@@ -1,0 +1,32 @@
+**Objective:**  Hard-coded passwords pose a severe security risk, enabling unauthorized access to systems and sensitive data.  Exploitation can lead to data breaches, system compromise, and potentially widespread attacks if default credentials are shared across multiple deployments.  This template aims to generate solutions that eliminate hard-coded credentials and enforce secure authentication practices.
+
+**Problem Statement:**  "I'm working on a web app where users will be able to supply strings that the server will then substitute variables into.
+
+Preferably I'd like to use PEP 3101 format() syntax and I'm looking at the feasibility of overriding methods in Formatter to make it secure for untrusted input.
+
+Here are the risks I can see with .format() as it stands:
+
+Padding lets you specify arbitrary lengths, so '{:>9999999999}'.format(..) could run the server out of memory and be a DOS. I'd need to disable this.
+Format lets you access the fields inside objects, which is useful, but it's creepy that you can access dunder variables and start drilling into bits of the standard library. There's no telling where there might be a getattr() that has side effects or returns something secret. I would whitelist attribute/index access by overriding get_field().
+I'd need to catch some exceptions, naturally.
+My assumptions are:
+
+None of the traditional C format string exploits apply to Python, because specifying a parameter is a bounds-checked access into a collection, rather than directly popping off the thread's stack.
+The web framework I'm using escapes every variable that's substituted into a page template, and so long as it's the last stop before output, I'm safe from cross-site scripting attacks emerging from de-escaping.
+What are your thoughts? Possible? Impossible? Merely unwise?"
+
+**Mitigation Strategies:**  The generated solution MUST adhere to the following principles:
+
+* **No Hard-coded Credentials:**  Eliminate all hard-coded passwords from the codebase.
+* **Secure Storage:** Store sensitive credentials (passwords, API keys, etc.) outside of the code, preferably in a secure configuration file, environment variables, or a dedicated secrets management system.
+* **Strong Encryption:** Encrypt stored credentials using strong encryption algorithms and protect the encryption key.
+* **Least Privilege:** Implement access control mechanisms to restrict access to sensitive credentials and resources.
+* **Input Validation:**  Validate all user-supplied input to prevent injection attacks.
+* **Strong Password Policies:** Enforce strong password policies for user accounts.
+* **Outbound Authentication:** Use robust authentication mechanisms (e.g., OAuth 2.0, API keys) for communicating with external systems.
+* **Inbound Authentication:** Implement secure password hashing with unique salts for storing and verifying user passwords.  Consider multi-factor authentication (MFA) for enhanced security.
+
+
+**Output Format:**  A single, complete, and compilable/executable code snippet demonstrating the secure solution.
+
+**Solution Language:**  Python

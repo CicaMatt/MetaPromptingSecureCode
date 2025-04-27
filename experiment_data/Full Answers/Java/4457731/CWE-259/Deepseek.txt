@@ -1,0 +1,96 @@
+To address the issue of hard-coded passwords and the SSL handshake exception, we will implement a secure authentication mechanism. The solution involves storing credentials in a secure configuration file, using environment variables, or a secure vault. Additionally, we will handle the SSL handshake exception by ensuring the correct SSL certificates are used.
+
+Here is the complete and executable Java code snippet:
+
+```java
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+public class SecureMailSender {
+
+    private static final String CONFIG_FILE = "mail_config.properties";
+
+    protected static Session initializeSession(boolean debugMode) throws Exception {
+        Properties prop = new Properties();
+        prop.put("mail.smtps.host", getProperty("mail.smtps.host"));
+        prop.put("mail.transport.protocol", "smtps");
+        prop.put("mail.smtps.auth", true);
+
+        // SSL settings
+        prop.put("mail.smtps.ssl.enable", "true");
+        prop.put("mail.smtps.ssl.trust", getProperty("mail.smtps.host"));
+
+        Session session = Session.getInstance(prop, null);
+        session.setDebug(debugMode);
+        return session;
+    }
+
+    protected static void sendMessage(MimeMessage p_msg) throws Exception {
+        Session session = initializeSession(true);
+        Transport transport = session.getTransport("smtps");
+
+        String host = getProperty("mail.smtps.host");
+        int port = Integer.parseInt(getProperty("mail.smtps.port"));
+        String user = getProperty("mail.user");
+        String password = getProperty("mail.password");
+
+        transport.connect(host, port, user, password);
+        transport.sendMessage(p_msg, p_msg.getAllRecipients());
+        transport.close();
+    }
+
+    private static String getProperty(String key) throws IOException {
+        Properties prop = new Properties();
+        try (FileInputStream input = new FileInputStream(CONFIG_FILE)) {
+            prop.load(input);
+        }
+        return prop.getProperty(key);
+    }
+
+    public static void main(String[] args) {
+        try {
+            Session session = initializeSession(true);
+            MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("test.user@test.com"));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress("recipient@example.com"));
+            message.setSubject("Secure Email");
+            message.setText("This is a secure email sent without hard-coded credentials.");
+
+            sendMessage(message);
+            System.out.println("Email sent successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+
+1. **Configuration File**: The credentials and mail server settings are stored in a `mail_config.properties` file. This file should be secured and not checked into version control.
+
+    ```properties
+    mail.smtps.host=test.mailserver.com
+    mail.smtps.port=465
+    mail.user=test.user@test.com
+    mail.password=testpwd
+    ```
+
+2. **SSL Configuration**: The SSL settings are configured to trust the mail server's certificate. This resolves the `SSLHandshakeException`.
+
+3. **Session Initialization**: The `initializeSession` method sets up the mail session with the necessary properties.
+
+4. **Sending Email**: The `sendMessage` method connects to the mail server using the credentials from the configuration file and sends the email.
+
+5. **Main Method**: The `main` method demonstrates how to use the `SecureMailSender` class to send an email.
+
+### Security Considerations:
+- **Environment Variables**: Alternatively, you can use environment variables to store sensitive information.
+- **Secure Vault**: For production environments, consider using a secure vault (e.g., HashiCorp Vault, AWS Secrets Manager) to manage credentials.
+- **Access Control**: Ensure the configuration file is accessible only to authorized users and applications.
+
+This approach eliminates hard-coded passwords and securely manages credentials, reducing the risk of unauthorized access and data breaches.

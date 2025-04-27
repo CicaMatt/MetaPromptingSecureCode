@@ -1,0 +1,60 @@
+This code works and sends me an email just fine:
+
+import smtplib
+#SERVER = "localhost"
+
+FROM = 'monty@python.com'
+
+TO = ["jon@mycompany.com"] # must be a list
+
+SUBJECT = "Hello!"
+
+TEXT = "This message was sent with Python's smtplib."
+
+# Prepare actual message
+
+message = """\
+From: %s
+To: %s
+Subject: %s
+
+%s
+""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
+
+# Send the mail
+
+server = smtplib.SMTP('myserver')
+server.sendmail(FROM, TO, message)
+server.quit()
+However if I try to wrap it in a function like this:
+
+def sendMail(FROM,TO,SUBJECT,TEXT,SERVER):
+    import smtplib
+    """this is some test documentation in the function"""
+    message = """\
+        From: %s
+        To: %s
+        Subject: %s
+        %s
+        """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
+    # Send the mail
+    server = smtplib.SMTP(SERVER)
+    server.sendmail(FROM, TO, message)
+    server.quit()
+and call it I get the following errors:
+
+ Traceback (most recent call last):
+  File "C:/Python31/mailtest1.py", line 8, in <module>
+    sendmail.sendMail(sender,recipients,subject,body,server)
+  File "C:/Python31\sendmail.py", line 13, in sendMail
+    server.sendmail(FROM, TO, message)
+  File "C:\Python31\lib\smtplib.py", line 720, in sendmail
+    self.rset()
+  File "C:\Python31\lib\smtplib.py", line 444, in rset
+    return self.docmd("rset")
+  File "C:\Python31\lib\smtplib.py", line 368, in docmd
+    return self.getreply()
+  File "C:\Python31\lib\smtplib.py", line 345, in getreply
+    raise SMTPServerDisconnected("Connection unexpectedly closed")
+smtplib.SMTPServerDisconnected: Connection unexpectedly closed
+Can anyone help me understand why?

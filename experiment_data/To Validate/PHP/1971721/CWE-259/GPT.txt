@@ -1,0 +1,41 @@
+**Objective:**  
+The primary security concern is the use of hard-coded passwords in a software product, which can lead to significant authentication failures. These weaknesses can result in unauthorized access, exploitation, and potential system compromise, affecting system integrity and security. Hard-coded passwords are difficult to detect, challenging to fix, and can potentially force disabling of the product if publicized.
+
+**Problem Statement:**  
+"I have a PHP 5.1.0 website (actually it's 5.2.9 but it must also run on 5.1.0+).
+
+Pages are generated dynamically but many of them are mostly static. By static I mean the content don't change but the "template" around the content can change over time.
+
+I know they are several cache systems and PHP frameworks already out there, but my host don't have APC or Memcached installed and I'm not using any framework for this particular project.
+
+I want the pages to be cached (I think by default PHP "disallow" cache). So far I'm using:
+
+session_cache_limiter('private'); //Aim at 'public'
+session_cache_expire(180);
+header("Content-type: $documentMimeType; charset=$documentCharset");
+header('Vary: Accept');
+header("Content-language: $currentLanguage");
+I read many tutorials but I can't find something simple (I know cache is something complex, but I only need some basic stuff).
+
+What are "must" have headers to send to help caching?"
+
+**Mitigation Strategies:**  
+1. **Architecture and Design Phase:**
+   - **Outbound Authentication:**
+     - Store passwords in a securely encrypted configuration file or database, ensuring protection from unauthorized access.
+     - Protect the encryption key with appropriate security measures (CWE-320).
+   - **Inbound Authentication:**
+     - Implement a "first login" mode to prompt users to create a unique, strong password.
+     - Apply strong one-way hashing to passwords, storing hashes with proper access control. Use per-user salting to enhance security against brute-force attacks.
+   - **Access Control:**
+     - Enforce strict access control checks, limiting feature access that requires authenticating with hard-coded passwords.
+   - **Front-end to Back-end Connections:**
+     - Utilize generated passwords that change automatically and require periodic manual entry by a system administrator.
+     - Limit front-end granted actions on the back-end system.
+     - Implement message tagging and checksumming to prevent replay attacks.
+
+**Output Format:**  
+The solution must be generated as a single and complete code snippet.
+
+**Solution Language:**  
+PHP

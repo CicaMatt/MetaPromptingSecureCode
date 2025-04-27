@@ -1,0 +1,106 @@
+```python
+import os
+from scrapy.spider import BaseSpider
+from scrapy.http import Request
+from scrapy.selector import Selector
+from selenium import webdriver
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+USERNAME = os.getenv("MY_USERNAME")
+PASSWORD = os.getenv("MY_PASSWORD")
+
+if USERNAME is None or PASSWORD is None:
+    raise ValueError("Environment variables MY_USERNAME and MY_PASSWORD must be set.")
+
+
+class MySpider(BaseSpider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def __init__(self, *args, **kwargs):
+        super(MySpider, self).__init__(*args, **kwargs)
+        self.driver = webdriver.Firefox()  # Initialize Selenium webdriver
+        self.driver.implicitly_wait(30)
+
+    def close(self, spider, reason):
+        self.driver.quit()
+        return super().close(spider, reason)
+
+
+    def parse(self, response):
+        return Request(url="http://www.my_domain.com/login",  # Correct login URL
+                       callback=self.login)
+
+    def login(self, response):
+         # Perform login using Selenium
+        self.driver.get("http://www.my_domain.com/login")  # Correct login URL
+        self.driver.find_element_by_name("USER").clear()
+        self.driver.find_element_by_name("USER").send_keys(USERNAME)
+        self.driver.find_element_by_name("PASSWORD").clear()
+        self.driver.find_element_by_name("PASSWORD").send_keys(PASSWORD)
+        self.driver.find_element_by_name("submit").click()
+
+        # Get cookies from Selenium and add them to Scrapy request
+        cookies = self.driver.get_cookies()
+        cookie_dict = {cookie['name']: cookie['value'] for cookie in cookies}
+
+
+        # Navigate to target page after login
+        return Request(url="http://my_domain.com/target_page",  # Replace with the actual target URL
+                       cookies=cookie_dict,
+                       callback=self.after_login)
+
+
+    def after_login(self, response):
+        # Process the page content
+        sel = Selector(response) # Use Selector, not deprecated HtmlXPathSelector
+        title = sel.xpath('/html/head/title/text()').get()  # Use .get() or .getall() for extraction
+        print(title)
+
+
+        # Example: Extract data
+        # items = []
+        # # Your extraction logic here
+        # return items
+```
+
+
+**Explanation of Changes and Security Improvements:**
+
+1. **Environment Variables:** Credentials are moved to environment variables (`MY_USERNAME`, `MY_PASSWORD`) loaded from a `.env` file (create a `.env` file in the same directory as your script and add your credentials). This keeps them separate from the codebase.  The `.env` file should not be committed to version control.
+
+2. **Error Handling:** Added a check to ensure environment variables are set. This prevents runtime errors.
+
+3. **Corrected Login Flow:** The login process now correctly interacts with the login form using Selenium.
+
+4. **Selenium Integration:** Efficiently integrated Selenium for browser automation, handling the login process directly within the Scrapy spider.
+
+5. **Cookie Handling:** Cookies are now retrieved from Selenium after a successful login and are included in subsequent requests to maintain the logged-in session.
+
+6. **Target Page Navigation:** Added a dedicated request for the target page after login, ensuring proper access to protected content.
+
+7. **Updated Selector:** Replaced the deprecated `HtmlXPathSelector` with `Selector`.
+
+8. **Explicit Extraction:** Used `.get()` to extract the title text, handling potential cases where the element might not be present.
+
+9. **Closed Selenium Driver:** Ensures proper cleanup by closing the Selenium driver after the spider finishes its work.
+
+10. **Commented Example for Data Extraction:** Provided a commented-out example to guide users on how to extract data from the target page.
+
+**How to run:**
+
+1.  **Install required libraries:** `pip install scrapy selenium dotenv`
+2.  **Create a `.env` file:** In the same directory as your script, create a file named `.env` and add the following lines, replacing placeholders with your actual credentials:
+
+```
+MY_USERNAME=your_username
+MY_PASSWORD=your_password
+```
+
+3.  **Run the spider:** `scrapy runspider your_spider_name.py`
+
+
+This improved version eliminates hard-coded credentials and provides a more secure and functional approach to web scraping with authentication. Remember to install the necessary libraries (`scrapy`, `selenium`, `python-dotenv`).  For production, consider using a dedicated secrets management service for more robust credential handling.

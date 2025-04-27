@@ -1,0 +1,64 @@
+I've been struggling with this for a while and feel helpless. Prestashop uses tcpdf to generate invoices and delivery slips from HTML templates filled using Smarty. We are working on updating the invoice design and found tcpdf to be lacking in CSS support. After some research we settled for wkhtmltopdf as the right tool from converting the HTML/CSS templates to PDF.
+
+The problem
+
+The store has a feature for exporting multiple invoices into a single PDF. Using TCPDF I was able to make the batch file ready for double sided printing by inserting a blank page after each invoice that had odd number of pages before the file was generated. But now that we switched to wkhtmltopdf I cannot achieve the same result.
+
+The crucial problem is that while wkhtmltopdf allows for the usage of multiple HTML templates there seems to be no reliable way to determine the number of pages they are each going to have before the file is generated. The header and footer templates can receive the page count that the invoice ends up being but they are separate from the main content and therefore I cannot insert a page break accordingly.
+
+I've also tried to calculate the height of the content / PDF page height but there were various issues with that once I started exporting multiple templates (worked alright with a single template). This approach isn't great either because inserting a blank page into the content itself causes the footer to appear on the new page as well which is not what I want.
+
+My best attempt
+
+The only way I've figured out that could get me around these issues is very inefficient. Each time a template is added to the batch I could pre-generate it using a separate instance of a wrapper for wkhtmltopdf, get the temporary file name, determine how many pages it has using pdfinfo and add a blank HTML template to the main instance accordingly. Here's a draft of a function to get the number of pages of the last template added (from a class that extends the wrapper, based on some other pdfinfo questions I found on SO):
+
+/**
+* Return the number of pages in the last invoice template added
+* $complete === true => return the length of the entire document
+*/
+public function getNumPages($complete = false)
+{
+    if (!$complete) {
+        // Generate PDF of last template added
+
+        $tmpPdf = new WKPdf($this->_options);
+        $tmpPdf->addPage($this->content, Array(
+            'footer-html' => $this->footer
+        ));
+
+        /**
+           The createPdf method is protected so I need to get 
+           the content as string here to force the wrapper to 
+           call wkhtmltopdf.
+        */
+        $tmpPdf->toString();
+        $document = $tmpPdf->getPdfFilename();
+    } else {
+
+        // Generate entire batch
+        $this->createPdf();
+        $document = $this->getPdfFilename();
+    }
+
+    // Use pdfinfo to get the PDF page count
+    $cmd = 'pdfinfo';
+    exec("$cmd \"$document\"", $output);
+
+    $pagecount = 0;
+    foreach($output as $op)
+    {
+        // Extract the number
+        if(preg_match("/Pages:\s*(\d+)/i", $op, $matches) === 1)
+        {
+            $pagecount = intval($matches[1]);
+            break;
+        }
+    }
+
+    return $pagecount;
+}
+This is very inefficient - it takes about 80 seconds to generate a batch of 25 invoices because I have to call wkhtmltopdf 25 times to create the temporary PDF files so that I can call pdfinfo 25 times to get their individual lengths and insert blank pages where necessary and then generate the final document.
+
+The advantage of TCPDF is that it can give you the number of pages on the fly and a similar functionality takes about 5 seconds to generate a batch file of 25 invoices.
+
+Anyone has any ideas on how to speed things up? Or a better idea to do this altogether. I've considered various tools for the generation including dompdf but wkhtmltopdf is simply the most powerful. The batch generation is really only used from the back office by the store admins so maybe they could be patient. But still.

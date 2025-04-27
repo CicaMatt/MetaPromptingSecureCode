@@ -1,0 +1,26 @@
+I am trying to understand how python could pull data from an FTP server into pandas then move this into SQL server. My code here is very rudimentary to say the least and I am looking for any advice or help at all. I have tried to load the data from the FTP server first which works fine.... If I then remove this code and change it to a select from ms sql server it is fine so the connection string works, but the insertion into the SQL server seems to be causing problems.
+
+import pyodbc
+import pandas
+from ftplib import FTP
+from StringIO import StringIO
+import csv
+
+ftp = FTP ('ftp.xyz.com','user','pass' )
+ftp.set_pasv(True)
+r = StringIO()
+ftp.retrbinary('filname.csv', r.write)
+
+pandas.read_table (r.getvalue(), delimiter=',')
+
+
+connStr = ('DRIVER={SQL Server Native Client 10.0};SERVER=localhost;DATABASE=TESTFEED;UID=sa;PWD=pass')
+conn = pyodbc.connect(connStr)
+
+cursor = conn.cursor()
+cursor.execute("INSERT INTO dbo.tblImport(Startdt, Enddt, x,y,z,)" "VALUES                  (x,x,x,x,x,x,x,x,x,x.x,x)")
+cursor.close()
+conn.commit()
+conn.close()
+print"Script has successfully run!"
+When I remove the ftp code this runs perfectly, but I do not understand how to make the next jump to get this into Microsoft SQL server, or even if it is possible without saving into a file first.

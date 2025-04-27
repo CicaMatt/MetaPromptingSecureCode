@@ -1,0 +1,67 @@
+I am trying to encode in nodejs and decryption for the same in nodejs works well. But when I try to do the decryption in Java using the same IV and secret, it doesn't behave as expected.
+
+Here is the code snippet:
+
+Encryption in nodeJs:
+
+   var crypto = require('crypto'),
+   algorithm = 'aes-256-ctr',
+   _ = require('lodash'),
+   secret = 'd6F3231q7d1942874322a@123nab@392';
+
+  function encrypt(text, secret) {
+    var iv = crypto.randomBytes(16);
+    console.log(iv);
+    var cipher = crypto.createCipheriv(algorithm, new Buffer(secret), 
+    iv);
+    var encrypted = cipher.update(text);
+
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
+}
+var encrypted = encrypt("8123497494", secret);
+console.log(encrypted);
+And the output is:
+
+<Buffer 94 fa a4 f4 a1 3c bf f6 d7 90 18 3f 3b db 3f b9>
+94faa4f4a13cbff6d790183f3bdb3fb9:fae8b07a135e084eb91e
+Code Snippet for decryption in JAVA:
+
+public class Test {
+    
+    public static void main(String[] args) throws Exception {
+        String s = 
+   "94faa4f4a13cbff6d790183f3bdb3fb9:fae8b07a135e084eb91e";
+        String seed = "d6F3231q7d1942874322a@123nab@392";
+
+        decrypt(s, seed);
+    }
+
+    private static void decrypt(String s, String seed)
+            throws NoSuchAlgorithmException, NoSuchPaddingException, UnsupportedEncodingException, InvalidKeyException,
+            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+        String parts[] = s.split(":");
+        String ivString = parts[0];
+        String encodedString = parts[1];
+        Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+
+        byte[] secretBytes = seed.getBytes("UTF-8");
+        
+        IvParameterSpec ivSpec = new IvParameterSpec(hexStringToByteArray(ivString));
+        
+        /*Removed after the accepted answer
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] thedigest = md.digest(secretBytes);*/ 
+        
+        SecretKeySpec skey = new SecretKeySpec(thedigest, "AES");
+        
+        cipher.init(Cipher.DECRYPT_MODE, skey, ivSpec);
+        byte[] output = cipher.doFinal(hexStringToByteArray(encodedString));
+
+        System.out.println(new String(output));
+    }
+}
+Output: �s˸8ƍ�
+
+I am getting some junk value in the response. Tried a lot of options, but none of them seem to be working. Any lead/help is appreciated.

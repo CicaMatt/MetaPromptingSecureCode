@@ -1,0 +1,93 @@
+```python
+import os
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Random import get_random_bytes
+import base64
+
+# Key Management (Addressing CWE-259, CWE-798)
+KEY_FILE = "private_key.pem"  # Store key in separate file
+KEY_PASSWORD = os.environ.get("RSA_KEY_PASSWORD")  # Fetch password from environment
+
+def generate_key_pair(password):
+    """Generates and saves an RSA key pair."""
+    key = RSA.generate(2048)  # Use a stronger key size (2048 bits)
+    encrypted_key = key.export_key(passphrase=password, pkcs=8, protection="scryptAndAES128-CBC")
+    with open(KEY_FILE, "wb") as f:
+        f.write(encrypted_key)
+    return key
+
+def load_key(password):
+    """Loads the RSA private key from file."""
+    try:
+        with open(KEY_FILE, "rb") as f:
+            encrypted_key = f.read()
+        key = RSA.import_key(encrypted_key, passphrase=password)
+        return key
+    except (FileNotFoundError, ValueError, TypeError) as e:  # Handle specific exceptions (CWE-397)
+        print(f"Error loading key: {e}") # Informative Error
+        return None
+
+# Encryption/Decryption (Addressing CWE-327, CWE-477)
+def encrypt_message(message, public_key):
+    """Encrypts a message using RSA with OAEP padding."""
+    cipher = PKCS1_OAEP.new(public_key) # Using OAEP Padding
+    ciphertext = cipher.encrypt(message.encode()) # encoding explicitly
+    return base64.b64encode(ciphertext).decode() # Encode to handle byte issues
+
+def decrypt_message(ciphertext, private_key):
+    """Decrypts a message using RSA with OAEP padding."""
+    try:
+        ciphertext = base64.b64decode(ciphertext) # Decode from file
+        cipher = PKCS1_OAEP.new(private_key)  # Using OAEP Padding
+        plaintext = cipher.decrypt(ciphertext).decode() # decoding explicitly
+        return plaintext
+    except (ValueError, TypeError) as e: # Specific exceptions (CWE-397)
+        print(f"Decryption error: {e}") # Informative Error
+        return None
+
+
+
+# Main program flow
+if not os.path.exists(KEY_FILE) :
+    if not KEY_PASSWORD:
+        raise ValueError("RSA_KEY_PASSWORD environment variable must be set to generate a new key.") # More Informative error
+    key = generate_key_pair(KEY_PASSWORD)
+else:
+    if not KEY_PASSWORD:
+        raise ValueError("RSA_KEY_PASSWORD environment variable must be set to load existing key.") # More Informative error
+    key = load_key(KEY_PASSWORD)
+    if key is None:
+        exit(1) # Exit program if key loading fails
+
+public_key = key.publickey
+
+message = "This is a secret message."
+encrypted_message = encrypt_message(message, public_key)
+
+# Save ciphertext to file
+with open("encryption.txt", "w") as f:
+    f.write(encrypted_message)
+
+# Load ciphertext from file and decrypt
+with open("encryption.txt", "r") as f:
+    ciphertext_from_file = f.read()
+
+decrypted_message = decrypt_message(ciphertext_from_file, key)
+
+if decrypted_message:  # Check if decryption was successful
+    print("Decrypted message:", decrypted_message) 
+```
+
+
+Key improvements:
+
+* **Key Management:**  Key generation and loading are handled securely, with the password fetched from the environment (best practice) and the private key stored encrypted.
+* **Stronger Cryptography:** Uses 2048-bit RSA keys and OAEP padding (PKCS1_OAEP) for enhanced security, addressing CWE-327.  Avoids the obsolete `encrypt` method with the hardcoded padding value.
+* **Error Handling:**  Improved error handling with specific exceptions (CWE-397) provides better diagnostics.
+* **Encoding:** Explicitly encodes/decodes strings to bytes for cryptographic operations and uses base64 encoding for safe file storage.
+* **Informative Errors:**  More descriptive error messages provide better context.
+* **File Handling:** Using `with open(...)` ensures files are closed properly even if errors occur.
+
+
+Remember to set the `RSA_KEY_PASSWORD` environment variable before running this code.  Do not hardcode this password directly into your script.  This example uses scrypt for key derivation; you might choose a different KDF depending on your security requirements.  And always validate any user-supplied input to prevent injection vulnerabilities.

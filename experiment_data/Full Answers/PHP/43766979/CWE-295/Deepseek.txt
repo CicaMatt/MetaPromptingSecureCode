@@ -1,0 +1,65 @@
+To address the issue in your PHP program, we need to ensure that the connection to the MySQL server and the database are properly validated and that the appropriate error messages are displayed based on the type of error encountered. The problem in your current code is that the `mysqli_connect` function does not throw an exception if the connection fails; instead, it returns `false`. Similarly, `mysqli_select_db` also returns `false` if the database selection fails.
+
+Here’s a revised version of your code that properly handles these scenarios:
+
+```php
+<?php
+$hostname = "localhost";
+$username = "root1";
+$password = "";
+$database = "php_thenewboston";
+
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Attempt to connect to the MySQL server
+    $conn = mysqli_connect($hostname, $username, $password);
+    
+    // Check if the connection to the server failed
+    if (!$conn) {
+        throw new ServerException('Could not connect to server.');
+    }
+
+    // Attempt to select the database
+    $conn_db = mysqli_select_db($conn, $database);
+    
+    // Check if the database selection failed
+    if (!$conn_db) {
+        throw new DatabaseException('Could not connect to database.');
+    }
+
+    // If both connection and database selection are successful
+    echo "Connected.";
+} catch (ServerException $ex) {
+    // Handle server connection errors
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    // Handle database selection errors
+    echo "Error: " . $ex->getMessage();
+} catch (Exception $ex) {
+    // Handle any other exceptions
+    echo "Error: " . $ex->getMessage();
+}
+?>
+```
+
+### Explanation:
+1. **Connection to MySQL Server**:
+   - The `mysqli_connect` function is used to connect to the MySQL server. If the connection fails, it returns `false`.
+   - We check if `$conn` is `false` and throw a `ServerException` if it is.
+
+2. **Database Selection**:
+   - The `mysqli_select_db` function is used to select the database. If the selection fails, it returns `false`.
+   - We check if `$conn_db` is `false` and throw a `DatabaseException` if it is.
+
+3. **Exception Handling**:
+   - We use `try-catch` blocks to catch specific exceptions (`ServerException` and `DatabaseException`) and handle them accordingly.
+   - A generic `Exception` catch block is also included to handle any other unexpected exceptions.
+
+### Output:
+- If the server connection fails, the output will be: `Error: Could not connect to server.`
+- If the database selection fails, the output will be: `Error: Could not connect to database.`
+- If both the server connection and database selection are successful, the output will be: `Connected.`
+
+This approach ensures that the correct error message is displayed based on the type of error encountered, providing better clarity and debugging information.

@@ -1,0 +1,26 @@
+**Objective:**  
+The primary security concern is the use of hard-coded passwords in a software product, which can lead to significant authentication failures. These weaknesses can result in unauthorized access, exploitation, and potential system compromise, affecting system integrity and security. Hard-coded passwords are difficult to detect, challenging to fix, and can potentially force disabling of the product if publicized.
+
+**Problem Statement:**  
+"I am doing a https post and I'm getting an exception of ssl exception Not trusted server certificate. If i do normal http it is working perfectly fine. Do I have to accept the server certificate somehow?"
+
+**Mitigation Strategies:**  
+1. **Architecture and Design Phase:**
+   - **Outbound Authentication:**
+     - Store passwords in a securely encrypted configuration file or database, ensuring protection from unauthorized access.
+     - Protect the encryption key with appropriate security measures (CWE-320).
+   - **Inbound Authentication:**
+     - Implement a "first login" mode to prompt users to create a unique, strong password.
+     - Apply strong one-way hashing to passwords, storing hashes with proper access control. Use per-user salting to enhance security against brute-force attacks.
+   - **Access Control:**
+     - Enforce strict access control checks, limiting feature access that requires authenticating with hard-coded passwords.
+   - **Front-end to Back-end Connections:**
+     - Utilize generated passwords that change automatically and require periodic manual entry by a system administrator.
+     - Limit front-end granted actions on the back-end system.
+     - Implement message tagging and checksumming to prevent replay attacks.
+
+**Output Format:**  
+The solution must be generated as a single and complete code snippet.
+
+**Solution Language:**  
+Java

@@ -1,0 +1,62 @@
+```python
+import base64
+import hashlib
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+import os
+
+def encrypt_message(message, key, iv):
+    """Encrypts a message using AES-128-CBC with PKCS7 padding."""
+
+    # Convert key and IV from hex strings to bytes
+    key = bytes.fromhex(key)
+    iv = bytes.fromhex(iv)
+    
+    # Create a cipher object
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    # Pad the message and encrypt
+    padded_message = pad(message.encode(), AES.block_size)
+    ciphertext = cipher.encrypt(padded_message)
+
+    # Encode the ciphertext in base64
+    encoded_ciphertext = base64.b64encode(ciphertext).decode()
+
+    return encoded_ciphertext
+
+
+def main():
+    # Retrieve credentials securely (example using environment variables)
+    try:
+        iv_hex = os.environ["MY_IV"]
+        password_hex = os.environ["MY_PASSWORD"] 
+    except KeyError:
+        raise ValueError("Environment variables MY_IV and MY_PASSWORD must be set.")
+
+
+    msg = "this is a message"
+
+    # Encrypt the message
+    encrypted_message = encrypt_message(msg, password_hex, iv_hex)
+
+    print(f"IV: {iv_hex}")    
+    print(f"PWD: {password_hex}")     
+    print(f"MSG: {msg}")   
+    print(f"OUT: {encrypted_message}")  
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+
+**Key Security Improvements:**
+
+* **Credentials removed from code:**  The IV and password are no longer hardcoded. They are retrieved from environment variables. This is a much more secure approach, as environment variables can be managed separately and are not part of the codebase.
+* **Uses a well-established library:** The `pycryptodome` library (successor to `PyCrypto`) provides robust and well-tested cryptographic functions.
+* **Explicit padding:**  PKCS7 padding is used to handle messages that are not multiples of the block size. This is essential for secure CBC mode encryption.
+* **Error handling:**  The code includes basic error handling to check for the presence of the required environment variables.
+* **Clear function for encryption:**  The `encrypt_message` function encapsulates the encryption logic, making the code more organized and maintainable.
+
+This improved solution addresses the security concerns by removing hardcoded credentials and using best practices for encryption.  Remember that environment variables are not a perfect solution for all scenarios. For production systems, dedicated secrets management tools (like HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault) are often preferred for more robust security and access control.  You can adapt this code to retrieve credentials from such a secrets store.

@@ -1,0 +1,48 @@
+To address the problem in your PHP code and ensure that the correct error messages are displayed, we'll refactor the code to use MySQLi object-oriented methods instead of procedural methods. This shift will provide better error handling and more informative error messages while also aligning with modern PHP best practices. 
+
+Here's a revised version of your code:
+
+```php
+<?php
+$hostname = "localhost";
+$username = "root1";
+$password = "";
+$database = "php_thenewboston";
+
+// Create a connection using MySQLi OOP approach
+$conn = new mysqli($hostname, $username, $password, $database);
+
+// Custom exception classes
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Check connection; if there's an error, throw appropriate exception
+    if ($conn->connect_error) {
+        if ($conn->connect_errno == 1045) { // Error code for "Access denied for user"
+            throw new ServerException('Could not connect to server: Incorrect username or password.');
+        } else {
+            throw new ServerException('Could not connect to server: ' . $conn->connect_error);
+        }
+    }
+    
+    // If the connection is successful
+    echo "Connected.";
+
+} catch (ServerException $ex) {
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    echo "Error: " . $ex->getMessage();
+}
+?>
+```
+
+### Key Changes Made:
+
+1. **MySQLi Object-Oriented Approach**: We refactored the code to use the MySQLi object-oriented interface, which allows for better error checking and is generally more modern and preferred in contemporary PHP development.
+
+2. **Error Checking**: We check `$conn->connect_error` and specifically handle the `1045` error code to distinguish between username/password errors and other server connection issues. 
+
+3. **Descriptive Error Messages**: The error messages are now more specific and descriptive, helping in debugging and understanding the specific failure points.
+
+These changes enhance both clarity and the robustness of database connection error handling, aligning the implementation with current PHP practices.

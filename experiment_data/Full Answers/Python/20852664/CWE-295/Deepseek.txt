@@ -1,0 +1,74 @@
+The issue you're encountering stems from the way you're handling the reading and writing of the encrypted data to and from the file. Specifically, the problem lies in the conversion between bytes and strings. When you write the encrypted data to the file, you convert it to a string using `str()`, which is not reversible directly. Instead, you should use a more robust method to handle the byte-to-string conversion, such as Base64 encoding.
+
+Here's a revised version of your code that addresses these issues:
+
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+import base64
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + ((bytes([x])) * x)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext))[AES.block_size:]
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'r') as f:
+        plaintext = f.read().encode('utf-8')
+    
+    enc = encrypt(plaintext, key)
+    
+    with open(file_name, 'wb') as f:
+        f.write(base64.b64encode(enc))
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        enc = f.read()
+    
+    enc = base64.b64decode(enc)
+    dec = decrypt(enc, key)
+    
+    with open(file_name, 'w') as f:
+        f.write(dec.decode('utf-8'))
+
+# Example usage
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+# Encrypt the file
+encrypt_file('to_enc.txt', key)
+
+# Decrypt the file
+decrypt_file('to_enc.txt', key)
+```
+
+### Explanation:
+1. **Base64 Encoding/Decoding**: 
+   - When writing the encrypted data to the file, we encode it using Base64. This ensures that the byte data is safely converted to a string format that can be written to a text file.
+   - When reading the encrypted data from the file, we decode it from Base64 back to bytes.
+
+2. **File Handling**:
+   - We use `with open(...)` for file handling, which ensures that files are properly closed after their block of code is executed.
+   - We use `'wb'` and `'rb'` modes for writing and reading binary data, respectively.
+
+3. **String and Bytes Conversion**:
+   - The `encrypt` and `decrypt` functions handle bytes, so we ensure that the data passed to and from these functions is in the correct format.
+
+This should resolve the issues you're facing with the `decrypt_file` function.

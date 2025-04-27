@@ -1,0 +1,100 @@
+```java
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.Base64;
+
+public class CrossPlatformEncryption {
+
+    private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES/ECB/PKCS5Padding"; // Use a mode compatible with both MySQL and SQL Server
+
+
+    public static void main(String[] args) throws Exception {
+
+        // Fetch the encryption key from a secure location. DO NOT HARDCODE!
+        // Examples: Environment variables, secure configuration file, secrets management service.
+        String encodedKey = System.getenv("ENCRYPTION_KEY"); // Example using environment variable
+        if (encodedKey == null || encodedKey.isEmpty()) {
+            throw new IllegalStateException("Encryption key not found in environment variable 'ENCRYPTION_KEY'");
+        }
+
+        byte[] keyBytes = Base64.getDecoder().decode(encodedKey); // Decode the Base64 encoded key
+
+        Key key = new SecretKeySpec(keyBytes, ALGORITHM);
+
+
+        String dataToEncrypt = "Sensitive Data";
+
+
+        // Encrypt in Java
+        String encryptedData = encrypt(dataToEncrypt, key);
+        System.out.println("Encrypted Data (Base64 encoded): " + encryptedData);
+
+        // Decrypt in Java (for demonstration)
+        String decryptedData = decrypt(encryptedData, key);
+        System.out.println("Decrypted Data: " + decryptedData);
+
+
+        // SQL Server Example (Illustrative - adapt as needed for your SQL Server environment)
+        System.out.println("Example SQL Server Decryption (Adapt for your SQL Server environment):");
+        System.out.println("DECLARE @encryptedData varbinary(max) = '" + bytesToHex(Base64.getDecoder().decode(encryptedData)) + "';");
+        System.out.println("OPEN SYMMETRIC KEY MySymmetricKey DECRYPTION BY CERTIFICATE MyCertificate;");
+        System.out.println("SELECT CONVERT(varchar, DecryptByKey(@encryptedData));"); // Demonstrates using a key defined in SQL Server. Adjust as needed
+        System.out.println("CLOSE SYMMETRIC KEY MySymmetricKey;"); //Remember to close symmetric key after decryption to prevent potential security issues. 
+        
+
+        //MySQL Example decryption (Illustrative. Must adapt to your env):
+        System.out.println("\nExample MySQL Decryption (Adapt for your MySQL environment):");
+        System.out.println("SET @encrypted_data = '" + encryptedData + "';");
+        System.out.println("SET @key = '" + encodedKey + "';");  // Replace with your method of retrieving the key
+        System.out.println("SELECT AES_DECRYPT(FROM_BASE64(@encrypted_data), @key);");
+    }
+
+
+    public static String encrypt(String data, Key key) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        byte[] encryptedBytes = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(encryptedBytes); // Encode to Base64 for easy transport and storage
+    }
+
+
+
+    public static String decrypt(String encryptedData, Key key) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
+    }
+
+
+
+    // Utility for converting byte array to hexadecimal string for SQL Server example
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
+    }
+}
+```
+
+
+**Key Improvements:**
+
+* **Key Management:** The encryption key is fetched from an environment variable (`ENCRYPTION_KEY`). In a real-world application, you should use a more robust secrets management solution like HashiCorp Vault, AWS Secrets Manager, Azure Key Vault, or similar.  *NEVER* hardcode keys.
+* **Base64 Encoding:** Encrypted data is Base64 encoded, making it safe for storage and transport across different systems.
+* **Cross-Platform Compatibility:** `AES/ECB/PKCS5Padding` is used, which is generally well-supported across both MySQL and SQL Server (though ECB mode has limitations; consider other modes like CBC or GCM if possible).
+* **Illustrative SQL Code:**  The code provides examples of how the encrypted data could be decrypted in both SQL Server and MySQL, illustrating how a consistent key allows decryption on both platforms.  You will need to adapt this to your specific SQL Server and MySQL key management strategies. You will definitely need to create your keys and certificates in SQL server before you can decrypt the values there. 
+* **Error Handling:** Includes a check for the missing environment variable for the key.
+* **Charsets:** Explicitly defines the charset (`StandardCharsets.UTF_8`) to avoid potential encoding issues.
+
+**Important Considerations:**
+
+* **Key Rotation:** Regularly rotate your encryption keys.
+* **Secure Key Storage:** Choose a secure method to store and access the encryption key, according to best practices.
+* **ECB Mode Limitations:** ECB mode is generally considered less secure than other modes like CBC or GCM for encrypting larger amounts of data.  If possible, use CBC or GCM with appropriate IV handling.
+* **SQL Server Key Management:**  The SQL Server examples are simplified for demonstration. Implement proper key management in SQL Server using certificates or keys. Never hardcode the key directly into your SQL queries.  Understand the implications of the `OPEN SYMMETRIC KEY` command for decrypting data as it can cause issues if not used safely.

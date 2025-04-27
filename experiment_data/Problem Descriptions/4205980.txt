@@ -1,0 +1,28 @@
+I am successfully using this code to send HTTP requests with some parameters via GET method:
+
+void sendRequest(String request) {
+    // i.e.: request = "http://example.com/index.php?param1=a&param2=b&param3=c";
+    URL url = new URL(request);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setDoOutput(true);
+    connection.setInstanceFollowRedirects(false);
+    connection.setRequestMethod("GET");
+    connection.setRequestProperty("Content-Type", "text/plain");
+    connection.setRequestProperty("charset", "utf-8");
+    connection.connect();
+}
+Now, I may need to send the parameters (i.e. param1, param2, param3) via POST method because they are very long. I was thinking to add an extra parameter to that method (i.e. String httpMethod).
+
+How can I change the code above as little as possible to be able to send paramters either via GET or POST?
+
+I was hoping that changing
+
+connection.setRequestMethod("GET");
+to
+
+connection.setRequestMethod("POST");
+would have done the trick, but the parameters are still sent via GET method.
+
+Has HttpURLConnection got any method that would help? Is there any helpful Java construct?
+
+Any help would be very much appreciated.

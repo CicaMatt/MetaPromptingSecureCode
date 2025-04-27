@@ -1,0 +1,53 @@
+**Objective:** Hard-coded credentials pose a significant security risk.  Attackers can easily exploit these credentials to gain unauthorized access to systems or sensitive data, potentially leading to data breaches, system compromise, and reputational damage.  This vulnerability applies to both inbound (user authentication) and outbound (system-to-system) communication.
+
+**Problem Statement:**  "I'm not a cryptography profi and specially due to the fact that OpenSSL has lots of missing documentation, I'm not sure how can I solve this problem.
+
+I have an external system which expects to receive encrypted messages. The only example provided uses OpenSSL in this way:
+
+$ openssl enc -aes-256-cbc -a -in t.txt -k testpass
+U2FsdGVkX1/RUdaSJKRXhHv3zUyTsQwu5/ar2ECKDlrNyH5GL4xRR4fgxkiWqkS1
+cQstcoSIgWfRPSOFj/5OtdNLeNXiVR6MxSKJ+NvS9LyUD8+Rg6XIcYUvxR4gHi3w
+DWT44LAMCpRAh1Q0t4Z2g7rwb0D05T6ygLaWvB5zD/xGZD3brTqSlWmiJb9Imgda
+M6soZO7BhbYdqWqEUl5r6+EbkD21f6L3NX3hJFo+BJ+VFctiAlBO8NwT5l4ogo/s
+GErm8gqRr57XoX/kvKAimg==
+Where the t.txt file contains this string on one line:
+
+AMOUNT=10&TID=#19:23&CURRENCY=EUR&LANGUAGE=DE&SUCCESS_URL=http://some.url/sucess&ERROR_URL=http://some.url/error&CONFIRMATION_URL=http://some.url/confirm&NAME=customer full name`
+I have found this other question and I have been able to do the encryption using following code:
+
+String password = "passPhrase";
+String salt = "15charRandomSalt";
+int iterations = 100;
+
+/* Derive the key, given password and salt. */
+SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(Charset.forName("UTF8")), iterations, 256);
+SecretKey tmp = factory.generateSecret(spec);
+SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+/* Encrypt the message. */
+Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+cipher.init(Cipher.ENCRYPT_MODE, secret);
+AlgorithmParameters params = cipher.getParameters();
+byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+byte[] cipherText = cipher.doFinal(toBeEncrypted.getBytes("UTF-8"));
+encryptedData = Base64.getEncoder().encodeToString(cipherText);
+encryptedData += Base64.getEncoder().encodeToString(iv);
+What I can not understand is how should I generate similar output (encryptedData) to what OpenSSL does. I have the salt, iv and cipherText, is the OpenSSL output Base64 encoded result of a concatenation of these? or only one single of them?
+
+The only thing I share with that other system before encryption is the pass phrase. How could they decrypt the result if salt and number of iterations is not known to them?
+
+Can somebody give answers to those unknown parameters and also tell me if the above code is the equivalent of OpenSSL process?"
+
+**Mitigation Strategies:** Adhere to the following best practices to prevent or remediate the use of hard-coded credentials:
+
+* **Store credentials securely:** Store sensitive credentials outside the codebase in a secure configuration file or database, protected by strong encryption and strict access controls. Use environment variables or dedicated secrets management tools.
+* **Use robust hashing for passwords:** Apply strong one-way hashing algorithms with unique salts to passwords before storing them.  Never store passwords in plain text.
+* **Implement initial setup:** For inbound authentication, require users to set their own unique strong passwords during the initial setup or first login, rather than relying on default credentials.
+* **Restrict access:** Limit access to features or systems that rely on hard-coded credentials.  Employ principle of least privilege and enforce strong access controls.
+* **Rotate credentials:** Regularly rotate credentials, especially for outbound connections, to minimize the impact of potential compromise.
+* **Use secrets management tools:** Explore secrets management solutions that offer secure storage, rotation, and access control for sensitive credentials.
+
+**Output Format:** Provide a single, complete, and compilable/executable code snippet demonstrating the secure solution.  The code should be ready to implement with minimal modifications.
+
+**Solution Language:** Java

@@ -1,0 +1,65 @@
+I was given this C# code written by the web service team that exposes some web service that I'm planning to consume. My password needs to be encrypted with this code so that the web service knows how to decrypt it on their end.
+
+using(RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+{
+    rsa.FromXmlString(publicKey);
+    byte[] plainBytes = Encoding.Unicode.GetBytes(clearText);
+    byte[] encryptedBytes = rsa.Encrypt(plainBytes, false);
+    return Convert.ToBase64String(encryptedBytes);
+}
+I'm using Java to consume this web service and right now, I'm having problem translating that #C code into Java code because that web service can't decrypt my password properly.
+
+Here's my current failed attempt:-
+
+// my clear text password
+String clearTextPassword = "XXXXX";
+
+// these values are provided by the web service team
+String modulusString = "...";
+String publicExponentString = "...";
+
+BigInteger modulus = new BigInteger(1, Base64.decodeBase64(modulusString.getBytes("UTF-8")));
+BigInteger publicExponent = new BigInteger(1, Base64.decodeBase64(publicExponentString.getBytes("UTF-8")));
+
+KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(modulus, publicExponent);
+PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+
+Cipher cipher = Cipher.getInstance("RSA/ECB/NoPadding");
+cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+String encodedEncryptedPassword = new String(Base64.encodeBase64(cipher.doFinal(clearTextPassword.getBytes("UTF-8"))));
+What did I do wrong? Thanks much.
+
+2013-08-07 - UPDATE
+
+I was reading this website and I realized that my modulus value and public exponent value are not in Hex. So, I modified my code a little bit and tried with RSA/ECB/PKCS1PADDING as mentioned by @Dev.
+
+// my clear text password
+String clearTextPassword = "XXXXX";
+
+// these are the actual values I get from the web service team
+String modulusString = "hm2oRCtP6usJKYpq7o1K20uUuL11j5xRrbV4FCQhn/JeXLT21laKK9901P69YUS3bLo64x8G1PkCfRtjbbZCIaa1Ci/BCQX8nF2kZVfrPyzcmeAkq4wsDthuZ+jPInknzUI3TQPAzdj6gim97E731i6WP0MHFqW6ODeQ6Dsp8pc=";
+String publicExponentString = "AQAB";
+
+Base64 base64Encoder = new Base64();
+
+String modulusHex = new String(Hex.encodeHex(modulusString.getBytes("UTF-8")));
+String publicExponentHex = new String(Hex.encodeHex(publicExponentString.getBytes("UTF-8")));
+
+BigInteger modulus = new BigInteger(modulusHex, 16);
+BigInteger publicExponent = new BigInteger(publicExponentHex);
+
+KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(modulus, publicExponent);
+PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+
+Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING");
+cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+String encodedEncryptedPassword = new String(base64Encoder.encode(cipher.doFinal(clearTextPassword.getBytes("UTF-8"))));
+When I hit the webservice, I'm getting this error: "The data to be decrypted exceeds the maximum for this modulus of 128 bytes." It seems like the clear text password is still not encrypted properly.
+
+Any help or suggestion is greatly appreciated. Thanks.

@@ -1,0 +1,105 @@
+To address the SSL exception (`Not trusted server certificate`) in Java when making an HTTPS POST request, you need to handle the server's SSL certificate properly. This can be done by either trusting the server's certificate or bypassing the SSL certificate validation (not recommended for production environments due to security risks).
+
+Below is a Java code snippet that demonstrates how to handle the SSL certificate issue by creating a custom `TrustManager` that trusts all certificates. This approach should only be used in development or testing environments. For production, you should use a valid and trusted certificate.
+
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class HttpsClient {
+
+    public static void main(String[] args) {
+        try {
+            // Disable SSL certificate validation
+            disableSSLVerification();
+
+            // URL for the HTTPS POST request
+            String url = "https://example.com/api/endpoint";
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+            // Set the request method to POST
+            con.setRequestMethod("POST");
+
+            // Set request headers
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("Accept", "application/json");
+
+            // Enable input/output streams
+            con.setDoOutput(true);
+
+            // JSON body for the POST request
+            String jsonInputString = "{\"key1\": \"value1\", \"key2\": \"value2\"}";
+
+            // Write the JSON body to the request
+            try (OutputStream os = con.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // Get the response code
+            int responseCode = con.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+
+            // Read the response
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"))) {
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                System.out.println("Response: " + response.toString());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void disableSSLVerification() {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[0];
+                        }
+
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                        }
+
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                        }
+                    }
+            };
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = (hostname, session) -> true;
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+1. **Disable SSL Verification**: The `disableSSLVerification()` method creates a custom `TrustManager` that trusts all certificates and a `HostnameVerifier` that accepts all hostnames. This effectively bypasses SSL certificate validation.
+2. **HTTPS POST Request**: The main method performs an HTTPS POST request to the specified URL. It sets the necessary headers, writes the JSON body to the request, and reads the response.
+
+### Important Note:
+- **Security Risk**: Bypassing SSL certificate validation is not secure and should only be used in development or testing environments. In production, always use valid and trusted SSL certificates.
+- **Production Environment**: For production, ensure that the server's SSL certificate is valid and trusted by the Java runtime. You can import the server's certificate into the Java keystore if necessary.

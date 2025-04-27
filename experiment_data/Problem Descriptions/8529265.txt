@@ -1,0 +1,31 @@
+I am trying to use one-time passwords that can be generated using Google Authenticator application.
+
+What Google Authenticator does
+Basically, Google Authenticator implements two types of passwords:
+
+HOTP - HMAC-based One-Time Password, which means the password is changed with each call, in compliance to RFC4226, and
+TOTP - Time-based One-Time Password, which changes for every 30-seconds period (as far as I know).
+Google Authenticator is also available as Open Source here: code.google.com/p/google-authenticator
+
+Current code
+I was looking for existing solutions to generate HOTP and TOTP passwords, but did not find much. The code I have is the following snippet responsible for generating HOTP:
+
+"import hmac, base64, struct, hashlib, time
+
+def get_token(secret, digest_mode=hashlib.sha1, intervals_no=None):
+    if intervals_no == None:
+        intervals_no = int(time.time()) // 30
+    key = base64.b32decode(secret)
+    msg = struct.pack(">Q", intervals_no)
+    h = hmac.new(key, msg, digest_mode).digest()
+    o = ord(h[19]) & 15
+    h = (struct.unpack(">I", h[o:o+4])[0] & 0x7fffffff) % 1000000
+    return h"
+The problem I am facing is that the password I generate using the above code is not the same as generated using Google Authenticator app for Android. Even though I tried multiple intervals_no values (exactly first 10000, beginning with intervals_no = 0), with secret being equal to key provided within the GA app.
+
+My questions are:
+
+What am I doing wrong?
+How can I generate HOTP and/or TOTP in Python?
+Are there any existing Python libraries for this?
+To sum up: please give me any clues that will help me implement Google Authenticator authentication within my Python code.

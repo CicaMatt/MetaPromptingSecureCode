@@ -1,0 +1,21 @@
+I'm trying to call ~ 300 API calls at the same time, so that I would get the results in a couple of seconds max.
+
+My pseudo-code looks like this:
+
+def function_1():
+    colors = ['yellow', 'green', 'blue', + ~300 other ones]
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    res = loop.run_until_complete(get_color_info(colors))
+
+async def get_color_info(colors):
+    loop = asyncio.get_event_loop()
+    responses = []
+    for color in colors:
+        print("getting color")
+        url = "https://api.com/{}/".format(color)
+        data = loop.run_in_executor(None, requests.get, url)
+        r = await data
+        responses.append(r.json())
+    return responses
+Doing this I get getting color printed out every second or so and the code takes forever, so I'm pretty sure they don't run simultaneously. What am I doing wrong?

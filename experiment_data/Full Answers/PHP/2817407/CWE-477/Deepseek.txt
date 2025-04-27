@@ -1,0 +1,38 @@
+To address the issue of inconsistent encryption results across different languages (ColdFusion, PHP, and Perl) using the TripleDES algorithm, we need to ensure that the encryption process is standardized. The primary problem lies in the differences in how each language handles padding, key sizes, and encryption modes.
+
+In PHP, the `mcrypt_ecb` function is obsolete and has been removed in PHP 7.2.0. Instead, we should use the `openssl_encrypt` function, which is more secure and widely supported. Below is a PHP code snippet that uses `openssl_encrypt` to produce the same encrypted string as the Perl code provided.
+
+```php
+<?php
+// PHP Solution using OpenSSL (Modern and Secure)
+
+$theKey = "123412341234123412341234";
+$theString = "username=test123";
+
+// Ensure the key is 24 bytes long (required for TripleDES)
+if (strlen($theKey) !== 24) {
+    $theKey = substr($theKey, 0, 24);
+}
+
+// Encrypt using TripleDES in ECB mode
+$encrypted = openssl_encrypt($theString, 'DES-EDE3', $theKey, OPENSSL_RAW_DATA);
+
+// Base64 encode the result
+$strEncodedEnc = base64_encode($encrypted);
+
+// Output the result
+echo $strEncodedEnc; // Expected output: AYOF+kRtg239Mnyc8QIarw==
+?>
+```
+
+### Explanation:
+1. **Key Length**: TripleDES requires a key length of 24 bytes. If the key is shorter, it should be padded or truncated to meet this requirement.
+2. **Encryption Mode**: The Perl code uses ECB mode, which is not secure for most purposes but is necessary to match the expected output. The `openssl_encrypt` function is used with the `DES-EDE3` cipher, which corresponds to TripleDES.
+3. **Padding**: The `OPENSSL_RAW_DATA` option ensures that no additional padding is added, matching the behavior of the Perl code.
+
+### Steps to Ensure Consistency:
+1. **Key Management**: Ensure the key is exactly 24 bytes long.
+2. **Encryption Mode**: Use ECB mode to match the Perl implementation.
+3. **Padding**: Avoid additional padding to ensure the output matches the expected result.
+
+By using `openssl_encrypt`, we adhere to modern PHP standards and ensure that the encryption process is secure and consistent with the Perl implementation. This approach mitigates the risks associated with using obsolete functions and ensures compatibility with the payment processor's requirements.

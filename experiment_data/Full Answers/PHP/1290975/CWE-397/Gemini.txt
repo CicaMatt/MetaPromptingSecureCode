@@ -1,0 +1,87 @@
+```php
+<?php
+
+// Function to retrieve data using a prepared statement
+function getData($conn, $userid, $category) {
+    try {
+        $stmt = $conn->prepare("SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC");
+        if (!$stmt) {
+            throw new Exception("Prepare failed: (" . $conn->errno . ") " . $conn->error);
+        }
+
+        $stmt->bind_param("ss", $userid, $category); // "ss" indicates both parameters are strings
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: (" . $stmt->errno . ") " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        if (!$result) {
+            throw new Exception("Get result failed: (" . $stmt->errno . ") " . $stmt->error);
+        }
+
+        $data = [];
+        while ($row = $result->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        $stmt->close();
+        return $data;
+
+    } catch (Exception $e) {
+        // Log the error for debugging
+        error_log("Database error: " . $e->getMessage());
+
+        // Handle the error appropriately for the user – e.g., display a generic error message
+        return false; // Or throw a custom exception to be handled higher up
+    }
+}
+
+
+// Example usage (assuming you have a database connection $conn)
+if (isset($_GET['userid']) && isset($_GET['category'])) {
+    $userid = $_GET['userid'];
+    $category = $_GET['category'];
+
+
+    // Validate inputs before using them in the query (e.g., sanitize for SQL injection)
+    // Example validation (replace with your specific validation logic):
+    $userid = htmlspecialchars($userid);
+    $category = htmlspecialchars($category);
+
+
+    $data = getData($conn, $userid, $category);
+
+    if ($data !== false) {
+        // Process the retrieved data
+        foreach ($data as $row) {
+           // ... do something with each row ...
+            print_r($row);
+        }
+
+    } else {
+        echo "Error retrieving data."; // Or a more user-friendly message
+    }
+
+
+} else {
+    echo "Missing parameters.";
+}
+
+?>
+
+```
+
+
+**Explanation and Improvements:**
+
+* **Uses MySQLi:** The code uses the improved MySQLi extension, which is more secure and feature-rich than the deprecated `mysql_*` functions.
+* **Prepared Statement:**  The code now correctly uses a prepared statement to prevent SQL injection vulnerabilities.  Placeholders (`?`) are used for parameters, and values are bound safely using `bind_param()`.
+* **Specific Exception Handling:**  The code uses a `try...catch` block to handle potential `Exception` objects that could arise during database operations. The `catch` block now logs the error for debugging purposes and returns `false` to indicate failure. You can customize the error handling within the `catch` block to suit your needs.
+* **Input Validation:** Basic input validation (using `htmlspecialchars`) is included. This should be expanded upon to thoroughly sanitize user inputs according to your application's requirements.
+* **Error Handling:** Clearer error handling is implemented, returning `false` on failure and providing more informative error messages.
+* **Parameter Type Specification:** The `bind_param()` method now includes "ss" to specify that both parameters are strings, which further enhances security.
+* **Result Handling:** Uses `get_result()` and `fetch_assoc()` for efficient retrieval of results.
+
+**Regarding Performance (Bonus):**
+
+Prepared statements *can* offer performance benefits, especially when the same query is executed multiple times with different parameters. The database server can reuse the compiled query plan, reducing overhead. However, for only three or four executions on a single page, the performance difference is likely to be negligible.  The security benefits of prepared statements far outweigh the minor performance gains in most common web application scenarios.

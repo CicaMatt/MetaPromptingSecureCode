@@ -1,0 +1,79 @@
+```java
+import javax.net.ssl.*;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+
+public class SecureHttpsClient {
+
+    public static void main(String[] args) throws Exception {
+
+        // Keystore and truststore paths. Adjust as needed.
+        String keyStorePath = "client.jks"; // Client keystore with private key and cert
+        String keyStorePassword = "client_password";
+        String trustStorePath = "truststore.jks"; // Truststore with server's root certificate
+        String trustStorePassword = "truststore_password";
+
+
+        // Load KeyStore and TrustStore
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(SecureHttpsClient.class.getResourceAsStream(keyStorePath), keyStorePassword.toCharArray());
+
+        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        trustStore.load(SecureHttpsClient.class.getResourceAsStream(trustStorePath), trustStorePassword.toCharArray());
+
+
+        // Create KeyManagerFactory and TrustManagerFactory
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(trustStore);
+
+
+        // Create SSLContext with TLSv1.2 (or higher if available)
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");  // Or TLSv1.3
+        sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+
+
+        // Create SSLSocketFactory
+        SSLSocketFactory sslsocketfactory = sslContext.getSocketFactory();
+
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setSSLSocketFactory(sslsocketfactory);
+
+
+
+        // Now, connect and process the response
+        try (InputStream inputstream = conn.getInputStream()) {
+            // Process the inputstream from the server.
+            // ... Read data from inputstream ...
+        } catch (Exception e) {
+            e.printStackTrace(); // Handle exceptions appropriately
+        }
+    }
+}
+```
+
+
+**Explanation and Improvements:**
+
+1. **Separate Keystores:** Uses separate keystores for client certificates (`client.jks`) and trusted server certificates (`truststore.jks`). This is crucial for security and organization. Do not put client certificates in the `cacerts` file.
+
+2. **KeyManager and TrustManager:**  Explicitly creates `KeyManagerFactory` and `TrustManagerFactory` to handle client authentication and server certificate validation respectively.
+
+3. **Explicit TLS Version:** Sets the SSL context to TLSv1.2 (or TLSv1.3 if your Java version supports it). Using `SSLSocketFactory.getDefault()` might default to an insecure protocol. Always specify a strong protocol version.
+
+4. **Resource Loading:** Loads keystore files as resources, which is more robust than hardcoded paths, especially in packaged applications.
+
+5. **Try-with-Resources:** Uses try-with-resources to ensure the `InputStream` is closed properly.
+
+6. **Error Handling:** Includes a `catch` block to handle potential exceptions.
+
+7. **Clearer Variable Names and Comments:**  Uses more descriptive variable names and adds comments to improve code readability and maintainability.
+
+8. **Removed Unnecessary SSLSocket Code:**  The `SSLSocket` code is not needed when using `HttpsURLConnection` and adds complexity.
+
+This revised solution addresses the original problem while incorporating the best practices for secure communication in Java. Remember to replace placeholder paths and passwords with your actual values.  Always prioritize using the latest stable Java version for the best security features and performance.  This solution provides a secure and robust approach to establishing HTTPS connections with client-certificate authentication.

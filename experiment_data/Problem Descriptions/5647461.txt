@@ -1,0 +1,3 @@
+Actually I want to read the contents that come after the search query, when it is done. The problem is that the URL only accepts POST methods, and it does not take any action with GET method...
+
+I have to read all contents with the help of domdocument or file_get_contents(). Is there any method that will let me send parameters with POST method and then read the contents via PHP?

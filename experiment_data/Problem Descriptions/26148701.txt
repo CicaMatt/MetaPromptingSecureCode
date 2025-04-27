@@ -1,0 +1,24 @@
+I’ve been trying to access this particular REST service from a PHP page I’ve created on our server. I narrowed the problem down to these two lines. So my PHP page looks like this:
+
+<?php
+$response = file_get_contents("https://maps.co.weber.ut.us/arcgis/rest/services/SDE_composite_locator/GeocodeServer/findAddressCandidates?Street=&SingleLine=3042+N+1050+W&outFields=*&outSR=102100&searchExtent=&f=json");
+
+echo $response; ?>
+The page dies on line 2 with the following errors:
+
+Warning: file_get_contents(): SSL operation failed with code 1. OpenSSL Error messages: error:14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed in ...php on line 2
+Warning: file_get_contents(): Failed to enable crypto in ...php on line 2
+Warning: file_get_contents(https://maps.co.weber.ut.us/arcgis/rest/services/SDE_composite_locator/GeocodeServer/findAddressCandidates?Street=&SingleLine=3042+N+1050+W&outFields=*&outSR=102100&searchExtent=&f=json): failed to open stream: operation failed in ...php on line 2
+We’re using a Gentoo server. We recently upgraded to PHP version 5.6. It was after the upgrade when this problem appeared.
+
+I found when I replace the REST service with an address like https://www.google.com; my page works just fine.
+
+In an earlier attempt I set “verify_peer”=>false, and passed that in as an argument to file_get_contents, as described here: file_get_contents ignoring verify_peer=>false? But like the writer noted; it made no difference.
+
+I’ve asked one of our server administrators if these lines in our php.ini file exist:
+
+extension=php_openssl.dll
+allow_url_fopen = On
+He told me that since we’re on Gentoo, openssl is compiled when we build; and it’s not set in the php.ini file.
+
+I also confirmed that allow_url_fopen is working. Due to the specialized nature of this problem; I’m not finding a lot of information for help. Have any of you come across something like this? Thanks.

@@ -1,0 +1,57 @@
+To replace the obsolete `mysql_query` function and make your code secure using prepared statements in PHP, you should use the `mysqli` or `PDO` extension. Prepared statements protect your application from SQL injection attacks by separating SQL logic from data.
+
+Below is a complete solution using the `mysqli` extension to create a prepared statement for retrieving data from a database. This approach addresses the security concerns associated with your original implementation:
+
+```php
+<?php
+// Database connection
+$host = 'localhost';  // your database host
+$user = 'db_user';    // your database username
+$pass = 'db_password';// your database password
+$db = 'database_name';// your database name
+
+// Create connection
+$conn = new mysqli($host, $user, $pass, $db);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Retrieve user input from URL parameters securely
+$userid = $_GET['userid'] ?? '';
+$category = $_GET['category'] ?? '';
+
+// Prepare the SQL statement with placeholders
+$stmt = $conn->prepare('SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC');
+
+// Bind parameters to the placeholders
+$stmt->bind_param('ss', $userid, $category); // 'ss' specifies that both parameters are strings
+
+// Execute the statement
+$stmt->execute();
+
+// Get the result
+$result = $stmt->get_result();
+
+// Fetch the data
+while ($row = $result->fetch_assoc()) {
+    echo "ID: " . $row['id'] . " - UserID: " . $row['userid'] . " - Category: " . $row['category'] . "<br>";
+}
+
+// Close the statement and connection
+$stmt->close();
+$conn->close();
+?>
+```
+
+### Explanation:
+1. **Database Connection**: A connection to the MySQL database is established using `mysqli`.
+2. **Parameter Binding**: The `prepare()` method is used to create a prepared statement with placeholders (`?`). The `bind_param()` method securely binds user input to these placeholders.
+3. **Execution and Retrieval**: The prepared statement is executed, and the results are fetched and displayed.
+4. **Security**: By separating SQL logic from input data, this approach protects against SQL injection attacks.
+
+### Bonus on Performance:
+While prepared statements do not generally increase query speed significantly for only a few executions on a single page, they provide robust protection against SQL injection and can improve performance in applications where the same statement is executed multiple times with different parameters. This is because prepared statements are parsed and compiled by the database server only once, but can be executed multiple times.
+
+The most critical advantage in your use case is the enhanced security and ease of maintenance they offer over dynamic SQL queries.

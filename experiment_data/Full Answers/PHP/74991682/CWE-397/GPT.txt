@@ -1,0 +1,51 @@
+To address the deprecation of dynamic properties in PHP 8.2 and for compatibility with future versions of PHP, you should refactor your code to avoid using these properties. The recommended approach is to declare properties explicitly in your class definitions. Below is a code snippet showing how you can transition from using dynamic properties to explicit properties with getter and setter methods to maintain encapsulation and control over property access.
+
+```php
+<?php
+
+class User {
+    private string $name;
+    private int $age;
+
+    // Constructor to initialize properties
+    public function __construct(string $name, int $age) {
+        $this->name = $name;
+        $this->age = $age;
+    }
+
+    // Getter for name
+    public function getName(): string {
+        return $this->name;
+    }
+
+    // Setter for name
+    public function setName(string $name): void {
+        $this->name = $name;
+    }
+
+    // Getter for age
+    public function getAge(): int {
+        return $this->age;
+    }
+
+    // Setter for age
+    public function setAge(int $age): void {
+        $this->age = $age;
+    }
+}
+
+// Example usage
+$user = new User('Alice', 30);
+$user->setName('Bob');
+echo $user->getName(); // Outputs: Bob
+echo $user->getAge();  // Outputs: 30
+
+```
+
+### Key Benefits of This Approach:
+1. **Avoid Deprecated Features:** By declaring properties explicitly in your classes, you avoid the use of dynamic properties, which will throw errors in future PHP versions.
+2. **Encapsulation:** Using private properties with getters and setters ensures that you maintain precise control over how class properties are accessed and modified.
+3. **Type Safety:** By declaring the types of properties and method parameters, you leverage PHP’s type system to catch potential bugs early.
+4. **Maintainable Code:** Explicit class properties and methods lead to more readable and maintainable code, making it easier to understand the intention and flow of data within your applications.
+
+This refactoring not only aligns with the latest PHP standards but also enhances the robustness and predictability of your code by avoiding generic exceptions and embracing a more structured and controlled error management approach.

@@ -1,0 +1,24 @@
+I'm very new to Python and multithreaded programming in general. Basically, I have a script that will copy files to another location. I would like this to be placed in another thread so I can output .... to indicate that the script is still running.
+
+The problem that I am having is that if the files cannot be copied it will throw an exception. This is OK if running in the main thread; however, having the following code does not work:
+
+try:
+    threadClass = TheThread(param1, param2, etc.)
+    threadClass.start()   ##### **Exception takes place here**
+except:
+    print "Caught an exception"
+In the thread class itself, I tried to re-throw the exception, but it does not work. I have seen people on here ask similar questions, but they all seem to be doing something more specific than what I am trying to do (and I don't quite understand the solutions offered). I have seen people mention the usage of sys.exc_info(), however I do not know where or how to use it.
+
+Edit: The code for the thread class is below:
+
+class TheThread(threading.Thread):
+    def __init__(self, sourceFolder, destFolder):
+        threading.Thread.__init__(self)
+        self.sourceFolder = sourceFolder
+        self.destFolder = destFolder
+    
+    def run(self):
+        try:
+           shul.copytree(self.sourceFolder, self.destFolder)
+        except:
+           raise

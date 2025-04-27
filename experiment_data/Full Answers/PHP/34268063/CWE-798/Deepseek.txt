@@ -1,0 +1,67 @@
+To address the issue of handling `null` returns in PHP 7+ when a return type is defined, you can use the **Nullable Types** feature introduced in PHP 7.1. This allows you to explicitly declare that a function can return either a specific type or `null`. This approach avoids the need for excessive `try...catch` blocks or creating `NullObject` classes for every object in your application.
+
+Here’s how you can implement this:
+
+### Solution Code
+```php
+<?php
+
+class MyObject
+{
+    // Example class definition
+    public function doSomething(): void
+    {
+        echo "Doing something!\n";
+    }
+}
+
+class MyService
+{
+    /**
+     * Returns a MyObject instance or null if no object is available.
+     * 
+     * @return MyObject|null
+     */
+    public function getMyObject(): ?MyObject
+    {
+        // Simulate a condition where the object might not be available
+        if (rand(0, 1) === 1) {
+            return new MyObject();
+        }
+
+        return null;
+    }
+}
+
+// Usage example
+$service = new MyService();
+$myObject = $service->getMyObject();
+
+if ($myObject !== null) {
+    $myObject->doSomething();
+} else {
+    echo "No object available.\n";
+}
+```
+
+### Explanation
+1. **Nullable Return Type (`?MyObject`)**:
+   - The `getMyObject` method is declared to return `?MyObject`, which means it can return either an instance of `MyObject` or `null`.
+   - This is a clean and efficient way to handle cases where a method might not always return a valid object.
+
+2. **Avoiding `try...catch` Blocks**:
+   - By using nullable types, you avoid the need for `try...catch` blocks to handle `null` returns. This keeps your code cleaner and more readable.
+
+3. **Conditional Check**:
+   - When calling `getMyObject`, you can check if the returned value is `null` before attempting to use it. This ensures that your application handles the absence of an object gracefully.
+
+4. **No Need for Null Object Pattern**:
+   - This approach eliminates the need to create `NullObject` classes for every object in your application, simplifying your codebase.
+
+### Additional Security Considerations
+While this solution addresses the specific issue of handling `null` returns, it’s important to ensure that your application follows secure coding practices, especially when dealing with sensitive data or credentials. Here are some additional tips:
+- **Avoid Hard-Coding Credentials**: Store credentials in environment variables or secure vaults.
+- **Use Strong Hashing**: For passwords, use strong one-way hashing algorithms like bcrypt or Argon2.
+- **Implement Access Control**: Restrict access to sensitive features and data.
+
+This solution provides a clean and secure way to handle `null` returns in PHP 7+ while maintaining code readability and security.

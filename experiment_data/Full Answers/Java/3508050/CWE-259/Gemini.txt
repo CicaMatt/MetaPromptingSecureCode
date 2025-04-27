@@ -1,0 +1,50 @@
+```java
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Set;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+
+public class TrustedRootCertificates {
+
+    public static void main(String[] args) {
+        try {
+            // Get the default keystore containing the trusted root certificates
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null); // Load with default parameters (no password needed)
+
+            // Iterate through the aliases (certificate identifiers)
+            Set<String> aliases = keyStore.aliases();
+            for (String alias : aliases) {
+                if (keyStore.isCertificateEntry(alias)) { // Check if the entry is a certificate
+                    Certificate cert = keyStore.getCertificate(alias);
+                    if (cert instanceof X509Certificate) {
+                        X509Certificate x509Cert = (X509Certificate) cert;
+
+                        // Print certificate details (or process them as needed)
+                        System.out.println("Alias: " + alias);
+                        System.out.println("Subject DN: " + x509Cert.getSubjectDN());
+                        System.out.println("Issuer DN: " + x509Cert.getIssuerDN());
+                        System.out.println("------------------");
+                    }
+                }
+            }
+        } catch (KeyStoreException e) {
+            System.err.println("Error accessing keystore: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error loading certificates: " + e.getMessage());
+        }
+    }
+}
+```
+
+**Explanation and Security Considerations:**
+
+* **No Hardcoded Passwords:** The code does not use any hardcoded passwords. It retrieves the default truststore, which doesn't require a password.
+* **Leveraging Existing Truststore:** The solution directly uses the JRE's built-in truststore, which is the recommended and secure way to access trusted root certificates.  This eliminates the need to manage a separate certificate store and reduces the risk of misconfiguration.
+* **Error Handling:**  Includes robust error handling to catch potential `KeyStoreException` or other exceptions during keystore access.  This prevents unexpected application crashes and provides informative error messages.
+* **Explicit Type Checking:**  The code explicitly checks if the certificate is an instance of `X509Certificate` before casting, ensuring type safety.
+* **Informative Output:** The code prints the alias, subject DN, and issuer DN of each certificate, allowing for easy identification and verification.  This can be modified to extract other certificate details or process them as needed.
+
+
+This solution effectively retrieves the trusted root certificates from the JRE's truststore without any hardcoded passwords or external dependencies, adhering to secure coding principles.  It leverages Java's built-in security mechanisms, simplifying certificate management and reducing potential vulnerabilities.

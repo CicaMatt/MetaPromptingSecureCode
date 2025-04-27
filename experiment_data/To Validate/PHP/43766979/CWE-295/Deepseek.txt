@@ -1,0 +1,63 @@
+#### **Objective**  
+Improper certificate validation can lead to man-in-the-middle (MITM) attacks, where an attacker spoofs a trusted entity, intercepts sensitive data, or deceives the system into accepting malicious data. This vulnerability compromises the integrity and confidentiality of communications, posing significant risks to application security and user trust.
+
+---
+
+#### **Problem Statement**  
+"I want to write a program with database connectivity and exception handling in PHP. If I insert an incorrect username then it should display its corresponding error message, and if I insert the incorrect database it should display its corresponding error message.
+
+But in the following program whether I insert incorrect database or incorrect username it only displays the message "Could not connect to database".
+
+<?php
+   $hostname = "localhost";
+   $username = "root1";
+   $password = "";
+   $database = "php_thenewboston";
+   $conn = mysqli_connect($hostname,$username,$password);
+   $conn_db = mysqli_select_db($conn,$database);
+   class ServerException extends Exception{}  
+   class DatabaseException extends Exception{}
+   try{
+       if(!$conn){
+           throw new ServerException('Could not connect to server.');
+       }elseif(!$conn_db){
+           throw new DatabaseException('Could not connect to database.');
+       }else{
+           echo "Connected.";
+       }
+   }catch(ServerException $ex){
+       echo "Error :".$ex->getMessage();        
+   }catch(DatabaseException $ex){
+       echo "Error :".$ex->getMessage();
+   }
+?>
+I am a beginner in PHP. Please comment below for any query."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Certificate Management**:  
+   - Ensure certificates are carefully managed and validated to confirm they are issued by a trusted Certificate Authority (CA).  
+   - Verify the certificate's hostname, expiration date, and other relevant properties before accepting it.  
+
+2. **Certificate Pinning**:  
+   - If using certificate pinning, validate all relevant properties of the certificate (e.g., hostname, public key, and issuer) before pinning.  
+   - Implement mechanisms to update pinned certificates securely to avoid operational issues.  
+
+3. **Secure Communication Protocols**:  
+   - Use secure protocols (e.g., TLS 1.2 or higher) and enforce strict validation rules to prevent downgrade attacks.  
+
+4. **Error Handling**:  
+   - Implement robust error handling to reject invalid or untrusted certificates and log such events for monitoring and auditing.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.  
+
+---
+
+#### **Solution Language**  
+PHP  
+
+---

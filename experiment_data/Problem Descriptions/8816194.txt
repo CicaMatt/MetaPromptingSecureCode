@@ -1,0 +1,1 @@
+I need to fetch the second column of the given HTML table using PHP. How can I do it?

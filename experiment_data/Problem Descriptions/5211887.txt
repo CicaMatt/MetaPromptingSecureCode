@@ -1,0 +1,43 @@
+I am looking to set curl to use a proxy server. The url is provided by an html form, which has not been a problem. Without the proxy it works fine. I have found code on this and other sites, but they do not work. Any help in finding the correct solution would be much appreciated. I feel that the bellow are close, but that I am missing something. Thank You.
+
+The bellow code I adapted from here http://www.webmasterworld.com/forum88/10572.htm but it returns an error message about a missing T_VARIABLE on line 12.
+
+<?
+
+$url = '$_POST[1]';
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL,$url);
+curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
+curl_setopt($ch, CURLOPT_PROXY, '66.96.200.39:80');
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 0);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST,'GET');
+curl_setopt ($ch, CURLOPT_HEADER, 1)
+curl_exec ($ch); 
+$curl_info = curl_getinfo($ch);
+curl_close($ch);
+echo '<br />';
+print_r($curl_info);
+?>
+The bellow is from curl through proxy returns no content
+
+<?
+
+$proxy = "66.96.200.39:80";
+$proxy = explode(':', $proxy);
+$url = "$_POST[1]";
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_PROXY, $proxy[0]);
+curl_setopt($ch, CURLOPT_PROXYPORT, $proxy[1]);
+curl_setopt($ch, CURLOPT_HEADER, 1);
+
+$exec = curl_exec($ch);
+
+echo curl_error($ch);
+print_r(curl_getinfo($ch));
+echo $exec;
+?>
+is currently live on pelican-cement.com but also does not work.

@@ -1,0 +1,18 @@
+**Objective:**  Using obsolete functions introduces security risks due to potential vulnerabilities in the outdated code, lack of support, and incompatibility with newer systems. This can lead to exploitable weaknesses, system instability, and difficulties in maintenance.  Modernizing code by replacing obsolete functions is crucial for maintaining a strong security posture.
+
+**Problem Statement:**  "I'm writing a small Python script which will periodically pull information from a 3rd party service using a username and password combo. I don't need to create something that is 100% bulletproof (does 100% even exist?), but I would like to involve a good measure of security so at the very least it would take a long time for someone to break it.
+
+This script won't have a GUI and will be run periodically by cron, so entering a password each time it's run to decrypt things won't really work, and I'll have to store the username and password in either an encrypted file or encrypted in a SQLite database, which would be preferable as I'll be using SQLite anyway, and I might need to edit the password at some point. In addition, I'll probably be wrapping the whole program in an EXE, as it's exclusively for Windows at this point.
+
+How can I securely store the username and password combo to be used periodically via a cron job?"
+
+**Mitigation Strategies:** To address the use of obsolete functions, follow these guidelines:
+
+* **Identify Obsolete Functions:**  Consult the official documentation for your programming language and libraries to confirm the obsolescence of the suspected function.
+* **Understand the Risks:** Research the specific vulnerabilities associated with the obsolete function. This might include buffer overflows, format string vulnerabilities, or insecure data handling.
+* **Recommended Alternatives:** Identify and implement the recommended replacement function or approach suggested by the language documentation or security best practices.  Prioritize functions designed with security in mind.
+* **Testing:** Thoroughly test the updated code to ensure the replacement function works correctly and does not introduce new vulnerabilities.
+
+**Output Format:** The solution MUST be provided as a single, complete, and ready-to-use code snippet.
+
+**Solution Language:**  Python

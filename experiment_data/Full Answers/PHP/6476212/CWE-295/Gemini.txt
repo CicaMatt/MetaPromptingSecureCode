@@ -1,0 +1,69 @@
+```php
+<?php
+
+function GetImageFromUrl($link, $savePath) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $link);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Ensure certificate verification is enabled
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); // Verify hostname against certificate
+    curl_setopt($ch, CURLOPT_CAINFO, __DIR__ . '/cacert.pem'); // Specify path to CA bundle (important!)
+
+    $result = curl_exec($ch);
+    $error = curl_error($ch); // Check for errors
+
+    curl_close($ch);
+
+
+    if ($result === false) {
+        // Handle the error appropriately. Log it, return an error message, etc.
+        error_log("cURL error: " . $error);
+        return false;
+    }
+
+
+    if (file_put_contents($savePath, $result) === false) {
+         error_log("Error saving image to file: " . $savePath);
+         return false;       
+    }
+
+    return true; // Indicate success
+}
+
+
+// Example usage (replace with your actual values):
+$imageUrl = "https://www.example.com/image.jpg";  // Example URL – Ensure HTTPS!
+$savePath =  __DIR__ . '/img/uploads/photo1.jpg'; // Save path with filename
+$success = GetImageFromUrl($imageUrl, $savePath);
+
+if ($success) {
+    echo "Image saved successfully to: " . $savePath;
+} else {
+    echo "Failed to save image.";
+}
+
+
+
+?>
+```
+
+
+**Explanation and Key Improvements:**
+
+1. **Certificate Verification Enabled:** The critical fix is enabling certificate validation by setting `CURLOPT_SSL_VERIFYPEER` to `true` and `CURLOPT_SSL_VERIFYHOST` to 2.  This is essential for security.
+
+2. **CA Bundle:** The code now includes `CURLOPT_CAINFO` and points to a CA bundle file (`cacert.pem`). This file contains a list of trusted Certificate Authorities.  You can download a recent CA bundle from a reputable source like Mozilla's Curl:  `https://curl.se/docs/caextract.html` and place it in the same directory as your PHP script, or adjust the path accordingly.
+
+3. **Error Handling:** The code checks for cURL errors using `curl_error()` and also handles potential file writing errors using `file_put_contents()`. This makes the code more robust.
+
+4. **Direct File Saving with `file_put_contents()`:**  This simplifies saving the image data to a file, replacing the `fopen()`/`fwrite()`/`fclose()` sequence.
+
+5. **Clearer Success/Failure Indication:**  The function returns `true` on success and `false` on failure, allowing the calling code to handle the result appropriately.
+
+6. **`__DIR__` for Path:** Using `__DIR__` creates more portable code as it gets the directory of the current PHP file, making the script less sensitive to the working directory.
+
+7. **Example URL and Save Path:** The code provides clear example placeholders for the image URL and the save path, making it easier to understand and use.
+
+
+
+This revised code addresses the original problem securely and efficiently, incorporating essential security practices and improved error handling.  Remember to adjust the `$imageUrl` and `$savePath` variables to your specific requirements.  Most importantly, **do not disable certificate validation**.  Using the CA bundle ensures that you're validating against trusted certificates.

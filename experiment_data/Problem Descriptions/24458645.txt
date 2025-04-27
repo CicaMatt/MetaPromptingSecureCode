@@ -1,0 +1,20 @@
+I'm trying to use scikit-learn's LabelEncoder to encode a pandas DataFrame of string labels. As the dataframe has many (50+) columns, I want to avoid creating a LabelEncoder object for each column; I'd rather just have one big LabelEncoder objects that works across all my columns of data.
+
+Throwing the entire DataFrame into LabelEncoder creates the below error. Please bear in mind that I'm using dummy data here; in actuality I'm dealing with about 50 columns of string labeled data, so need a solution that doesn't reference any columns by name.
+
+import pandas
+from sklearn import preprocessing 
+
+df = pandas.DataFrame({
+    'pets': ['cat', 'dog', 'cat', 'monkey', 'dog', 'dog'], 
+    'owner': ['Champ', 'Ron', 'Brick', 'Champ', 'Veronica', 'Ron'], 
+    'location': ['San_Diego', 'New_York', 'New_York', 'San_Diego', 'San_Diego', 
+                 'New_York']
+})
+
+le = preprocessing.LabelEncoder()
+
+le.fit(df)
+Traceback (most recent call last): File "", line 1, in File "/Users/bbalin/anaconda/lib/python2.7/site-packages/sklearn/preprocessing/label.py", line 103, in fit y = column_or_1d(y, warn=True) File "/Users/bbalin/anaconda/lib/python2.7/site-packages/sklearn/utils/validation.py", line 306, in column_or_1d raise ValueError("bad input shape {0}".format(shape)) ValueError: bad input shape (6, 3)
+
+Any thoughts on how to get around this problem?

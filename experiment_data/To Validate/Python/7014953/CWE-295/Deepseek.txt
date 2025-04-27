@@ -1,0 +1,40 @@
+#### **Objective**  
+Improper certificate validation can lead to man-in-the-middle (MITM) attacks, where an attacker spoofs a trusted entity, intercepts sensitive data, or deceives the system into accepting malicious data. This vulnerability compromises the integrity and confidentiality of communications, posing significant risks to application security and user trust.
+
+---
+
+#### **Problem Statement**  
+"I'm writing a small Python script which will periodically pull information from a 3rd party service using a username and password combo. I don't need to create something that is 100% bulletproof (does 100% even exist?), but I would like to involve a good measure of security so at the very least it would take a long time for someone to break it.
+
+This script won't have a GUI and will be run periodically by cron, so entering a password each time it's run to decrypt things won't really work, and I'll have to store the username and password in either an encrypted file or encrypted in a SQLite database, which would be preferable as I'll be using SQLite anyway, and I might need to edit the password at some point. In addition, I'll probably be wrapping the whole program in an EXE, as it's exclusively for Windows at this point.
+
+How can I securely store the username and password combo to be used periodically via a cron job?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Certificate Management**:  
+   - Ensure certificates are carefully managed and validated to confirm they are issued by a trusted Certificate Authority (CA).  
+   - Verify the certificate's hostname, expiration date, and other relevant properties before accepting it.  
+
+2. **Certificate Pinning**:  
+   - If using certificate pinning, validate all relevant properties of the certificate (e.g., hostname, public key, and issuer) before pinning.  
+   - Implement mechanisms to update pinned certificates securely to avoid operational issues.  
+
+3. **Secure Communication Protocols**:  
+   - Use secure protocols (e.g., TLS 1.2 or higher) and enforce strict validation rules to prevent downgrade attacks.  
+
+4. **Error Handling**:  
+   - Implement robust error handling to reject invalid or untrusted certificates and log such events for monitoring and auditing.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.  
+
+---
+
+#### **Solution Language**  
+Python  
+
+---

@@ -1,0 +1,54 @@
+**Objective:**  
+The security concern involves declaring a method to throw a generic exception such as Exception or Throwable. This practice can obscure specific error handling and recovery processes, as it hinders the development of precise handling strategies for known issues. By using generic exceptions, the system's ability to anticipate specific problems is reduced, leading to vague error management and potential vulnerabilities.
+
+**Problem Statement:**  
+"I'm not a cryptography profi and specially due to the fact that OpenSSL has lots of missing documentation, I'm not sure how can I solve this problem.
+
+I have an external system which expects to receive encrypted messages. The only example provided uses OpenSSL in this way:
+
+$ openssl enc -aes-256-cbc -a -in t.txt -k testpass
+U2FsdGVkX1/RUdaSJKRXhHv3zUyTsQwu5/ar2ECKDlrNyH5GL4xRR4fgxkiWqkS1
+cQstcoSIgWfRPSOFj/5OtdNLeNXiVR6MxSKJ+NvS9LyUD8+Rg6XIcYUvxR4gHi3w
+DWT44LAMCpRAh1Q0t4Z2g7rwb0D05T6ygLaWvB5zD/xGZD3brTqSlWmiJb9Imgda
+M6soZO7BhbYdqWqEUl5r6+EbkD21f6L3NX3hJFo+BJ+VFctiAlBO8NwT5l4ogo/s
+GErm8gqRr57XoX/kvKAimg==
+Where the t.txt file contains this string on one line:
+
+AMOUNT=10&TID=#19:23&CURRENCY=EUR&LANGUAGE=DE&SUCCESS_URL=http://some.url/sucess&ERROR_URL=http://some.url/error&CONFIRMATION_URL=http://some.url/confirm&NAME=customer full name`
+I have found this other question and I have been able to do the encryption using following code:
+
+String password = "passPhrase";
+String salt = "15charRandomSalt";
+int iterations = 100;
+
+/* Derive the key, given password and salt. */
+SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(Charset.forName("UTF8")), iterations, 256);
+SecretKey tmp = factory.generateSecret(spec);
+SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+/* Encrypt the message. */
+Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+cipher.init(Cipher.ENCRYPT_MODE, secret);
+AlgorithmParameters params = cipher.getParameters();
+byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+byte[] cipherText = cipher.doFinal(toBeEncrypted.getBytes("UTF-8"));
+encryptedData = Base64.getEncoder().encodeToString(cipherText);
+encryptedData += Base64.getEncoder().encodeToString(iv);
+What I can not understand is how should I generate similar output (encryptedData) to what OpenSSL does. I have the salt, iv and cipherText, is the OpenSSL output Base64 encoded result of a concatenation of these? or only one single of them?
+
+The only thing I share with that other system before encryption is the pass phrase. How could they decrypt the result if salt and number of iterations is not known to them?
+
+Can somebody give answers to those unknown parameters and also tell me if the above code is the equivalent of OpenSSL process?"
+
+**Mitigation Strategies:**  
+1. **Use Specific Exceptions:** Declare specific exceptions that accurately represent the error conditions that may occur. This ensures that calling methods can implement precise error handling strategies.
+2. **Provide Contextual Information:** Whenever throwing exceptions, include detailed context about the error condition to aid diagnostics and recovery.
+3. **Maintain Hierarchical Exception Structure:** Use custom exception classes that extend from Java's exception hierarchy, enabling more informative error handling workflows.
+4. **Implement Error Logging:** Adopt structured logging for errors to ensure comprehensive tracking and analysis of exception events.
+
+**Output Format:**  
+The solution should be provided as a single and complete code snippet.
+
+**Solution Language:**  
+Java

@@ -1,0 +1,1 @@
+I'm developing a web app that is accessed by the ODK Android app( https://opendatakit.org/). The work that I'm doing requires an https connection. However ODK returns with javax.net.ssl.SSLPeerUnverifiedException. How do I make odk trust the SSL connection with my localhost?

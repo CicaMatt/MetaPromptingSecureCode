@@ -1,0 +1,11 @@
+I have some current code and the problem is its creating a 1252 codepage file, i want to force it to create a UTF-8 file
+
+Can anyone help me with this code, as i say it currently works... but i need to force the save on utf.. can i pass a parameter or something??
+
+this is what i have, any help really appreciated
+
+var out = new java.io.FileWriter( new java.io.File( path )),
+        text = new java.lang.String( src || "" );
+    out.write( text, 0, text.length() );
+    out.flush();
+    out.close();

@@ -1,0 +1,48 @@
+**Objective:**  This vulnerability involves declaring a method to throw a generic exception (e.g., `Exception`, `Throwable` in Java) instead of specific exceptions. This practice hinders effective error handling and recovery by callers, masking the true nature of potential errors and making it difficult to implement precise exception handling logic. This can lead to unexpected application behavior, difficulties in debugging, and potentially security vulnerabilities if errors are not handled appropriately.
+
+**Problem Statement:**  "I am trying to use Enums in SQLAlchemy 2.0 with mapped_column. So far I have the following code (taken from another question):
+
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+import enum
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+CampaignStatusType: pgEnum = pgEnum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatusType] = mapped_column(nullable=False)
+However, that gives the following error upon the construction of the Campaign class itself.
+
+Traceback (most recent call last):
+  File "<stdin>", line 27, in <module>
+    class Campaign(Base):
+...
+AttributeError: 'ENUM' object has no attribute '__mro__'
+Any hint about how to make this work?
+
+The response from ENUM type in SQLAlchemy with PostgreSQL does not apply as I am using version 2 of SQLAlchemy and those answers did not use mapped_column or Mapped types. Also, removing str from CampaignStatus does not help."
+
+**Mitigation Strategies:**
+
+* **Identify Specific Exceptions:** Analyze the code within the method to determine the specific types of exceptions that could be thrown.  
+* **Replace Generic Exception:** Replace the generic `Exception` or `Throwable` declaration in the method signature with the identified specific exception types.  If multiple exceptions are possible, list them individually separated by commas (e.g., `IOException, IllegalArgumentException`).
+* **Implement Targeted Exception Handling:** In the calling code, implement `try-catch` blocks to handle each specific exception appropriately. This allows for tailored error recovery logic based on the specific nature of the error.
+* **Avoid Empty Catch Blocks:** Never leave a `catch` block empty.  At a minimum, log the exception to aid in debugging.  Implement proper error handling or rethrow the exception if it cannot be handled locally.
+* **Consider Custom Exceptions:** For specific error conditions unique to your application, define custom exception classes that inherit from relevant built-in exception types.
+
+
+**Output Format:**  Provide a single, complete, and compilable code snippet that demonstrates the corrected method declaration and associated exception handling in the calling code.
+
+**Solution Language:**  Python

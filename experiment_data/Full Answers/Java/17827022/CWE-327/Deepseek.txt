@@ -1,0 +1,75 @@
+The problem statement you provided is about understanding and using `CountDownLatch` in Java, not directly related to cryptographic algorithms. However, I will address your question about `CountDownLatch` and provide a solution in Java.
+
+### Understanding `CountDownLatch`
+
+`CountDownLatch` is a synchronization aid that allows one or more threads to wait until a set of operations being performed in other threads completes. It is initialized with a count, and the `await()` method blocks until the count reaches zero due to invocations of the `countDown()` method.
+
+### When to Use `CountDownLatch`
+
+- **Coordination of Tasks**: When you need to ensure that certain tasks are completed before proceeding.
+- **Parallel Processing**: When you want to wait for multiple threads to finish their work before continuing.
+- **Testing**: In unit tests to ensure that all threads have completed their tasks before asserting results.
+
+### Solution Code
+
+Here is the complete and executable Java code that demonstrates the use of `CountDownLatch`:
+
+```java
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000); // Simulate some work
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        latch.countDown(); // Decrement the latch count
+        System.out.println("Latch count: " + latch.getCount());
+    }
+}
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // Initialize with count 3
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // Create a thread pool with 3 threads
+
+        for (int i = 0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // Submit tasks to the executor
+        }
+
+        try {
+            latch.await(); // Wait until the latch count reaches zero
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Completed.");
+        executor.shutdown(); // Shutdown the executor
+    }
+}
+```
+
+### Explanation
+
+1. **Initialization**: The `CountDownLatch` is initialized with a count of 3.
+2. **Thread Pool**: An `ExecutorService` with a fixed thread pool of 3 threads is created.
+3. **Task Submission**: Three tasks (instances of `Processor`) are submitted to the executor. Each task simulates some work by sleeping for 3 seconds and then decrements the latch count.
+4. **Awaiting Completion**: The main thread waits for the latch count to reach zero using `latch.await()`.
+5. **Completion**: Once the latch count reaches zero, the main thread prints "Completed" and shuts down the executor.
+
+This code ensures that the "Completed" message is printed only after all three threads have finished their work and decremented the latch count to zero.

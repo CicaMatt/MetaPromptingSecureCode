@@ -1,0 +1,48 @@
+```php
+<?php
+
+// Define content type and charset
+$documentMimeType = "text/html"; // Or appropriate mime type
+$documentCharset = "UTF-8";     // Or appropriate charset
+
+// Cache control headers (adjust max-age as needed)
+header("Cache-Control: public, max-age=10800"); // 3 hours
+header("Expires: " . gmdate("D, d M Y H:i:s", time() + 10800) . " GMT");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s", filemtime(__FILE__)) . " GMT"); // If file based, otherwise use a relevant timestamp
+
+// Other headers
+header("Content-type: {$documentMimeType}; charset={$documentCharset}");
+header("Vary: Accept"); //  Important if content varies based on Accept header
+header("Content-language: en"); // Replace with actual language
+
+// Example of checking for If-Modified-Since header (for efficiency)
+if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && (strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == filemtime(__FILE__))) {
+    header('HTTP/1.1 304 Not Modified');
+    exit;
+}
+
+
+// ... your PHP code to generate the page content ...
+
+?>
+```
+
+
+**Explanation of Changes and Improvements:**
+
+1. **Removed Obsolete Functions:**  `session_cache_limiter` and `session_cache_expire` are removed. They are not relevant to page caching and were misused in the original code.
+
+2. **Cache-Control Header:** The `Cache-Control: public, max-age=10800` header is the primary mechanism for controlling caching. `public` allows caching by any intermediary (browsers, proxies).  `max-age` specifies the caching duration in seconds (3 hours in this example).
+
+3. **Expires Header:** The `Expires` header provides an explicit expiration date and time, enhancing cache control. It's calculated based on the current time plus the `max-age`.
+
+4. **Last-Modified Header:** This header indicates the last modification time of the resource.  It's used for conditional requests, enabling clients to check if their cached copy is still valid.  If the resource hasn't been modified since the client's cached version, a `304 Not Modified` response can be sent, saving bandwidth. Use a relevant timestamp if your content is not directly tied to a file's modification time.
+
+5. **Conditional GET (If-Modified-Since):** The code includes a check for the `If-Modified-Since` header. If the client's cached version is still current, a `304 Not Modified` response is sent, preventing unnecessary data transfer.
+
+6. **Content-Type and Charset:** These headers are correctly set using variables and string interpolation.
+
+7. **Vary: Accept:** This header is kept because it's important if the content served might vary based on the client's `Accept` header (e.g., serving different formats like HTML or JSON).
+
+
+This revised solution provides a more robust and efficient caching mechanism using standard HTTP headers, eliminating the obsolete functions and improving the overall performance and security of the website. Remember to adjust the `max-age` and filemtime/timestamp logic according to your specific needs.  If the content is truly static for extended periods, you could significantly increase the `max-age`.

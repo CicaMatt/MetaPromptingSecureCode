@@ -1,0 +1,103 @@
+```java
+import java.security.Security;
+import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.MimeMessage;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.X509Certificate;
+
+public class SecureEmail {
+
+    protected static Session initializeSession(MailMessage p_msg) throws Exception {
+
+        Properties prop = System.getProperties();
+        prop.put("mail.smtps.host", "test.mailserver.com");
+        prop.put("mail.transport.protocol", "smtps");
+        prop.put("mail.smtps.auth", true);
+        prop.put("mail.smtps.port", "465"); // Explicitly set the port
+        prop.put("mail.smtps.socketFactory.port", "465"); // Important for SSL
+        prop.put("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory"); // Important for SSL
+        prop.put("mail.smtps.socketFactory.fallback", "false"); // Don't fall back to plain
+
+
+        // START: Handling Self-Signed or Untrusted Certificates (ONLY for testing/development)
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+            public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+            public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+        } };
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            Security.setProperty("ssl.SocketFactory.provider", "sun.security.ssl.SSLSocketFactoryImpl"); // Some JVMs need this
+            prop.put("mail.smtps.ssl.socketFactory", sc.getSocketFactory());
+            prop.put("mail.smtps.ssl.checkserveridentity", "false"); // Disable host verification
+            
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize SSL context", e);
+        }
+
+        // END: Handling Self-Signed Certificates
+
+
+        Session session = Session.getInstance(prop, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("test.user@test.com", "testpwd"); // Replace with your credentials
+            }
+        });
+
+        session.setDebug(p_msg.getDebugMode());
+        return session;
+    }
+
+    protected static void sendMessage(MimeMessage p_msg) throws Exception {
+        Session session = initializeSession(p_msg);  // Reuse session
+        Transport transport = session.getTransport("smtps");
+
+        transport.connect();  // No need to specify parameters again, they are in the session
+        transport.sendMessage(p_msg, p_msg.getAllRecipients());
+        transport.close();
+    }
+
+
+
+    public static void main(String[] args) throws Exception {
+        // Example usage (replace with your actual MimeMessage creation)
+        Properties props = new Properties();
+        Session session = Session.getDefaultInstance(props, null);
+        MimeMessage message = new MimeMessage(session);
+        // ... set message properties (to, from, subject, body, etc.) ...
+
+        // Set debug mode to true for debugging
+        // message.setDebugMode(true); 
+
+        sendMessage(message);
+        System.out.println("Message sent successfully!");
+
+
+    }
+
+}
+
+
+```
+
+**Explanation and Key Improvements:**
+
+1. **SSL Context and Trust Manager:**  The code now includes the necessary setup for handling SSL/TLS connections, especially for dealing with self-signed or untrusted certificates.  This involves creating an `SSLContext` and a `TrustManager` that bypasses the usual certificate validation process.  **Important:**  This is only for testing/development purposes.  In a production environment, you should **never** disable certificate validation.
+2. **Proper Port Configuration:** The port `465` is now explicitly set for both the `mail.smtps.port` and `mail.smtps.socketFactory.port` properties, which is crucial for secure SMTP over SSL.
+3. **SSL Socket Factory:** The `mail.smtps.socketFactory.class` property is correctly set to use the SSL socket factory.
+4. **Authenticator:** Uses an `Authenticator` to provide credentials, avoiding hardcoding within the `connect()` method.
+5. **Session Reuse:** The `sendMessage` method now reuses the session created in `initializeSession`, ensuring consistent configuration.
+6. **Clearer Comments:**  The code includes comments explaining the purpose of different sections, especially the part related to handling untrusted certificates.
+7. **Example Usage:** A `main` method demonstrating how to use the `sendMessage` function is included.
+8. **Disabling Hostname Verification (for testing only):** The line `prop.put("mail.smtps.ssl.checkserveridentity", "false");` is added to disable hostname verification. This is *extremely* insecure and should **never** be used in production. It's only here as a last resort if you are testing with a self-signed certificate and cannot fix the hostname mismatch.  The proper solution is to use a correctly configured certificate.
+
+
+**Production Environment:** If this is for a production environment, remove the entire block of code that handles the self-signed certificates (lines 34-55) and ensure you have a valid and trusted certificate installed on the mail server. Consult with your mail server administrator to resolve the certificate issue properly.  The rest of the improved code structure and configuration should still be applied.

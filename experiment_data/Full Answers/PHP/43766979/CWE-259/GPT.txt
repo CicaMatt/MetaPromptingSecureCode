@@ -1,0 +1,71 @@
+Certainly! To address your specific problem as well as provide a secure implementation, here's a revised PHP script that utilizes exception handling properly, checks for both database connection and user authentication errors separately, and avoids using hard-coded passwords directly in the script:
+
+```php
+<?php
+// Example of loading configuration from a secure external source
+$config = parse_ini_file('db_config.ini');
+
+// Retrieving configuration
+$hostname = $config['hostname'];
+$username = $config['username'];
+$password = $config['password'];
+$database = $config['database'];
+
+// Exception classes for handling different connection errors
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Database connection
+    $conn = mysqli_connect($hostname, $username, $password);
+
+    if (!$conn) {
+        // Throwing exception if connection to server fails
+        throw new ServerException('Could not connect to server: ' . mysqli_connect_error());
+    }
+
+    // Selecting the database
+    $conn_db = mysqli_select_db($conn, $database);
+    if (!$conn_db) {
+        // Throwing exception if database selection fails
+        throw new DatabaseException('Could not connect to database: ' . mysqli_error($conn));
+    }
+
+    echo "Connected successfully.";
+
+} catch (ServerException $ex) {
+    echo "Server Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    echo "Database Error: " . $ex->getMessage();
+} catch (Exception $ex) {
+    // General exception handling
+    echo "General Error: " . $ex->getMessage();
+}
+?>
+```
+
+### Description and Security Enhancements:
+
+1. **Configuration File**:
+   - The script reads credentials and configuration from an external file (`db_config.ini`). This prevents hard-coding sensitive data directly in your PHP script.
+   - The format for `db_config.ini` might look like this:
+     ```
+     hostname = "localhost"
+     username = "your_database_username"
+     password = "your_database_password"
+     database = "php_thenewboston"
+     ```
+
+2. **Exception Handling**:
+   - Separate exception classes are used to distinguish between server connection errors and database selection failures.
+   - Descriptive error messages are given, including `mysqli_connect_error()` and `mysqli_error()` to return specific issues.
+
+3. **Security**:
+   - Store sensitive information in external configuration files with access permissions that restrict undesired access.
+   - Ensure that the `db_config.ini` file is kept outside the web root directory and has appropriate file system permissions.
+   - Avoid direct display of database error messages in a production environment to prevent information leakage. Consider logging these details securely and showing generic messages to the user.
+
+4. **Password Management**:
+   - Encourage best practices for password management such as using encrypted storage and regularly rotating credentials.
+
+By adhering to these practices and the improved exception handling, you can develop a more robust and secure PHP application.

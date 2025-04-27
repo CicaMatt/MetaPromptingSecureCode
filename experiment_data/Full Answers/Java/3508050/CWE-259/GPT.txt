@@ -1,0 +1,57 @@
+To address your query about retrieving the trusted root certificates from the Java Runtime Environment (JRE), it's important to note that the primary security concern related to hard-coded passwords should be handled separately as outlined in the mitigation strategies.
+
+However, let's focus on providing a code snippet to programmatically access the trusted root certificates in a Java application. The trusted certificates are typically contained within a KeyStore that the JRE itself manages. Here's a code snippet that demonstrates how to load and access these certificates:
+
+```java
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+
+public class TrustedRootCertificates {
+    public static void main(String[] args) {
+        try {
+            // Load the default Java KeyStore
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            // Load the keyStore with null InputStream & password for JRE's default trust store
+            keyStore.load(null, null);
+
+            // Enumeration of all aliases in the KeyStore
+            Enumeration<String> aliases = keyStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                if (keyStore.isCertificateEntry(alias)) {
+                    Certificate certificate = keyStore.getCertificate(alias);
+                    if (certificate instanceof X509Certificate) {
+                        X509Certificate x509Certificate = (X509Certificate) certificate;
+                        // Print the certificate details
+                        System.out.println("-----BEGIN CERTIFICATE-----");
+                        System.out.println("Alias: " + alias);
+                        System.out.println(x509Certificate);
+                        System.out.println("-----END CERTIFICATE-----\n");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+
+1. **KeyStore Initialization**:
+   - We initialize the `KeyStore` with the default type. This typically refers to `JKS` (Java KeyStore).
+
+2. **Loading the KeyStore**:
+   - We load it with `null` for both the `InputStream` and password to access the Java runtime's default trust store.
+
+3. **Accessing Certificates**:
+   - Using an enumeration, we iterate through the aliases in the KeyStore, checking if each entry is a certificate.
+
+4. **Certificate Processing**:
+   - Each certificate is retrieved and checked if it's an instance of `X509Certificate`.
+   - It then prints the details of each trusted root certificate.
+
+Remember, the code above focuses on accessing trusted root certificates and must be integrated within a larger security context where password handling follows best practices as per your security concern.

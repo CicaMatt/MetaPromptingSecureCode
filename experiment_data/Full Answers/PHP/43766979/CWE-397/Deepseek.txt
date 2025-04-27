@@ -1,0 +1,56 @@
+To address the issue described in the problem statement, we need to ensure that the program correctly identifies and handles specific exceptions for different error scenarios, such as incorrect username and incorrect database. The current implementation only catches generic exceptions, which makes it difficult to distinguish between different types of errors.
+
+Here’s a revised version of the code that uses custom exceptions to handle specific error scenarios:
+
+```php
+<?php
+// Database connection parameters
+$hostname = "localhost";
+$username = "root1"; // Incorrect username for testing
+$password = "";
+$database = "php_thenewboston"; // Incorrect database for testing
+
+// Custom exception classes
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+
+try {
+    // Attempt to connect to the server
+    $conn = mysqli_connect($hostname, $username, $password);
+    
+    // Check if the connection to the server failed
+    if (!$conn) {
+        throw new ServerException('Could not connect to server.');
+    }
+
+    // Attempt to select the database
+    $conn_db = mysqli_select_db($conn, $database);
+    
+    // Check if the database selection failed
+    if (!$conn_db) {
+        throw new DatabaseException('Could not connect to database.');
+    }
+
+    // If both connection and database selection are successful
+    echo "Connected.";
+} catch (ServerException $ex) {
+    // Handle server connection errors
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    // Handle database connection errors
+    echo "Error: " . $ex->getMessage();
+} catch (Exception $ex) {
+    // Handle any other exceptions
+    echo "An unexpected error occurred: " . $ex->getMessage();
+}
+?>
+```
+
+### Explanation:
+1. **Custom Exception Classes**: We define two custom exception classes, `ServerException` and `DatabaseException`, to handle specific error scenarios.
+2. **Server Connection Check**: We attempt to connect to the server using `mysqli_connect()`. If the connection fails, we throw a `ServerException`.
+3. **Database Selection Check**: We attempt to select the database using `mysqli_select_db()`. If the selection fails, we throw a `DatabaseException`.
+4. **Exception Handling**: We use separate `catch` blocks to handle `ServerException` and `DatabaseException` separately. This allows us to display specific error messages for each type of error.
+5. **Generic Exception Handling**: We also include a generic `catch` block to handle any other unexpected exceptions that might occur.
+
+This approach ensures that the program can distinguish between different types of errors and provide appropriate error messages, improving both error handling and code maintainability.

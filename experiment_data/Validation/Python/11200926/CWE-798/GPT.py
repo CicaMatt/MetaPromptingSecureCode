@@ -1,0 +1,54 @@
+from scrapy.spiders import Spider
+from scrapy.http import Request, FormRequest
+from selenium import webdriver
+import os
+
+class MySpider(Spider):
+    name = 'MySpider'
+    start_urls = ['http://my_domain.com/']
+
+    def __init__(self, *args, **kwargs):
+        super(MySpider, self).__init__(*args, **kwargs)
+        
+        # Fetch credentials securely from environment variables
+        self.username = os.environ.get('MY_DOMAIN_USER')
+        self.password = os.environ.get('MY_DOMAIN_PASS')
+        
+        if not self.username or not self.password:
+            raise ValueError("Username and password must be set in environment variables.")
+
+    def get_cookies(self):
+        # Initialize WebDriver and handle cookies
+        driver = webdriver.Firefox()
+        driver.implicitly_wait(30)
+        base_url = "http://my_domain.com/"
+        driver.get(base_url)
+
+        # Fill login form
+        driver.find_element("name", "USER").clear()
+        driver.find_element("name", "USER").send_keys(self.username)
+        driver.find_element("name", "PASSWORD").clear()
+        driver.find_element("name", "PASSWORD").send_keys(self.password)
+        driver.find_element("name", "submit").click()
+
+        # Capture and return cookies
+        cookies = driver.get_cookies()
+        driver.quit()
+        return cookies
+
+    def start_requests(self):
+        # Start requests by fetching cookies using Selenium
+        cookies = self.get_cookies()
+        for url in self.start_urls:
+            yield Request(url=url, cookies={cookie['name']: cookie['value'] for cookie in cookies}, callback=self.login)
+
+    def login(self, response):
+        # Login using cookies obtained
+        return FormRequest.from_response(response,
+                                          formdata={'USER': self.username, 'PASSWORD': self.password},
+                                          callback=self.after_login)
+
+    def after_login(self, response):
+        # Process the response after login
+        title = response.xpath('//title/text()').get()
+        self.logger.info("Page title after login: %s", title)

@@ -1,0 +1,97 @@
+```java
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.security.cert.X509Certificate;
+
+public class HttpsPostWithUntrustedCertificate {
+
+    public static void main(String[] args) throws Exception {
+
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+        };
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (Exception e) {
+            System.err.println("Failed to install custom trust manager: " + e);
+            // Handle appropriately, e.g., exit the application
+            return; 
+        }
+
+        // Now you can make the HTTPS POST request
+        URL url = new URL("https://your_untrusted_server/path"); // Replace with your URL
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+        //add reuqest header
+        con.setRequestMethod("POST");
+        con.setRequestProperty("User-Agent", "Mozilla/5.0");
+        con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); // Or appropriate content type
+
+
+        String urlParameters = "param1=value1&param2=value2"; // Replace with your parameters
+
+        // Send post request
+        con.setDoOutput(true);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(urlParameters);
+        wr.flush();
+        wr.close();
+
+        int responseCode = con.getResponseCode();
+        System.out.println("\nSending 'POST' request to URL : " + url);
+        System.out.println("Post parameters : " + urlParameters);
+        System.out.println("Response Code : " + responseCode);
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        //print result
+        System.out.println(response.toString());
+    }
+
+}
+```
+
+
+**Explanation and Crucial Security Warning:**
+
+This code bypasses certificate validation.  **This is extremely dangerous and should never be used in production code.**  By disabling certificate checks, you open your application to man-in-the-middle attacks, where an attacker can intercept and modify your communication.
+
+This code is provided *only* as a direct response to the user's very specific request to make the code work "somehow."  It addresses the immediate problem but introduces a severe vulnerability.
+
+**Proper Solutions for Production:**
+
+1. **Fix the Server Certificate:** The correct solution is to obtain a valid and trusted certificate from a recognized Certificate Authority (CA) for the server.
+
+2. **Import the Certificate to Your Truststore:** If the certificate is self-signed or from a private CA, you should import it into your Java truststore.  Do not disable certificate validation entirely.
+
+3. **Hostname Verification:** Ensure that the hostname of the server matches the hostname in the certificate. This prevents attacks where an attacker uses a different hostname with a valid certificate.
+
+The provided code demonstrates how to bypass certificate validation, but doing so is highly discouraged.  Always prioritize secure practices in a production environment.  If you encounter certificate errors, investigate the cause and address the underlying issue instead of disabling validation.

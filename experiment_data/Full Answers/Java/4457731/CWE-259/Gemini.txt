@@ -1,0 +1,126 @@
+```java
+import javax.mail.*;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
+
+public class SecureMailSender {
+
+    private static final String SMTP_HOST_KEY = "mail.smtps.host";
+    private static final String SMTP_PORT_KEY = "mail.smtps.port";
+    private static final String SMTP_USER_KEY = "mail.smtps.user";
+    private static final String SMTP_PASSWORD_KEY = "mail.smtps.password";
+
+
+    protected static Session initializeSession() throws MessagingException {
+        Properties prop = new Properties();
+        prop.put("mail.transport.protocol", "smtps");
+        prop.put("mail.smtps.auth", true);
+        // Port is optional, defaults to 465 for smtps
+        prop.put(SMTP_PORT_KEY, "465");
+
+        // Fetch credentials from environment variables
+        String smtpHost = System.getenv(SMTP_HOST_KEY);
+        String smtpUser = System.getenv(SMTP_USER_KEY);
+        String smtpPassword = System.getenv(SMTP_PASSWORD_KEY);
+
+        // OR fetch from a properties file (See commented-out example below)
+       // loadPropertiesFromFile(prop, "email.properties");
+
+
+        // Fail if essential properties are missing
+        if (smtpHost == null || smtpUser == null || smtpPassword == null) {
+            throw new MessagingException("Missing SMTP configuration. Please set environment variables or properties file.");
+        }
+
+        prop.put(SMTP_HOST_KEY, smtpHost);
+
+
+        // Create a session with authentication
+        Session session = Session.getInstance(prop, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(smtpUser, smtpPassword);
+            }
+        });
+        return session;
+
+    }
+
+    // Example of loading from properties file (Uncomment if needed)
+//    private static void loadPropertiesFromFile(Properties prop, String filename) throws IOException {
+//        try (InputStream input = new FileInputStream(filename)) {
+//            prop.load(input);
+//        }
+//    }
+
+    protected static void sendMessage(MimeMessage p_msg, boolean debugMode) throws MessagingException {
+        Session session = initializeSession();
+        session.setDebug(debugMode);
+
+        try (Transport transport = session.getTransport("smtps")) { // Use try-with-resources for automatic closing
+
+            // Connect using the credentials provided in the session creation
+            transport.connect(); // Host, port, user, and password are handled by the Authenticator
+
+            transport.sendMessage(p_msg, p_msg.getAllRecipients());
+        }
+    }
+
+
+
+    public static void main(String[] args) throws Exception {
+        // Example usage (replace with your message creation logic):
+
+        Properties props = new Properties();
+        Session session = Session.getInstance(props);
+
+        MimeMessage message = new MimeMessage(session);
+        // ... set message properties (to, from, subject, body, etc.) ...
+
+        sendMessage(message, true); // Set debugMode to true for debugging information
+        System.out.println("Message sent successfully!");
+
+    }
+
+}
+
+
+
+
+```
+
+**Explanation and Key Improvements:**
+
+1. **Environment Variables for Credentials:** The code now retrieves SMTP credentials (host, username, password) from environment variables.  This is preferable to a properties file for sensitive information in many production environments (especially containerized ones).  Set these environment variables before running the application.
+
+2. **Error Handling for Missing Configuration:**  The code checks for missing SMTP settings and throws a `MessagingException` if they're not found.
+
+3. **Authenticator for Secure Connection:** Uses a `javax.mail.Authenticator` to handle authentication seamlessly.  This removes the need to pass credentials directly to the `transport.connect()` method.
+
+4. **Try-with-resources:**  Employs try-with-resources to ensure the `Transport` is closed automatically, even if exceptions occur.
+
+5. **Removed Hardcoded Credentials:**  Completely eliminates hardcoded credentials within the code.
+
+6. **Clearer Session Initialization:** The `initializeSession()` method now handles all session setup logic, making the code more organized and maintainable.
+
+7. **Properties File Option (Commented out):**  Includes an example of how to load credentials from a `.properties` file if environment variables are not suitable.  **Important:** If using a properties file, ensure it is NOT committed to version control.
+
+
+**To Run:**
+
+1. **Set Environment Variables:**
+   ```bash
+   export mail.smtps.host="test.mailserver.com"
+   export mail.smtps.user="test.user@test.com"
+   export mail.smtps.password="YOUR_ACTUAL_PASSWORD"
+   ```
+
+2. **Compile and Run:**
+   ```bash
+   javac SecureMailSender.java
+   java SecureMailSender
+   ```
+
+
+
+This improved solution addresses the security concerns of hardcoded credentials while also providing a more robust and maintainable approach to sending emails in Java.  Remember to adjust the email properties (to, from, etc.) within the `main` method for your specific use case.  Also, ensure you are using a valid SSL certificate for your mail server to avoid the `SSLHandshakeException`.  If you have self-signed or internal certificates, you'll need to configure your Java keystore accordingly.

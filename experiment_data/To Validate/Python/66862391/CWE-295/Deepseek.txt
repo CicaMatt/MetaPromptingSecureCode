@@ -1,0 +1,56 @@
+#### **Objective**  
+Improper certificate validation can lead to man-in-the-middle (MITM) attacks, where an attacker spoofs a trusted entity, intercepts sensitive data, or deceives the system into accepting malicious data. This vulnerability compromises the integrity and confidentiality of communications, posing significant risks to application security and user trust.
+
+---
+
+#### **Problem Statement**  
+"I am trying to get rid of the openssl call below and replace it with pure python code.
+
+import os
+    
+iv = "7bde5a0f3f39fd658efc45de143cbc94"
+password = "3e83b13d99bf0de6c6bde5ac5ca4ae68"
+msg = "this is a message"
+
+out = os.popen(f'printf "{msg}" | openssl aes-128-cbc -base64 -K {password} -iv {iv}').read()
+
+print(f"IV: {iv}")    
+print(f"PWD: {password}")     
+print(f"MSG: {msg}")   
+print(f"OUT: {out}")   
+yields:
+
+IV: 7bde5a0f3f39fd658efc45de143cbc94
+PWD: 3e83b13d99bf0de6c6bde5ac5ca4ae68
+MSG: this is a message
+OUT: ukMTwxkz19qVPiwU8xa/YM9ENqklbZtB86AaVPULHLE=
+Between the 3 different libraries that people seem to suggest and various other code excerpts that don't seem to work anymore, I haven't been able to replicate it in pure python reliably. Would anyone have a working code example for the above?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Certificate Management**:  
+   - Ensure certificates are carefully managed and validated to confirm they are issued by a trusted Certificate Authority (CA).  
+   - Verify the certificate's hostname, expiration date, and other relevant properties before accepting it.  
+
+2. **Certificate Pinning**:  
+   - If using certificate pinning, validate all relevant properties of the certificate (e.g., hostname, public key, and issuer) before pinning.  
+   - Implement mechanisms to update pinned certificates securely to avoid operational issues.  
+
+3. **Secure Communication Protocols**:  
+   - Use secure protocols (e.g., TLS 1.2 or higher) and enforce strict validation rules to prevent downgrade attacks.  
+
+4. **Error Handling**:  
+   - Implement robust error handling to reject invalid or untrusted certificates and log such events for monitoring and auditing.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.  
+
+---
+
+#### **Solution Language**  
+Python  
+
+---

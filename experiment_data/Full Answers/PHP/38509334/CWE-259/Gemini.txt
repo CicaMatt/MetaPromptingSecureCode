@@ -1,0 +1,120 @@
+```php
+<?php
+
+// Configuration (store these securely, e.g., environment variables)
+$upload_path = 'uploads/'; // Ensure this directory exists and is outside the webroot
+$max_file_size = 1000000; // 1MB
+$allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+$allowed_mime_types = ['image/jpeg', 'image/png', 'image/gif'];
+
+
+function uploadFile($file_field) {
+    global $upload_path, $max_file_size, $allowed_extensions, $allowed_mime_types;
+
+    $errors = [];
+
+    if (empty($_FILES[$file_field]['name'])) {
+        $errors[] = "No file uploaded.";
+        return $errors;
+    }
+
+    // Input validation
+    $file_name = $_FILES[$file_field]['name'];
+    $file_tmp = $_FILES[$file_field]['tmp_name'];
+    $file_size = $_FILES[$file_field]['size'];
+    $file_type = $_FILES[$file_field]['type']; 
+    $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+    if (!in_array($file_ext, $allowed_extensions)) {
+        $errors[] = "Invalid file extension.";
+    }
+
+    if (!in_array($file_type, $allowed_mime_types)) {
+        $errors[] = "Invalid file type.";
+    }
+    
+
+    if ($file_size > $max_file_size) {
+        $errors[] = "File size exceeds limit.";
+    }
+
+
+    // Image validation: important step to prevent disguised files 
+    $image_info = getimagesize($file_tmp);
+    if (!$image_info || !in_array($image_info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF])) {
+        $errors[] = "Uploaded file is not a valid image.";
+    }
+
+
+
+    if (empty($errors)) {
+        $new_file_name = bin2hex(random_bytes(16)) . '.' . $file_ext; // Cryptographically secure random filename
+        $destination = $upload_path . $new_file_name;
+
+        if (move_uploaded_file($file_tmp, $destination)) {
+           // Optionally, re-process the image using GD to further mitigate risks. Example:
+           // $image = imagecreatefromjpeg($destination);
+           // imagejpeg($image, $destination, 90); // Save with quality 90
+           // imagedestroy($image);
+
+            return ['filepath' => $destination, 'filename' => $new_file_name];
+        } else {
+            $errors[] = "Error moving uploaded file.";
+        }
+    }
+
+
+    return $errors;
+
+}
+
+if (isset($_POST['submit'])) {
+    $result = uploadFile('file');
+
+    if (is_array($result)) {  // Error array returned
+        $message = '';
+        foreach ($result as $error) {
+            $message .= "<p>$error</p>";
+        }
+    } else {
+        $message = "File uploaded successfully: " . $result['filename'];
+    }
+
+    echo $message;
+}
+?>
+
+
+<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" id="file">
+    <input type="submit" name="submit" value="Upload">
+</form>
+```
+
+
+**Key Improvements:**
+
+* **No Hardcoded paths or configuration:**  Configuration should be moved to environment variables or a secure configuration file.
+* **Secure Random Filenames:**  Uses `random_bytes()` for cryptographically secure random filenames, preventing predictable file names and potential overwrites.
+* **Strict Type and Extension Validation:**  Validates both MIME type and extension to prevent mismatches and bypass attempts.
+* **Image Validation with `getimagesize()`:** Critically important step. Checks if the file is actually an image of the allowed type.
+* **Error Handling:** Provides informative error messages to the user.
+* **Optional GD Reprocessing:** Includes an example of how to use GD to reprocess the image, which can strip malicious metadata.
+* **File Upload Path Outside Webroot:**  The `$upload_path` MUST point to a directory outside the webroot to prevent direct access to uploaded files.  You will need a separate script or mechanism to serve these files securely.
+
+
+**Further Considerations:**
+
+* **.htaccess Protection (if applicable):**  If `uploads` is inside the webroot (not recommended), use `.htaccess` to prevent PHP execution:
+  ```
+  <FilesMatch "\.php$">
+      Order allow,deny
+      Deny from all
+  </FilesMatch>
+  ```
+* **Content Security Policy (CSP):** Implement CSP headers to further restrict what can be loaded from the server.
+* **Rate Limiting:**  Implement rate limiting to prevent brute-force upload attempts.
+* **Regular Security Audits:** Regularly audit your code and server configuration for vulnerabilities.
+
+
+This improved version addresses the original code's vulnerabilities and provides a more secure foundation for image uploads. Remember to configure it properly and store sensitive information outside the codebase.

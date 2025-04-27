@@ -1,0 +1,64 @@
+To securely handle database queries in PHP using prepared statements, you can use the `mysqli` extension. Here’s how you can rewrite your query to prevent SQL injection:
+
+```php
+<?php
+// Establish a connection to the database
+$mysqli = new mysqli("localhost", "username", "password", "database");
+
+// Check for connection errors
+if ($mysqli->connect_error) {
+    die("Connection failed: " . $mysqli->connect_error);
+}
+
+// Get the parameters from the URL safely
+$userid = $_GET['userid'] ?? '';
+$category = $_GET['category'] ?? '';
+
+// Prepare the SQL statement
+$stmt = $mysqli->prepare("SELECT * FROM mytable WHERE userid=? AND category=? ORDER BY id DESC");
+
+// Bind the parameters
+$stmt->bind_param("ss", $userid, $category);
+
+// Execute the statement
+$stmt->execute();
+
+// Get the result
+$result = $stmt->get_result();
+
+// Fetch data from the result
+while ($row = $result->fetch_assoc()) {
+    // Process the row
+    echo "ID: " . $row['id'] . " - User ID: " . $row['userid'] . " - Category: " . $row['category'] . "<br>";
+}
+
+// Close the statement and the connection
+$stmt->close();
+$mysqli->close();
+?>
+```
+
+### Key Points:
+
+1. **Use of `mysqli` Extension:**
+   - The `mysqli` extension is used for database interactions, offering a secure interface for executing prepared statements.
+
+2. **Prepared Statements:**
+   - Prepared statements with parameter binding (`bind_param`) ensure that the input values are treated safely, protecting against SQL injection.
+
+3. **Parameter Binding:**
+   - The `bind_param` function is used to bind variables to the SQL statement as parameters. The first argument specifies the types of the parameters (`"ss"` indicates two string parameters).
+
+4. **Error Handling:**
+   - Always check for connection errors and handle them appropriately.
+
+5. **Fetching Results:**
+   - The `get_result` function is used to execute the prepared statement and fetch results.
+
+6. **Security Practices:**
+   - Incorporate checks or defaults such as using `'??'` to handle cases where parameters might not be provided.
+
+### Additional Notes:
+- Using prepared statements may not dramatically increase speed for a few queries, but they improve security and maintainability significantly.
+- Compared to raw queries, prepared statements can have performance benefits when reused multiple times due to reduced query parsing overhead.
+- Always sanitize and validate input data as added layers of security.

@@ -1,0 +1,79 @@
+To address the issue of using a client certificate with `HttpsURLConnection` in Java 6, you need to properly configure the SSL context to use the client certificate. The default `SSLSocketFactory` does not automatically use the client certificate stored in the keystore. Instead, you need to create a custom `SSLContext` and configure it with the keystore containing the client certificate.
+
+Below is a complete and executable Java code snippet that demonstrates how to achieve this:
+
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+public class HttpsClientCertificateExample {
+
+    public static void main(String[] args) throws Exception {
+        // Path to the keystore containing the client certificate
+        String keystorePath = "/path/to/your/keystore.jks";
+        String keystorePassword = "keystore_password";
+        String clientCertPassword = "client_cert_password";
+
+        // Load the keystore
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        try (FileInputStream fis = new FileInputStream(keystorePath)) {
+            keyStore.load(fis, keystorePassword.toCharArray());
+        }
+
+        // Initialize KeyManagerFactory with the keystore
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, clientCertPassword.toCharArray());
+
+        // Initialize TrustManagerFactory with the default truststore
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init((KeyStore) null);
+
+        // Create and initialize SSLContext
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+        // Set the default SSLSocketFactory to the one from our SSLContext
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+        // Create the URL connection
+        URL url = new URL("https://somehost.dk:3049");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+
+        // Set request method and properties if needed
+        conn.setRequestMethod("GET");
+
+        // Get the input stream
+        try (InputStream inputStream = conn.getInputStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+    }
+}
+```
+
+### Explanation:
+1. **Keystore Loading**: The keystore containing the client certificate is loaded using `KeyStore.getInstance("JKS")`. The keystore password is provided to unlock the keystore.
+
+2. **KeyManagerFactory**: The `KeyManagerFactory` is initialized with the keystore and the client certificate password. This ensures that the client certificate is used during the SSL handshake.
+
+3. **TrustManagerFactory**: The `TrustManagerFactory` is initialized with the default truststore, which includes the server's root certificate.
+
+4. **SSLContext**: The `SSLContext` is initialized with the `KeyManager` and `TrustManager`. This context is then used to create the `SSLSocketFactory`.
+
+5. **HttpsURLConnection**: The default `SSLSocketFactory` for `HttpsURLConnection` is set to the one created from the custom `SSLContext`. This ensures that the client certificate is presented to the server during the handshake.
+
+6. **Connection and Reading**: The connection is opened, and the input stream is read to retrieve the server's response.
+
+### Notes:
+- Replace `/path/to/your/keystore.jks`, `keystore_password`, and `client_cert_password` with the actual paths and passwords.
+- Ensure that the keystore contains both the client certificate and the server's root certificate.
+- This example assumes that the server's root certificate is already trusted by the default Java truststore. If not, you may need to add it manually.
+
+This solution should resolve the `javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure` issue by ensuring that the client certificate is properly presented during the SSL handshake.

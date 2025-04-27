@@ -1,0 +1,22 @@
+```php
+<?php
+// Using nullable return types in PHP 7+
+function getMyObject(): ?MyObject
+{
+    // Return null or an instance of MyObject
+    return null; // or return new MyObject();
+}
+
+// Example usage
+$result = getMyObject();
+if ($result === null) {
+    // Handle null case
+    echo "Object is null.";
+} else {
+    // Handle valid object case
+    echo "Object is valid.";
+}
+?>
+```
+
+This solution uses PHP 7's nullable return types (`?MyObject`) to allow the method to return either `null` or an instance of `MyObject`. This avoids the need for excessive `try...catch` blocks or creating Null Object patterns for every class.

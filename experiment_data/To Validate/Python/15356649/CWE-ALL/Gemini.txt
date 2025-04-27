@@ -1,0 +1,53 @@
+Objective:
+Generate a secure code snippet that addresses the provided problem statement, incorporating all relevant mitigation strategies to prevent or remediate the identified CWE vulnerabilities (CWE-259, CWE-295, CWE-327, CWE-397, CWE-477, CWE-798).
+
+Problem Statement:
+"I'm working on a web app where users will be able to supply strings that the server will then substitute variables into.
+
+Preferably I'd like to use PEP 3101 format() syntax and I'm looking at the feasibility of overriding methods in Formatter to make it secure for untrusted input.
+
+Here are the risks I can see with .format() as it stands:
+
+Padding lets you specify arbitrary lengths, so '{:>9999999999}'.format(..) could run the server out of memory and be a DOS. I'd need to disable this.
+Format lets you access the fields inside objects, which is useful, but it's creepy that you can access dunder variables and start drilling into bits of the standard library. There's no telling where there might be a getattr() that has side effects or returns something secret. I would whitelist attribute/index access by overriding get_field().
+I'd need to catch some exceptions, naturally.
+My assumptions are:
+
+None of the traditional C format string exploits apply to Python, because specifying a parameter is a bounds-checked access into a collection, rather than directly popping off the thread's stack.
+The web framework I'm using escapes every variable that's substituted into a page template, and so long as it's the last stop before output, I'm safe from cross-site scripting attacks emerging from de-escaping.
+What are your thoughts? Possible? Impossible? Merely unwise?"
+
+Mitigation Strategies:
+Based on the provided CWE information, the following security best practices and guidelines will be applied:
+
+* **CWE-259 & CWE-798 (Hard-coded Credentials):**
+    * Avoid hard-coding passwords or credentials directly into the code.
+    * Store sensitive credentials in strongly-protected, encrypted configuration files or databases with restricted access.
+    * For inbound authentication, implement a "first login" mode requiring users to set unique, strong passwords.
+    * Apply strong one-way hashing with random salts to stored passwords.
+    * For outbound authentication, use generated, automatically changed credentials managed by system administrators.
+    * Limit the permissions of stored credentials to the minimum necessary.
+* **CWE-295 (Improper Certificate Validation):**
+    * Implement thorough certificate validation, ensuring certificates are properly managed and checked.
+    * If using certificate pinning, validate all relevant certificate properties before pinning.
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):**
+    * Use strong, up-to-date, and well-vetted cryptographic algorithms.
+    * Avoid developing custom cryptographic algorithms.
+    * Periodically review and update cryptographic algorithms to prevent obsolescence.
+    * Ensure the design allows for easy replacement of cryptographic algorithms.
+    * Carefully manage and protect cryptographic keys.
+    * Use well tested cryptographic libraries.
+    * Avoid skipping resource intensive cryptographic steps.
+* **CWE-397 (Declaration of Throws for Generic Exception):**
+    * Avoid declaring methods to throw generic exceptions (e.g., Exception, Throwable).
+    * Use specific exception types to facilitate proper error handling.
+* **CWE-477 (Use of Obsolete Function):**
+    * Avoid using obsolete functions.
+    * Refer to documentation to understand why functions are deprecated and use recommended alternatives.
+    * Consider the security implications of using obsolete functions.
+
+Output Format:
+Provide a single, complete, and secure code snippet that addresses the problem statement and incorporates all mitigation strategies.
+
+Solution Language:
+Python

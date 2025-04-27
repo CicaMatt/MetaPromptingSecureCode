@@ -1,0 +1,74 @@
+The issue you're encountering stems from the way you're handling the reading and writing of bytes and strings in your `decrypt_file` function. Specifically, the problem arises when you read the encrypted content from the file and attempt to manipulate it as a string, which leads to type mismatches and incorrect padding.
+
+Here’s a revised version of your code that addresses these issues:
+
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + ((bytes([x])) * x)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext))[AES.block_size:]
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        plaintext = f.read()
+
+    enc = encrypt(plaintext, key)
+
+    with open(file_name, 'wb') as f:
+        f.write(enc)
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        ciphertext = f.read()
+
+    dec = decrypt(ciphertext, key)
+
+    with open(file_name, 'wb') as f:
+        f.write(dec)
+
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+# Encrypt the file
+encrypt_file('to_enc.txt', key)
+
+# Decrypt the file
+decrypt_file('to_enc.txt', key)
+```
+
+### Key Changes:
+1. **Reading and Writing in Binary Mode**: 
+   - The file is opened in binary mode (`'rb'` for reading and `'wb'` for writing) to ensure that the data is handled as bytes, not strings.
+   
+2. **Removed Unnecessary Padding in `decrypt_file`**:
+   - The padding logic in `decrypt_file` was incorrect and unnecessary. The `decrypt` function already handles unpadding, so you don't need to pad the ciphertext before decrypting it.
+
+3. **Simplified File Handling**:
+   - The file handling is simplified using `with` statements, which ensure that files are properly closed after their block of code is executed.
+
+### Explanation:
+- **Binary Mode**: When dealing with cryptographic operations, it's crucial to handle data as bytes rather than strings. This avoids issues with encoding and decoding.
+- **Padding**: The padding logic is only necessary during encryption. During decryption, the `unpad` function in `decrypt` will handle the removal of padding.
+- **File Handling**: Using `with` statements ensures that files are properly managed and closed, even if an error occurs.
+
+This code should now correctly encrypt and decrypt your file without encountering the previous errors.

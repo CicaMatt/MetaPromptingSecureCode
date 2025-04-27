@@ -1,0 +1,50 @@
+```php
+<?php
+
+$plainText = "Text To Encrypt"; // The text to encrypt
+$passPhrase = "passpharse";
+$saltValue = "saltvalue";
+$hashAlgorithm = "sha1";
+$passwordIterations = 2;
+$initVector = "1a2b3c4d5e6f7g8h";
+$keySize = 256;
+
+// Derive the key
+$saltValueBytes = $saltValue; // No ASCII encoding needed in PHP, it's already bytes
+$derivedKey = openssl_pbkdf2($passPhrase, $saltValueBytes, $keySize / 8, $passwordIterations, $hashAlgorithm);
+
+
+// Encrypt the data
+$cipher = "aes-256-cbc"; // Rijndael-256 == AES-256
+$encrypted = openssl_encrypt($plainText, $cipher, $derivedKey, OPENSSL_RAW_DATA, $initVector);
+
+// Convert to base64
+$encryptedtext = base64_encode($encrypted);
+
+
+echo "->encrypt = $encryptedtext<br />";
+
+
+// --- Decryption (for testing) ---
+
+$decrypted = openssl_decrypt(base64_decode($encryptedtext), $cipher, $derivedKey, OPENSSL_RAW_DATA, $initVector);
+
+echo "->decrypt = $decrypted<br />";
+
+?>
+```
+
+**Explanation of Changes and Improvements:**
+
+1. **Key Derivation:** The crucial missing piece in the original PHP code was the proper key derivation process. The C# code uses `PasswordDeriveBytes` with PBKDF2. The PHP code now uses `openssl_pbkdf2()` to mimic this behavior accurately. This ensures the key generated in PHP matches the one in C#.  The `$saltValueBytes` is directly used because PHP strings are effectively byte arrays. No ASCII encoding is needed.
+
+2. **Rijndael/AES:**  Rijndael-256 is equivalent to AES-256.  The provided PHP code was already using `MCRYPT_RIJNDAEL_256` which is now deprecated.  The solution uses `openssl_encrypt()` with  `aes-256-cbc` for better security and compatibility.
+
+3. **Encoding:**  The C# code uses UTF8 encoding for the plaintext and ASCII for the salt and IV. The solution uses direct string input as PHP strings handle byte arrays without explicit encoding required, making it consistent with the C# byte array handling.  The final base64 encoding step matches the C# code.
+
+4. **Parameter Consistency:** The solution uses the same parameters (passphrase, salt, hash algorithm, iterations, IV, key size) as the C# code, ensuring consistent encryption results.
+
+5. **Decryption Included (for testing):**  The provided decryption code demonstrates how to decrypt the ciphertext using the same derived key and IV in PHP. This helps verify that the encryption is working as expected and that the key derivation is correct.  Remove the decryption part from the production code if it's not needed.
+
+
+This improved PHP code now accurately mirrors the key derivation and encryption logic of the C# code, allowing for seamless interoperability between the two systems. Remember to keep your `$passPhrase` and `$saltValue` secure in a production environment, ideally not hardcoded as in the example. Consider using environment variables or configuration files.

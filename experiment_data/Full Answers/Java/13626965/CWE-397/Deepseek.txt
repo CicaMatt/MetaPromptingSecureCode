@@ -1,0 +1,82 @@
+The issue described in the problem statement is related to SSL/TLS certificate validation. The server's SSL certificate is not trusted by the Java runtime, leading to an `SSLHandshakeException`. While the user asked for a way to "ignore" this exception, it's important to note that bypassing SSL certificate validation can introduce significant security risks. However, for the sake of addressing the problem, I'll provide a solution that demonstrates how to bypass SSL certificate validation in a controlled manner, while also emphasizing that this should only be done in a trusted environment or for testing purposes.
+
+### Solution Code
+
+```java
+import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.cert.X509Certificate;
+
+public class SSLHandshakeBypass {
+
+    public static void main(String[] args) {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = (hostname, session) -> true;
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+            // Now you can make the request
+            URL url = new URL("https://www.abc.com");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setDoOutput(true);
+
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            wr.flush();
+            wr.close();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation
+
+1. **TrustManager**: We create a custom `TrustManager` that does not validate any SSL certificates. This is done by overriding the `checkClientTrusted` and `checkServerTrusted` methods to do nothing.
+
+2. **SSLContext**: We initialize an `SSLContext` with our custom `TrustManager` and set it as the default `SSLSocketFactory` for all `HttpsURLConnection` instances.
+
+3. **HostnameVerifier**: We create a custom `HostnameVerifier` that accepts all hostnames, effectively bypassing hostname verification.
+
+4. **Making the Request**: After setting up the custom `TrustManager` and `HostnameVerifier`, we proceed to make the HTTP request as usual.
+
+### Important Notes
+
+- **Security Risk**: Bypassing SSL certificate validation can expose your application to man-in-the-middle (MITM) attacks. This should only be done in a controlled environment, such as during development or testing.
+  
+- **Production Environment**: In a production environment, you should ensure that the server's SSL certificate is properly configured and trusted by the Java runtime. You can add the server's certificate to the Java truststore if necessary.
+
+- **Alternative**: If you control the server, consider obtaining a valid SSL certificate from a trusted Certificate Authority (CA).
+
+This solution demonstrates how to bypass SSL certificate validation, but it should be used with caution and only when absolutely necessary.

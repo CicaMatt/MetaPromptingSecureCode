@@ -1,0 +1,159 @@
+```python
+import os
+import sqlite3
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from getpass import getpass  # For secure password input during setup
+
+DATABASE_FILE = "credentials.db"
+SALT_FILE = "salt.bin"
+KEY_FILE = "key.bin"
+
+
+def derive_key(password, salt):
+    """Derives a cryptographic key from the password and salt."""
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+    )
+    return kdf.derive(password.encode())
+
+
+def encrypt_data(data, key):
+    """Encrypts data using Fernet."""
+    f = Fernet(key)
+    return f.encrypt(data.encode())
+
+
+def decrypt_data(data, key):
+    """Decrypts data using Fernet."""
+    f = Fernet(key)
+    return f.decrypt(data).decode()
+
+
+def initialize_database():
+    """Initializes the database and sets up encryption."""
+    # Generate salt
+    salt = os.urandom(16)
+    with open(SALT_FILE, "wb") as f:
+        f.write(salt)
+
+    # Get master password from the user (only done once)
+    password = getpass("Enter a master password: ")
+    key = derive_key(password, salt)
+    with open(KEY_FILE, "wb") as f:
+        f.write(key)
+    
+    conn = sqlite3.connect(DATABASE_FILE)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS credentials (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            service_name TEXT UNIQUE NOT NULL,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL
+        )
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
+def store_credentials(service_name, username, password):
+    """Stores encrypted credentials in the database."""
+    with open(SALT_FILE, "rb") as f:
+        salt = f.read()
+    with open(KEY_FILE, "rb") as f:
+        key = f.read()
+
+
+    encrypted_username = encrypt_data(username, key)
+    encrypted_password = encrypt_data(password, key)
+
+
+    conn = sqlite3.connect(DATABASE_FILE)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "INSERT INTO credentials (service_name, username, password) VALUES (?, ?, ?)",
+            (service_name, encrypted_username, encrypted_password),
+        )
+    except sqlite3.IntegrityError:
+        cursor.execute(
+            "UPDATE credentials SET username = ?, password = ? WHERE service_name = ?",
+            (encrypted_username, encrypted_password, service_name),
+        )
+    
+    conn.commit()
+    conn.close()
+
+
+def retrieve_credentials(service_name):
+    """Retrieves and decrypts credentials from the database."""
+    with open(SALT_FILE, "rb") as f:
+        salt = f.read()
+    with open(KEY_FILE, "rb") as f:
+        key = f.read()
+    
+
+    conn = sqlite3.connect(DATABASE_FILE)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username, password FROM credentials WHERE service_name = ?", (service_name,)
+    )
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        encrypted_username, encrypted_password = result
+        username = decrypt_data(encrypted_username, key)
+        password = decrypt_data(encrypted_password, key)
+        return username, password
+    else:
+        return None
+
+
+# Example Usage (First time setup):
+if not os.path.exists(DATABASE_FILE):
+    initialize_database()
+
+
+# Example usage: Storing credentials
+store_credentials("third_party_service", "my_username", "my_secret_password")
+
+
+# Example usage: Retrieving credentials
+username, password = retrieve_credentials("third_party_service")
+
+if username and password:
+    # Use the retrieved credentials to interact with the third-party service.
+    print(f"Username: {username}")
+    print(f"Password: {password}")
+
+```
+
+
+Key improvements:
+
+* **Key Derivation:**  Uses PBKDF2HMAC to derive a strong encryption key from the master password.  This is much more secure than directly using the password as a key.
+* **Salting:**  Uses a randomly generated salt stored separately. This makes it computationally expensive to crack even if the database is compromised.
+* **Strong Encryption:** Uses Fernet, a modern, secure symmetric encryption library.
+* **No Hardcoded Credentials:**  Credentials are stored encrypted in the database.
+* **Separate Key Storage (Critical):** The encryption key is derived from a master password entered *only once* during setup and stored separately. The script itself never contains the key in plaintext. This mitigates the risks associated with distributing the script (even as an EXE).
+* **Error Handling:** Includes basic error handling with specific exceptions where appropriate (e.g., `sqlite3.IntegrityError`).
+* **Parameterization:** Uses parameterized SQL queries to prevent SQL injection vulnerabilities.
+
+
+**Deployment Considerations for the EXE:**
+
+* **Key Protection:** The most crucial security aspect is protecting the `salt.bin` and `key.bin` files. Distributing these with the EXE would defeat the purpose of the encryption. These MUST be stored separately and securely. Consider environment variables, the registry (with appropriate access controls), or a separate secure configuration store. The script can be modified to load the key and salt from these alternative locations.
+* **Code Obfuscation:** When creating the EXE, consider using a code obfuscator to make it more difficult to reverse engineer the script and extract the key handling logic.
+* **OS-Level Security:**  Since this is running on Windows via cron (Task Scheduler), ensure the user account running the script has minimal necessary privileges.
+
+
+This provides a robust approach to securing the credentials, even within the constraints of an EXE distribution.  Remember that security is a layered approach, and the strongest link is only as strong as its weakest component. Pay particular attention to securing the key derivation process and storage of the salt and derived key.

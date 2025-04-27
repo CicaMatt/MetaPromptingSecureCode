@@ -1,0 +1,89 @@
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class HttpsPostWithCertificateHandling {
+
+    public static void main(String[] args) throws Exception {
+        String urlString = "https://your_server_url"; // Replace with your server URL
+        String postData = "your_post_data";         // Replace with your POST data
+
+        try {
+            sendHttpsPost(urlString, postData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void sendHttpsPost(String urlString, String postData) throws Exception {
+
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        }};
+
+        // Install the all-trusting trust manager
+        SSLContext sc = SSLContext.getInstance("TLS"); // Use TLS instead of SSL
+        sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+        // Create all-trusting host name verifier
+        HostnameVerifier allHostsValid = (hostname, session) -> true;
+        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+
+        URL url = new URL(urlString);
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+        con.setRequestMethod("POST");
+        con.setDoOutput(true);
+        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+
+        try (OutputStream os = con.getOutputStream()) {
+            byte[] input = postData.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"))) {
+            StringBuilder response = new StringBuilder();
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+            System.out.println(response);
+        }
+
+
+    }
+}
+```
+
+**Explanation and Important Security Considerations:**
+
+This code provides a way to bypass certificate verification.  **This is extremely dangerous and should only be used for testing or in tightly controlled development environments where you fully understand the risks.**  **Never use this in production code.**
+
+* **Disabling Certificate Verification:** The code disables certificate verification by creating a custom `TrustManager` that accepts all certificates and a `HostnameVerifier` that accepts all hostnames. This opens your application to man-in-the-middle attacks.
+
+* **Production Environment:** In a production environment, you **must** properly verify the server's certificate. This typically involves configuring your application to trust a known Certificate Authority (CA) that has issued the server's certificate.  If you are using a self-signed certificate, you need to add the self-signed certificate to your trusted keystore.  Consult the documentation for your Java environment for instructions on how to manage your truststore.
+
+
+* **Why This is a Risky Solution:** Disabling certificate verification allows attackers to intercept and modify your HTTPS traffic without your application being aware.  They can steal sensitive data, inject malicious code, or redirect users to phishing sites.
+
+
+
+This example demonstrates how to make the HTTPS connection work with an untrusted certificate, but again, it's crucial to understand the security implications and only use this for testing or development in controlled environments where the risks are understood and acceptable.  For production, always verify certificates appropriately.

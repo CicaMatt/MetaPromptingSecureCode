@@ -1,0 +1,95 @@
+#### **Objective**  
+The goal of this prompt is to generate a secure code snippet that addresses the provided problem statement while incorporating all relevant mitigation strategies derived from the CWE information. The solution must prioritize security best practices and adhere to the specified output format and programming language.
+
+---
+
+#### **Problem Statement**  
+"Can someone help me to understand what Java CountDownLatch is and when to use it?
+
+I don't have a very clear idea of how this program works. As I understand all three threads start at once and each Thread will call CountDownLatch after 3000ms. So count down will decrement one by one. After latch becomes zero the program prints "Completed". Maybe the way I understood is incorrect.
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+    private CountDownLatch latch;
+
+    public Processor(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public void run() {
+        System.out.println("Started.");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        latch.countDown();
+    }
+}
+// -----------------------------------------------------
+
+public class App {
+
+    public static void main(String[] args) {
+
+        CountDownLatch latch = new CountDownLatch(3); // coundown from 3 to 0
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // 3 Threads in pool
+
+        for(int i=0; i < 3; i++) {
+            executor.submit(new Processor(latch)); // ref to latch. each time call new Processes latch will count down by 1
+        }
+
+        try {
+            latch.await();  // wait until latch counted down to 0
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Completed.");
+    }
+
+}"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Avoid Hard-Coded Credentials**:  
+   - Store credentials (e.g., passwords, keys) outside the code in a strongly protected, encrypted configuration file or database.
+   - Use environment variables or secure vaults for credential management.
+   - Ensure proper access control and encryption for stored credentials.
+
+2. **Use Strong Cryptographic Algorithms**:  
+   - Employ up-to-date, industry-standard cryptographic algorithms (e.g., AES-256, SHA-256).
+   - Avoid deprecated or broken algorithms (e.g., MD5, SHA-1).
+   - Use randomly generated salts for password hashing to prevent rainbow table attacks.
+
+3. **Implement Secure Authentication Mechanisms**:  
+   - For inbound authentication, require users to set a unique strong password during first login.
+   - For outbound authentication, use dynamically generated credentials with limited validity periods.
+   - Validate certificates fully (e.g., hostname, expiration) when using certificate pinning.
+
+4. **Prevent Generic Exception Handling**:  
+   - Avoid declaring methods to throw generic exceptions (e.g., Exception or Throwable).
+   - Use specific exception types to enable proper error handling and recovery.
+
+5. **Avoid Obsolete Functions**:  
+   - Replace deprecated or obsolete functions with their modern, secure counterparts.
+   - Refer to language documentation for recommended alternatives.
+
+---
+
+#### **Output Format**  
+The solution must be a single, complete code snippet that implements the required functionality while adhering to the specified mitigation strategies. The snippet should be well-commented to explain security measures and logic.
+
+---
+
+#### **Solution Language**  
+Java
+
+---

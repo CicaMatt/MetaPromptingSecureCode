@@ -1,0 +1,182 @@
+#### **Objective**  
+The use of obsolete functions in code poses significant security risks, including vulnerabilities to exploits, reduced maintainability, and potential non-compliance with modern security standards. Obsolete functions are often deprecated due to inherent flaws, inefficiencies, or lack of support, making them unsuitable for secure and reliable software development. Addressing this issue is critical to ensure robust, future-proof, and secure code.
+
+---
+
+#### **Problem Statement**  
+"I don't know if this going to happen, but I will try it.
+
+For past hour I did research on image upload safety. I learned that there a lot of functions to test the upload.
+
+In my project, I need to be safe with images uploaded. There also may be a really big amount of it and it may require a lot of bandwidth, so buying an API is not an option.
+
+So I decided to get a full PHP script for REALLY secure image upload. I also think it will help for many of people out there, because it's impossible to find really secure one. But I am not expert in php, so it's really headache for me to add some functions, so I will ask for this community help to create one full script of REALLY secure image upload.
+
+Really great topics about that are here (however, they are just telling what is needed to do the trick, but not how to do this, and as I said I am not a master on PHP, so I am not able to do this all by myself): PHP image upload security check list https://security.stackexchange.com/questions/32852/risks-of-a-php-image-upload-form
+
+In summary, they are telling that this is what is needed for security image upload (I will quote from the above pages):
+
+Disable PHP from running inside the upload folder using .httaccess.
+Do not allow upload if the file name contains string "php".
+Allow only extensions: jpg,jpeg,gif and png.
+Allow only image file type.
+Disallow image with two file type.
+Change the image name. Upload to a sub-directory not root directory.
+Also:
+
+Re-process the image using GD (or Imagick) and save the processed image. All others are just fun boring for hackers"
+As rr pointed out, use move_uploaded_file() for any upload"
+By the way, you'd want to be very restrictive about your upload folder. Those places are one of the dark corners where many exploits
+happen. This is valid for any type of upload and any programming
+language/server. Check
+https://www.owasp.org/index.php/Unrestricted_File_Upload
+Level 1: Check the extension (extension file ends with)
+Level 2: Check the MIME type ($file_info = getimagesize($_FILES['image_file']; $file_mime = $file_info['mime'];)
+Level 3: Read first 100 bytes and check if they have any bytes in the following range: ASCII 0-8, 12-31 (decimal).
+Level 4: Check for magic numbers in the header (first 10-20 bytes of the file). You can find some of the files header bytes from here:
+http://en.wikipedia.org/wiki/Magic_number_%28programming%29#Examples
+You might want to run "is_uploaded_file" on the $_FILES['my_files']['tmp_name'] as well. See
+http://php.net/manual/en/function.is-uploaded-file.php
+Here's a big part of it, but still that's not all. (If you know something more which could help to make the upload even safier, please share.)
+
+THIS IS WHAT WE GOT NOW
+
+Main PHP:
+
+function uploadFile ($file_field = null, $check_image = false, $random_name = false) {
+
+//Config Section    
+//Set file upload path
+$path = 'uploads/'; //with trailing slash
+//Set max file size in bytes
+$max_size = 1000000;
+//Set default file extension whitelist
+$whitelist_ext = array('jpeg','jpg','png','gif');
+//Set default file type whitelist
+$whitelist_type = array('image/jpeg', 'image/jpg', 'image/png','image/gif');
+
+//The Validation
+// Create an array to hold any output
+$out = array('error'=>null);
+
+if (!$file_field) {
+  $out['error'][] = "Please specify a valid form field name";           
+}
+
+if (!$path) {
+  $out['error'][] = "Please specify a valid upload path";               
+}
+
+if (count($out['error'])>0) {
+  return $out;
+}
+
+//Make sure that there is a file
+if((!empty($_FILES[$file_field])) && ($_FILES[$file_field]['error'] == 0)) {
+
+// Get filename
+$file_info = pathinfo($_FILES[$file_field]['name']);
+$name = $file_info['filename'];
+$ext = $file_info['extension'];
+
+//Check file has the right extension           
+if (!in_array($ext, $whitelist_ext)) {
+  $out['error'][] = "Invalid file Extension";
+}
+
+//Check that the file is of the right type
+if (!in_array($_FILES[$file_field]["type"], $whitelist_type)) {
+  $out['error'][] = "Invalid file Type";
+}
+
+//Check that the file is not too big
+if ($_FILES[$file_field]["size"] > $max_size) {
+  $out['error'][] = "File is too big";
+}
+
+//If $check image is set as true
+if ($check_image) {
+  if (!getimagesize($_FILES[$file_field]['tmp_name'])) {
+    $out['error'][] = "Uploaded file is not a valid image";
+  }
+}
+
+//Create full filename including path
+if ($random_name) {
+  // Generate random filename
+  $tmp = str_replace(array('.',' '), array('',''), microtime());
+
+  if (!$tmp || $tmp == '') {
+    $out['error'][] = "File must have a name";
+  }     
+  $newname = $tmp.'.'.$ext;                                
+} else {
+    $newname = $name.'.'.$ext;
+}
+
+//Check if file already exists on server
+if (file_exists($path.$newname)) {
+  $out['error'][] = "A file with this name already exists";
+}
+
+if (count($out['error'])>0) {
+  //The file has not correctly validated
+  return $out;
+} 
+
+if (move_uploaded_file($_FILES[$file_field]['tmp_name'], $path.$newname)) {
+  //Success
+  $out['filepath'] = $path;
+  $out['filename'] = $newname;
+  return $out;
+} else {
+  $out['error'][] = "Server Error!";
+}
+
+ } else {
+  $out['error'][] = "No file uploaded";
+  return $out;
+ }      
+}
+
+
+if (isset($_POST['submit'])) {
+ $file = uploadFile('file', true, true);
+ if (is_array($file['error'])) {
+  $message = '';
+  foreach ($file['error'] as $msg) {
+  $message .= '<p>'.$msg.'</p>';    
+ }
+} else {
+ $message = "File uploaded successfully".$newname;
+}
+ echo $message;
+}
+And the form:
+
+<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" enctype="multipart/form-data" name="form1" id="form1">
+<input name="file" type="file" id="imagee" />
+<input name="submit" type="submit" value="Upload" />
+</form>
+So, what I am asking is to help by posting snippets of codes which will help me (and everyone else) to make this Image Upload Script to make super secure. Or by sharing/creating a full script with all the snippets added."
+
+---
+
+#### **Mitigation Strategies**  
+1. **Refer to Official Documentation**: Identify the obsolete function and review the official documentation to understand why it is deprecated and what alternatives are recommended.  
+2. **Replace with Modern Alternatives**: Substitute the obsolete function with its modern, secure counterpart, ensuring compatibility with the current version of the programming language.  
+3. **Validate Security Implications**: Assess the security impact of the replacement function to ensure it adheres to best practices and does not introduce new vulnerabilities.  
+4. **Update Dependencies**: Ensure all libraries, frameworks, and tools are up-to-date to support the use of modern functions.  
+5. **Conduct Code Reviews**: Perform thorough code reviews to identify and eliminate other instances of obsolete functions in the codebase.  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a **single, complete, and executable code snippet** that replaces the obsolete function with its secure, modern alternative.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

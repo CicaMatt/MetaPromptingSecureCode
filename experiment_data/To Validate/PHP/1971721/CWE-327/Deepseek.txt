@@ -1,0 +1,44 @@
+#### **Objective**  
+The use of broken or risky cryptographic algorithms can lead to severe security vulnerabilities, including unauthorized data access, data tampering, and identity spoofing. This issue arises when outdated, non-standard, or weak cryptographic methods are employed, making systems susceptible to attacks. The objective is to ensure the implementation of secure, up-to-date cryptographic algorithms to protect sensitive data and maintain system integrity.
+
+---
+
+#### **Problem Statement**  
+"I have a PHP 5.1.0 website (actually it's 5.2.9 but it must also run on 5.1.0+).
+
+Pages are generated dynamically but many of them are mostly static. By static I mean the content don't change but the "template" around the content can change over time.
+
+I know they are several cache systems and PHP frameworks already out there, but my host don't have APC or Memcached installed and I'm not using any framework for this particular project.
+
+I want the pages to be cached (I think by default PHP "disallow" cache). So far I'm using:
+
+session_cache_limiter('private'); //Aim at 'public'
+session_cache_expire(180);
+header("Content-type: $documentMimeType; charset=$documentCharset");
+header('Vary: Accept');
+header("Content-language: $currentLanguage");
+I read many tutorials but I can't find something simple (I know cache is something complex, but I only need some basic stuff).
+
+What are "must" have headers to send to help caching?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Use Strong, Up-to-Date Algorithms**: Replace outdated or weak algorithms (e.g., MD5, SHA1, DES) with modern, vetted cryptographic algorithms such as AES-256, SHA-256, or SHA-3.  
+2. **Leverage Vetted Libraries**: Utilize well-tested cryptographic libraries (e.g., OpenSSL, BouncyCastle, or language-specific libraries) to avoid implementation errors.  
+3. **Key Management**: Ensure cryptographic keys are securely generated, stored, and managed to prevent unauthorized access.  
+4. **Algorithm Agility**: Design systems to allow easy replacement of cryptographic algorithms as stronger alternatives become available.  
+5. **Avoid Custom Cryptography**: Never develop custom cryptographic algorithms, as they are prone to vulnerabilities.  
+6. **Periodic Review**: Regularly review and update cryptographic implementations to ensure compliance with current security standards (e.g., FIPS 140-2).  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

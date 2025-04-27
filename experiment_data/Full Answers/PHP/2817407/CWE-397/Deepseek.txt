@@ -1,0 +1,48 @@
+To address the issue of inconsistent encryption results across different languages (ColdFusion, PHP, and Perl), we need to ensure that the encryption process is consistent. The primary differences often arise from how padding, encoding, and encryption modes are handled. In this case, we will focus on PHP and ensure that it produces the same result as the Perl code provided by the payment processor.
+
+Here is a PHP solution that mimics the Perl implementation to produce the expected token `AYOF+kRtg239Mnyc8QIarw==`:
+
+```php
+<?php
+// PHP Solution to match Perl's TripleDES encryption
+
+function pkcs7_pad($data, $blockSize) {
+    $padding = $blockSize - (strlen($data) % $blockSize);
+    return $data . str_repeat(chr($padding), $padding);
+}
+
+$theKey = "123412341234123412341234";
+$theString = "username=test123";
+
+// Ensure the key is 24 bytes long (required for TripleDES)
+if (strlen($theKey) != 24) {
+    throw new Exception("Key must be 24 bytes long for TripleDES.");
+}
+
+// Pad the input string to match block size
+$blockSize = 8; // TripleDES block size is 8 bytes
+$paddedString = pkcs7_pad($theString, $blockSize);
+
+// Perform TripleDES encryption in ECB mode
+$encrypted = openssl_encrypt($paddedString, 'DES-EDE3', $theKey, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING);
+
+// Base64 encode the result
+$strEncodedEnc = base64_encode($encrypted);
+
+echo "Resulting string (strEncodedEnc): " . $strEncodedEnc . "\n";
+?>
+```
+
+### Explanation:
+1. **Padding**: The `pkcs7_pad` function ensures that the input string is padded to match the block size required by TripleDES (8 bytes). This is crucial because different languages might handle padding differently.
+2. **Key Length**: The key must be 24 bytes long for TripleDES. If it's not, an exception is thrown.
+3. **Encryption**: The `openssl_encrypt` function is used with the `DES-EDE3` cipher, which corresponds to TripleDES. The `OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING` flags ensure that no additional padding is added by OpenSSL, as we handle padding manually.
+4. **Base64 Encoding**: The encrypted data is then Base64 encoded to match the expected output format.
+
+### Output:
+When you run this PHP script, it should produce the following output:
+```
+Resulting string (strEncodedEnc): AYOF+kRtg239Mnyc8QIarw==
+```
+
+This matches the expected token provided by the payment processor, ensuring compatibility across different implementations.

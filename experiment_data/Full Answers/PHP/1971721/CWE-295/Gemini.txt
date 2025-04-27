@@ -1,0 +1,93 @@
+```php
+<?php
+
+// Define cache duration (in seconds)
+$cacheDuration = 3600; // 1 hour
+
+// Generate a unique cache key based on the requested URL
+$cacheKey = md5($_SERVER['REQUEST_URI']);
+
+// Define the cache file path
+$cacheFile = 'cache/' . $cacheKey . '.html';
+
+// Check if a valid cached file exists
+if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheDuration) {
+    // Serve the cached file
+    header('Content-Type: text/html; charset=utf-8'); // Set the correct content type
+    header('Cache-Control: public, max-age=' . ($cacheDuration - (time() - filemtime($cacheFile))));
+    header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($cacheFile)) . ' GMT');
+    readfile($cacheFile);
+    exit;
+}
+
+// Start output buffering to capture the page content
+ob_start();
+
+// ... your existing PHP code to generate the page content ...
+
+// Example:
+$documentMimeType = 'text/html';
+$documentCharset = 'utf-8';
+$currentLanguage = 'en';
+
+
+header("Content-type: $documentMimeType; charset=$documentCharset");
+// IMPORTANT: Vary header based on aspects that might change the output (e.g., language)
+header('Vary: Accept, Accept-Language');  // Added Accept-Language
+header("Content-language: $currentLanguage");
+
+
+echo "<!-- Cache generated at " . date('Y-m-d H:i:s') . " -->\n";
+echo "<h1>Welcome to my website</h1>";
+// ... rest of your page content
+
+
+// Get the buffered content
+$content = ob_get_contents();
+
+// End output buffering and send the content to the browser
+ob_end_flush();
+
+
+// Save the content to the cache file
+if (!is_dir('cache')) {
+    mkdir('cache', 0755, true); // Create cache directory if it doesn't exist
+}
+file_put_contents($cacheFile, $content);
+
+
+// Set cache headers for the first time the page is generated
+header('Cache-Control: public, max-age=' . $cacheDuration);
+header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
+
+?>
+
+```
+
+
+
+**Explanation and Key Improvements:**
+
+1. **Proper Cache Control Headers:**  The code uses `Cache-Control: public, max-age=...`  which is crucial for browser and proxy caching.  It also includes `Last-Modified` for efficient validation.
+
+2. **Cache Key based on URL:** The `$cacheKey` is derived from the request URI, ensuring different URLs get different cache files.
+
+3. **File-Based Caching:** This simple method stores the cached HTML in files.
+
+4. **Cache Directory Creation:** The code now creates the `cache/` directory if it doesn't exist, handling a potential source of errors.
+
+5. **Output Buffering:** `ob_start()` and related functions capture the page output, allowing you to cache dynamic content.
+
+6. **`Vary` Header:** The `Vary` header is now set to `Accept, Accept-Language`. This is essential to ensure that different versions of the page are cached based on user preferences like language settings or accepted content types. The original code lacked this crucial header, potentially leading to incorrect cached content being served.
+
+7. **Error Handling and Security:** The `mkdir()` now has the recursive flag (`true`) and permissions set to prevent potential issues.
+
+
+**How to use:**
+
+1. Create a folder named "cache" in the same directory as your PHP script.
+2. Ensure the "cache" folder is web-writable (chmod 755 or equivalent).
+3. Place this code at the beginning of your PHP files that you want to cache.
+
+
+This improved solution is more robust, handles dynamic content properly, and includes important best practices for HTTP caching.  It addresses the original problem statement while adhering to the specified limitations (PHP 5.1.0+ compatibility, no external caching systems). Remember to adapt the `$cacheDuration` and other parameters as needed for your specific website.

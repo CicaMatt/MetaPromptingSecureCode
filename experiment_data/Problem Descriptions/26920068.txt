@@ -1,0 +1,50 @@
+I'm stucked days with a Java LDAP connection problem.
+
+This is my method to connect to a LDAP Server:
+
+public boolean authenticate(String user, String password) {
+    StringBuilder url = new StringBuilder("ldap://");
+    url.append("10.0.0.1");
+    url.append(":");
+    url.append(389);
+
+    StringBuilder securityPrincipal = new StringBuilder("uid=");
+    securityPrincipal.append(user);
+    securityPrincipal.append(",");
+    securityPrincipal.append("dc=XXXXX,dc=YYY,dc=ZZ");
+
+    Hashtable<String, String> env;
+    env = new Hashtable<String, String>();
+    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+    env.put(Context.PROVIDER_URL, url.toString());
+    env.put(Context.SECURITY_AUTHENTICATION, "simple");
+    env.put(Context.SECURITY_PRINCIPAL, securityPrincipal.toString());
+
+    env.put(Context.SECURITY_CREDENTIALS, password);
+
+    System.out.println(url);
+    System.out.println(securityPrincipal.toString());
+
+    try {
+        ldap = new InitialLdapContext(env, null);
+    } catch (NamingException e) {
+        e.printStackTrace();
+        return false;
+    }
+
+    return true;
+}
+For security and disclosure reasons, I ommited "dc" for XXXXX, YYY and ZZ and changed LDAP server's IP.
+
+I used the same combination into a PHP software (GLPI) and it worked like a charm. But, for GOD's sake, Java cannot accept this LDAP configurarion giving me always this error:
+
+javax.naming.AuthenticationException: [LDAP: error code 49 - Invalid Credentials]
+    at com.sun.jndi.ldap.LdapCtx.mapErrorCode(Unknown Source)
+    at com.sun.jndi.ldap.LdapCtx.processReturnCode(Unknown Source)
+    at com.sun.jndi.ldap.LdapCtx.processReturnCode(Unknown Source)
+Full dn is this:
+
+uid=tiagoadami,dc=XXXXX,dc=YYY,dc=ZZ
+Variable user is filled with "tiagoadami" and variable "argument" is filled with the plain text password.
+
+This is very annoying. My password is correct, and I'm authenticating into every single application with username "tiagoadami" and the password. I'm out of options right now. Can anyone help me?

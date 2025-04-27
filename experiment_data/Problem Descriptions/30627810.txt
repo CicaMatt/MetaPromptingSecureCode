@@ -1,0 +1,50 @@
+I am using Python logging to generate log files when processing and I am trying to READ those log files into a list/dict which will then be converted into JSON and loaded into a nosql database for processing.
+
+The file gets generated with the following format.
+
+2015-05-22 16:46:46,985 - __main__ - INFO - Starting to Wait for Files
+2015-05-22 16:46:56,645 - __main__ - INFO - Starting: Attempt 1 Checking for New Files from gs://folder/folder/
+2015-05-22 16:47:46,488 - __main__ - INFO - Success: Downloading the Files from Cloud Storage: Return Code - 0 and FileCount 1
+2015-05-22 16:48:48,180 - __main__ - ERROR - Failed: Waiting for files the Files from Cloud Storage: gs://folder/folder/
+Traceback (most recent call last):
+  File "<ipython-input-16-132cda1c011d>", line 10, in <module>
+    if numFilesDownloaded == 0:
+NameError: name 'numFilesDownloaded' is not defined
+2015-05-22 16:49:17,918 - __main__ - INFO - Starting to Wait for Files
+2015-05-22 16:49:32,160 - __main__ - INFO - Starting: Attempt 1 Checking for New Files from gs://folder/folder/
+2015-05-22 16:49:39,329 - __main__ - INFO - Success: Downloading the Files from Cloud Storage: Return Code - 0 and FileCount 1
+2015-05-22 16:53:30,706 - __main__ - INFO - Starting to Wait for Files
+NOTE: There are actually \n breaks before each NEW date you see but cant seem to represent it here.
+
+Basically I am trying to read in this text file and produce a json object that looks like this:
+
+{
+    'Date': '2015-05-22 16:46:46,985',
+    'Type': 'INFO',
+    'Message':'Starting to Wait for Files'
+}
+...
+
+{
+    'Date': '2015-05-22 16:48:48,180',
+    'Type': 'ERROR',
+    'Message':'Failed: Waiting for files the Files from Cloud Storage:  gs://folder/anotherfolder/ Traceback (most recent call last):
+               File "<ipython-input-16-132cda1c011d>", line 10, in <module> if numFilesDownloaded == 0: NameError: name 'numFilesDownloaded' is not defined '
+}
+The problem I am having:
+
+I can add each line into a list or dict etc BUT the ERROR message sometimes goes over multiple lines so I end up splitting it up incorrectly.
+
+Tried:
+
+I have tried to use code like the below to only split the lines on valid dates but I cant seem to get the error messages that go across multiple lines. I also tried regular expressions and think that's a possible solution but cant seem to find the right regex to use...NO CLUE how it works so tried a bunch of copy paste but without any success.
+
+with open(filename,'r') as f:
+    for key,group in it.groupby(f,lambda line: line.startswith('2015')):
+        if key:
+            for line in group:
+                listNew.append(line)
+Tried some crazy regex but no luck here either:
+
+logList = re.split(r'(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])', fileData)
+Would appreciate any help...thanks

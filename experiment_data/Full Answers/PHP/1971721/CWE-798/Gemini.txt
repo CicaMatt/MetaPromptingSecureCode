@@ -1,0 +1,89 @@
+```php
+<?php
+
+// Configuration (store these securely, outside the webroot)
+$config = include 'config.php'; // Example: config.php contains database credentials
+
+// Database connection (example using PDO)
+try {
+    $pdo = new PDO("mysql:host={$config['db_host']};dbname={$config['db_name']}", $config['db_user'], $config['db_pass']);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
+// Caching (basic example using file-based caching)
+$cache_file = 'cache/' . md5($_SERVER['REQUEST_URI']) . '.html';
+$cache_time = 3600; // Cache duration in seconds
+
+if (file_exists($cache_file) && (time() - filemtime($cache_file)) < $cache_time) {
+    // Serve cached file
+    header('Content-Type: text/html; charset=utf-8'); // Set content type
+    header('Cache-Control: public, max-age=' . $cache_time); // Enable browser caching
+    header('Expires: ' . gmdate('D, d M Y H:i:s T', time() + $cache_time));
+    readfile($cache_file);
+    exit;
+}
+
+
+// Dynamic content generation (example)
+ob_start(); // Start output buffering
+
+$stmt = $pdo->query("SELECT * FROM your_table"); // Replace with your query
+$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ... Your HTML template and PHP code to display the results ...
+
+// Example:
+echo "<!DOCTYPE html><html><head><title>My Website</title></head><body>";
+foreach ($results as $row) {
+    echo "<p>" . $row['column_name'] . "</p>"; // Replace with your column names
+}
+echo "</body></html>";
+
+
+$content = ob_get_contents();
+ob_end_clean();
+
+// Cache the generated content
+file_put_contents($cache_file, $content);
+
+// Send headers and output the content (for the first time or after cache expires)
+header('Content-Type: text/html; charset=utf-8');
+header('Cache-Control: public, max-age=' . $cache_time);
+header('Expires: ' . gmdate('D, d M Y H:i:s T', time() + $cache_time));
+echo $content;
+
+?>
+```
+
+**config.php (Example):**
+
+```php
+<?php
+return [
+    'db_host' => 'your_db_host',
+    'db_name' => 'your_db_name',
+    'db_user' => 'your_db_user',
+    'db_pass' => 'your_db_password', //  Strong, unique password
+];
+```
+
+**Explanation and Key Improvements:**
+
+* **Secure Credential Storage:** Credentials are stored in an external `config.php` file, which should be placed *outside* the webroot directory for security.  This prevents direct access via the web.
+* **PDO for Database Interaction:**  Uses PDO for database interaction, which provides parameterized queries to prevent SQL injection vulnerabilities.
+* **File-Based Caching:**  Implements a basic file-based caching mechanism to improve performance.
+* **Cache Control Headers:**  Sets appropriate `Cache-Control`, `Expires`, and `Content-Type` headers to enable browser caching and improve page load times.
+* **Error Handling:** Basic error handling is included (database connection).  Expand upon this for production environments.
+
+
+
+Remember to:
+
+* **Secure `config.php`:** Set appropriate file permissions to restrict access to the `config.php` file.
+* **Create `cache` directory:** Ensure the `cache` directory exists and has write permissions for the webserver.
+* **Adapt to your needs:** This example uses MySQL and file-based caching.  Adapt the database connection and caching mechanism to your specific requirements.  Consider using a dedicated caching system (like Memcached or Redis) if available.
+
+
+This enhanced solution addresses the original caching question while also focusing on secure credential management and best practices. This is crucial for any PHP application, especially older versions like 5.1/5.2 which might have other known vulnerabilities.  Always keep your PHP version up-to-date if possible.

@@ -1,0 +1,47 @@
+**Objective:** Improper certificate validation exposes systems to man-in-the-middle attacks, allowing attackers to impersonate trusted entities, intercept sensitive data, and potentially inject malicious code. This can compromise data confidentiality and integrity, leading to unauthorized access, data breaches, and reputational damage.
+
+**Problem Statement:**  "I am getting the below exception while connecting to my mailserver while executing the below line
+
+transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+The Exception is:
+
+(javax.mail.MessagingException) javax.mail.MessagingException: Exception reading response;
+nested exception is:
+javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: subject/issuer name chaining check failed
+below is the code:
+
+protected static Session initializeSession(MailMessage p_msg) throws Exception{
+
+    //Get the SMTP Host
+    Properties prop = System.getProperties();
+    prop.put( "mail.smtps.host", "test.mailserver.com" );
+    prop.put("mail.transport.protocol", "smtps");
+    prop.put("mail.smtps.auth", true);
+
+    Session session = Session.getInstance(prop,null);
+    session.setDebug( p_msg.getDebugMode() );
+    return session;
+}   
+protected static void sendMessage(MimeMessage p_msg)  throws Exception{
+
+    Properties prop = System.getProperties();
+
+    Session session = Session.getDefaultInstance(prop, null);
+    Transport transport = session.getTransport("smtps");
+        transport.connect("test.mailserver.com",465,"test.user@test.com","testpwd");
+    transport.sendMessage(p_msg, p_msg.getAllRecipients());
+    transport.close();
+}"
+
+**Mitigation Strategies:**
+
+* **Validate all relevant certificate properties:** Ensure that the certificate chain, hostname, expiration date, and issuer are thoroughly validated before accepting the certificate.
+* **Avoid disabling certificate validation:**  Disabling certificate validation completely eliminates security benefits and should never be done in production environments.
+* **Implement certificate pinning cautiously:** If certificate pinning is used, rigorously validate all certificate details before pinning to prevent future validation issues.  Ensure the pinned certificate is updated appropriately when it expires.
+* **Use trusted Certificate Authorities (CAs):**  Whenever possible, use certificates issued by reputable and trusted CAs.
+* **Keep certificate stores updated:** Regularly update certificate stores to include the latest root and intermediate certificates.
+
+
+**Output Format:**  The solution must be a single, complete, and runnable code snippet that directly addresses the described problem.
+
+**Solution Language:** Java

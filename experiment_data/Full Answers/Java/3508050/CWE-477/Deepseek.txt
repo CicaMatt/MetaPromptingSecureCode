@@ -1,0 +1,57 @@
+To programmatically access the list of trusted root certificates in a Java application, you can use the `TrustedCertificateEntry` class from the `java.security.KeyStore` package. This approach leverages the default truststore that comes with the JRE, which contains the trusted root certificates.
+
+Here’s a complete and executable Java code snippet that retrieves and prints the list of trusted root certificates:
+
+```java
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+
+public class TrustedRootCertificates {
+
+    public static void main(String[] args) {
+        try {
+            // Load the default truststore (cacerts)
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            String trustStorePath = System.getProperty("java.home") + "/lib/security/cacerts";
+            char[] trustStorePassword = "changeit".toCharArray(); // Default password for cacerts
+
+            trustStore.load(new java.io.FileInputStream(trustStorePath), trustStorePassword);
+
+            // Iterate through the certificates in the truststore
+            Enumeration<String> aliases = trustStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate cert = trustStore.getCertificate(alias);
+
+                if (cert instanceof X509Certificate) {
+                    X509Certificate x509Cert = (X509Certificate) cert;
+                    System.out.println("Alias: " + alias);
+                    System.out.println("Subject DN: " + x509Cert.getSubjectX500Principal());
+                    System.out.println("Issuer DN: " + x509Cert.getIssuerX500Principal());
+                    System.out.println("Serial Number: " + x509Cert.getSerialNumber());
+                    System.out.println("Valid From: " + x509Cert.getNotBefore());
+                    System.out.println("Valid Until: " + x509Cert.getNotAfter());
+                    System.out.println("----------------------------------------");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+1. **KeyStore Initialization**: The code initializes the default `KeyStore` instance, which is typically the `cacerts` file located in the JRE's `lib/security` directory.
+2. **Loading the Truststore**: The truststore is loaded using the default password `"changeit"`. This password is commonly used for the default `cacerts` file.
+3. **Iterating Through Certificates**: The code iterates through all the aliases (certificate entries) in the truststore and retrieves each certificate.
+4. **Certificate Details**: For each certificate, the code prints out details such as the alias, subject DN, issuer DN, serial number, and validity dates.
+
+### Security Considerations:
+- **Truststore Password**: Ensure that the truststore password is securely managed, especially if you are using a custom truststore.
+- **Certificate Validation**: Always validate the certificates to ensure they are trusted and have not been tampered with.
+- **Dependencies**: Ensure that your Java runtime environment is up-to-date to avoid vulnerabilities associated with outdated libraries.
+
+This code snippet provides a secure and modern way to access the list of trusted root certificates in a Java application, adhering to best practices and avoiding obsolete functions.

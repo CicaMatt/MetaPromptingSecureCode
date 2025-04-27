@@ -1,0 +1,9 @@
+I've been trying to figure out which form of connection i should use when using pika, I've got two alternatives as far as I understand.
+
+Either the BlockingConnection or the SelectConnection, however I'm not really sure about the differences between these two (i.e. what is the BlockingConnection blocking? and more)
+
+The documentation for pika says that SelectConnection is the preferred way to connect to rabbit since it provides "multiple event notification methods including select, epoll, kqueue and poll."
+
+So I'm wondering what are the implications of these two different kinds of connections?
+
+PS: I know I shouldn't put a tag in the title but in this case I think it does help to clarify the question.

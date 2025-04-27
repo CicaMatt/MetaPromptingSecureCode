@@ -1,0 +1,50 @@
+To address the caching issue in your PHP 5.1.0+ website, you can use HTTP headers to control caching behavior. The `session_cache_limiter` and `session_cache_expire` functions are not the best fit for controlling page caching, as they are primarily designed for session management. Instead, you can use HTTP headers like `Cache-Control`, `Expires`, and `ETag` to manage caching more effectively.
+
+Below is a complete and executable PHP code snippet that sets appropriate HTTP headers to enable caching for your pages:
+
+```php
+<?php
+// Set the content type and charset
+$documentMimeType = 'text/html'; // Example MIME type
+$documentCharset = 'UTF-8'; // Example charset
+header("Content-type: $documentMimeType; charset=$documentCharset");
+
+// Set the language header
+$currentLanguage = 'en'; // Example language
+header("Content-language: $currentLanguage");
+
+// Set caching headers
+$cacheDuration = 180 * 60; // Cache duration in seconds (180 minutes)
+
+// Cache-Control header
+header("Cache-Control: public, max-age=$cacheDuration");
+
+// Expires header
+header("Expires: " . gmdate("D, d M Y H:i:s", time() + $cacheDuration) . " GMT");
+
+// ETag header (optional, for cache validation)
+$etag = md5(filemtime(__FILE__) . $_SERVER['REQUEST_URI']);
+header("ETag: $etag");
+
+// Vary header (to indicate that the response may vary based on the Accept header)
+header('Vary: Accept');
+
+// Your dynamic content generation logic here
+echo "<html><body><h1>Hello, World!</h1></body></html>";
+?>
+```
+
+### Explanation:
+1. **Content-Type and Charset**: These headers specify the MIME type and character encoding of the response.
+2. **Content-Language**: This header indicates the language of the content.
+3. **Cache-Control**: This header specifies that the response can be cached publicly and sets the maximum age for the cache.
+4. **Expires**: This header sets an expiration date for the cached content.
+5. **ETag**: This header provides a unique identifier for the content, which can be used for cache validation.
+6. **Vary**: This header indicates that the response may vary based on the `Accept` header, which is useful for content negotiation.
+
+### Key Points:
+- **Cache-Control**: The `public` directive allows shared caches (like proxies) to store the response. The `max-age` directive specifies the maximum amount of time (in seconds) that the response can be cached.
+- **Expires**: This header provides an absolute expiration time for the cached content.
+- **ETag**: This header is useful for cache validation. If the content changes, the ETag will change, and the client will know to fetch the new content.
+
+This approach ensures that your pages are cached effectively while still allowing for dynamic content generation. It is compatible with PHP 5.1.0+ and does not rely on external caching systems like APC or Memcached.

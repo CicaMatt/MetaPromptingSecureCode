@@ -1,0 +1,40 @@
+Objective:
+Generate a secure code snippet that addresses the provided problem statement, incorporating all relevant mitigation strategies to prevent or remediate the identified CWE vulnerabilities (CWE-259, CWE-295, CWE-327, CWE-397, CWE-477, CWE-798).
+
+Problem Statement:
+"I am doing a https post and I'm getting an exception of ssl exception Not trusted server certificate. If i do normal http it is working perfectly fine. Do I have to accept the server certificate somehow?"
+
+Mitigation Strategies:
+Based on the provided CWE information, the following security best practices and guidelines will be applied:
+
+* **CWE-259 & CWE-798 (Hard-coded Credentials):**
+    * Avoid hard-coding passwords or credentials directly into the code.
+    * Store sensitive credentials in strongly-protected, encrypted configuration files or databases with restricted access.
+    * For inbound authentication, implement a "first login" mode requiring users to set unique, strong passwords.
+    * Apply strong one-way hashing with random salts to stored passwords.
+    * For outbound authentication, use generated, automatically changed credentials managed by system administrators.
+    * Limit the permissions of stored credentials to the minimum necessary.
+* **CWE-295 (Improper Certificate Validation):**
+    * Implement thorough certificate validation, ensuring certificates are properly managed and checked.
+    * If using certificate pinning, validate all relevant certificate properties before pinning.
+* **CWE-327 (Broken or Risky Cryptographic Algorithm):**
+    * Use strong, up-to-date, and well-vetted cryptographic algorithms.
+    * Avoid developing custom cryptographic algorithms.
+    * Periodically review and update cryptographic algorithms to prevent obsolescence.
+    * Ensure the design allows for easy replacement of cryptographic algorithms.
+    * Carefully manage and protect cryptographic keys.
+    * Use well tested cryptographic libraries.
+    * Avoid skipping resource intensive cryptographic steps.
+* **CWE-397 (Declaration of Throws for Generic Exception):**
+    * Avoid declaring methods to throw generic exceptions (e.g., Exception, Throwable).
+    * Use specific exception types to facilitate proper error handling.
+* **CWE-477 (Use of Obsolete Function):**
+    * Avoid using obsolete functions.
+    * Refer to documentation to understand why functions are deprecated and use recommended alternatives.
+    * Consider the security implications of using obsolete functions.
+
+Output Format:
+Provide a single, complete, and secure code snippet that addresses the problem statement and incorporates all mitigation strategies.
+
+Solution Language:
+Java

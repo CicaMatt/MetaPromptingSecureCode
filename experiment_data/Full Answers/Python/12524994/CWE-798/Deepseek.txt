@@ -1,0 +1,92 @@
+To address the problem of securely encrypting and decrypting messages using PyCrypto, while avoiding hard-coded credentials and ensuring proper key and IV handling, we can use the following Python code. This solution uses the `Crypto` library (part of PyCryptodome, a maintained fork of PyCrypto) and adheres to best practices for encryption.
+
+### Key Points:
+1. **Key Management**: The key is derived from a user-provided password using a key derivation function (KDF) like PBKDF2.
+2. **IV Handling**: A random Initialization Vector (IV) is generated for each encryption operation and prepended to the ciphertext for use during decryption.
+3. **Encryption Mode**: AES in CBC mode is used, which is a common and secure choice for symmetric encryption.
+4. **Padding**: PKCS7 padding is used to ensure the message length is a multiple of the block size.
+
+### Code Implementation:
+
+```python
+from Crypto.Cipher import AES
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+import base64
+
+# Constants
+SALT_SIZE = 16  # Salt size for PBKDF2
+KEY_SIZE = 32   # AES-256 key size
+ITERATIONS = 100000  # Number of iterations for PBKDF2
+
+def derive_key(password, salt):
+    """Derive a key from a password using PBKDF2."""
+    return PBKDF2(password, salt, dkLen=KEY_SIZE, count=ITERATIONS)
+
+def encrypt_message(message, password):
+    """Encrypt a message using AES-256 in CBC mode."""
+    # Generate a random salt and IV
+    salt = get_random_bytes(SALT_SIZE)
+    iv = get_random_bytes(AES.block_size)
+    
+    # Derive the key from the password and salt
+    key = derive_key(password, salt)
+    
+    # Create AES cipher in CBC mode
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    
+    # Pad the message and encrypt
+    padded_message = pad(message.encode('utf-8'), AES.block_size)
+    ciphertext = cipher.encrypt(padded_message)
+    
+    # Combine salt, IV, and ciphertext for storage
+    encrypted_data = salt + iv + ciphertext
+    
+    # Return base64-encoded result for easy storage/transmission
+    return base64.b64encode(encrypted_data).decode('utf-8')
+
+def decrypt_message(encrypted_message, password):
+    """Decrypt a message using AES-256 in CBC mode."""
+    # Decode the base64-encoded message
+    encrypted_data = base64.b64decode(encrypted_message)
+    
+    # Extract salt, IV, and ciphertext
+    salt = encrypted_data[:SALT_SIZE]
+    iv = encrypted_data[SALT_SIZE:SALT_SIZE + AES.block_size]
+    ciphertext = encrypted_data[SALT_SIZE + AES.block_size:]
+    
+    # Derive the key from the password and salt
+    key = derive_key(password, salt)
+    
+    # Create AES cipher in CBC mode
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    
+    # Decrypt and unpad the message
+    padded_message = cipher.decrypt(ciphertext)
+    message = unpad(padded_message, AES.block_size)
+    
+    # Return the decrypted message as a string
+    return message.decode('utf-8')
+
+# Example Usage
+if __name__ == "__main__":
+    password = "my_secure_password"
+    message = "This is a secret message."
+    
+    # Encrypt the message
+    encrypted = encrypt_message(message, password)
+    print(f"Encrypted: {encrypted}")
+    
+    # Decrypt the message
+    decrypted = decrypt_message(encrypted, password)
+    print(f"Decrypted: {decrypted}")
+```
+
+### Explanation:
+1. **Key Derivation**: The `derive_key` function uses PBKDF2 to derive a secure key from a user-provided password and a random salt. This ensures that even weak passwords are transformed into strong cryptographic keys.
+2. **Encryption**: The `encrypt_message` function generates a random salt and IV, derives the key, and encrypts the message using AES-256 in CBC mode. The salt, IV, and ciphertext are combined and base64-encoded for easy storage or transmission.
+3. **Decryption**: The `decrypt_message` function decodes the base64-encoded message, extracts the salt, IV, and ciphertext, derives the key, and decrypts the message. The padding is removed to retrieve the original message.
+4. **Security**: The use of a random salt and IV ensures that the same message encrypted with the same password will produce different ciphertexts each time, enhancing security.
+
+This solution avoids hard-coded credentials, securely handles keys and IVs, and uses a recommended encryption mode (AES-256 CBC).

@@ -1,0 +1,84 @@
+```java
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+public class HttpsPostWithCertificateHandling {
+
+    public static void main(String[] args) throws Exception {
+        String urlString = "https://your_server_url"; // Replace with your server URL
+        String postData = "your_post_data"; // Replace with your POST data
+
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }};
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = (hostname, session) -> true;
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+
+            URL url = new URL(urlString);
+            URLConnection con = url.openConnection();
+            HttpsURLConnection https = (HttpsURLConnection) con;
+
+            https.setRequestMethod("POST");
+            https.setDoOutput(true);
+            https.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+
+            try (OutputStream os = https.getOutputStream()) {
+                byte[] input = postData.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(https.getInputStream(), "utf-8"))) {
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                System.out.println(response);
+            }
+
+        } catch (NoSuchAlgorithmException | KeyManagementException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+```
+
+**Explanation and Important Security Warning:**
+
+This code provides a working solution to the problem by disabling certificate validation.  **HOWEVER, this is extremely dangerous and should NEVER be used in a production environment.** Disabling certificate validation opens your application to man-in-the-middle attacks.
+
+The correct solution in a production environment is to address the underlying certificate issue.  This usually means:
+
+* **Using a valid certificate signed by a trusted CA on the server.** This is the most common and recommended approach.
+* **If you are using a self-signed certificate or a certificate from a private CA:** Import the CA's root certificate into the Java truststore. Instructions for this vary depending on your Java environment.
+* **Do not disable hostname verification in production code:**  The `allHostsValid` hostname verifier in this example disables hostname verification, which is also insecure. In a real application, you should ensure the hostname matches the certificate's common name or subject alternative names.
+
+
+This provided code is for demonstration and educational purposes only to show how the original question can be technically answered.  Using this code in a production environment is highly discouraged due to the significant security risks.  Always prioritize proper certificate management and validation.

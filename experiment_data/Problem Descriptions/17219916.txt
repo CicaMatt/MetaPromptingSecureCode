@@ -1,0 +1,49 @@
+I got a very strange problem.
+
+I have a JSON webservice.
+
+When i check it with this website http://www.freeformatter.com/json-formatter.html#ad-output
+
+Everything is OK.
+
+But when i load my JSON with this code :
+
+  $data = file_get_contents('http://www.mywebservice');
+
+if(!empty($data))
+{
+
+    $obj = json_decode($data);
+
+ switch (json_last_error()) {
+    case JSON_ERROR_NONE:
+        echo ' - JSON_ERROR_NONE';
+    break;
+    case JSON_ERROR_DEPTH:
+        echo ' - JSON_ERROR_DEPTH';
+    break;
+    case JSON_ERROR_STATE_MISMATCH:
+        echo ' - JSON_ERROR_STATE_MISMATCH';
+    break;
+    case JSON_ERROR_CTRL_CHAR:
+        echo ' -  JSON_ERROR_CTRL_CHAR';
+    break;
+    case JSON_ERROR_SYNTAX:
+        echo "\r\n\r\n - SYNTAX ERROR \r\n\r\n";
+    break;
+    case JSON_ERROR_UTF8:
+        echo ' - JSON_ERROR_UTF8';
+    break;
+    default:
+        echo ' - Unknown erro';
+    break;
+}
+I got the error : SYNTAX ERROR
+
+WHICH IS NOT HELP FULL AT ALL.
+
+It is a nightmare.
+
+I see that with PHP 5.5 i could use this function : http://php.net/manual/en/function.json-last-error-msg.php
+
+(but i did not succeed to install PHP 5.5 yet, and i m not sure this function will give me more detail)

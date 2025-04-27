@@ -1,0 +1,18 @@
+Hey having some trouble trying to maintain transparency on a png when i create a thumbnail from it, anyone any experience with this? any help would be great, here's what i am currently doing:
+
+$fileName= "../js/ajaxupload/tees/".$fileName;
+
+list($width, $height) = getimagesize($fileName);
+
+$newwidth = 257;
+$newheight = 197;
+
+$thumb = imagecreatetruecolor($newwidth, $newheight);
+imagealphablending($thumb, true);
+$source = imagecreatefrompng($fileName);
+imagealphablending($source, true);
+
+imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+
+imagesavealpha($thumb, true);
+imagepng($thumb,$newFilename);

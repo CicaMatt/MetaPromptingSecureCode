@@ -1,0 +1,73 @@
+The issue you're encountering stems from the incorrect handling of byte and string data types in the `decrypt_file` function. Specifically, the problem arises when reading the encrypted data from the file and attempting to manipulate it as a string instead of bytes. Additionally, the padding logic in the `decrypt_file` function is incorrect and unnecessary since the padding should be handled by the `decrypt` function itself.
+
+Here's the corrected and complete code snippet:
+
+```python
+from Crypto import Random
+from Crypto.Cipher import AES
+
+def encrypt(message, key=None, key_size=256):
+    def pad(s):
+        x = AES.block_size - len(s) % AES.block_size
+        return s + (bytes([x]) * x)
+
+    padded_message = pad(message)
+
+    if key is None:
+        key = Random.new().read(key_size // 8)
+
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+
+    return iv + cipher.encrypt(padded_message)
+
+def decrypt(ciphertext, key):
+    unpad = lambda s: s[:-s[-1]]
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:]))
+
+    return plaintext
+
+def encrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        plaintext = f.read()
+
+    enc = encrypt(plaintext, key)
+
+    with open(file_name, 'wb') as f:
+        f.write(enc)
+
+def decrypt_file(file_name, key):
+    with open(file_name, 'rb') as f:
+        ciphertext = f.read()
+
+    dec = decrypt(ciphertext, key)
+
+    with open(file_name, 'wb') as f:
+        f.write(dec)
+
+# Example usage
+key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
+
+# Encrypt the file
+encrypt_file('to_enc.txt', key)
+
+# Decrypt the file
+decrypt_file('to_enc.txt', key)
+```
+
+### Explanation of Changes:
+1. **File Handling**: 
+   - Changed file opening modes to `'rb'` (read binary) and `'wb'` (write binary) to handle byte data correctly.
+   
+2. **Padding Logic**:
+   - Removed the unnecessary padding logic in the `decrypt_file` function. The padding is already handled by the `decrypt` function.
+
+3. **Data Type Handling**:
+   - Ensured that all data read from and written to files is treated as bytes, avoiding implicit conversions between strings and bytes.
+
+4. **Context Managers**:
+   - Used `with` statements for file handling to ensure files are properly closed after operations, even if an error occurs.
+
+This code should now correctly encrypt and decrypt files without encountering the previous errors.

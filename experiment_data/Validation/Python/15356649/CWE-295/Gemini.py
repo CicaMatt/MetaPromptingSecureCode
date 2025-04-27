@@ -1,0 +1,67 @@
+import string
+
+class SafeFormatter(string.Formatter):
+    def __init__(self, allowed_attrs=None):
+        super().__init__()
+        self.allowed_attrs = allowed_attrs or set()
+
+    def vformat(self, format_string, args, kwargs):
+        # Limit overall format string length to prevent DoS
+        if len(format_string) > 1000:
+            raise ValueError("Format string too long")
+        return super().vformat(format_string, args, kwargs)
+
+    def get_field(self, field_name, args, kwargs):
+        # Prevent accessing dunder attributes and limit attribute/index access
+        first, rest = field_name._formatter_field_name_split()
+
+        obj = self.get_value(first, args, kwargs)
+
+        for is_attr, i in rest:
+            if is_attr:
+                if i not in self.allowed_attrs:
+                    raise AttributeError(f"Access to attribute '{i}' is not allowed.")
+
+                # Safe getattr using hasattr to further mitigate potential side effects
+                if hasattr(obj, i):
+                     obj = getattr(obj, i)
+                else:
+                    raise AttributeError(f"Attribute '{i}' not found.")
+                    
+            else:
+                obj = obj[i] # Index access is still permitted
+        return obj, first
+
+
+# Example usage with allowed attributes:
+safe_formatter = SafeFormatter(allowed_attrs={"name", "age"})
+
+class User:
+    def __init__(self, name, age, secret):
+        self.name = name
+        self.age = age
+        self.secret = secret  # This attribute should not be accessible
+
+user = User("Alice", 30, "my_secret_key")
+
+try:
+    formatted_string = safe_formatter.format("Name: {0.name}, Age: {0.age}", user)
+    print(formatted_string)  # Output: Name: Alice, Age: 30
+
+    formatted_string = safe_formatter.format("Secret: {0.secret}", user)  # This will raise an AttributeError
+    print(formatted_string)
+except AttributeError as e:
+    print(f"Error: {e}")
+
+try:
+     formatted_string = safe_formatter.format("{:>9999999}", "test") # Dos attempt, raises ValueError
+except ValueError as e:
+    print(f"Error: {e}")
+
+try:
+    # Demonstrate safe index access:
+    data = [1, 2, 3]
+    formatted = safe_formatter.format("Value: {0[1]}", data)
+    print(formatted)  # Output: Value: 2
+except Exception as e:
+    print(f"Error: {e}")

@@ -1,0 +1,61 @@
+To address the issue of insecure SQL queries and implement secure prepared statements in PHP, we can use the `mysqli` extension, which supports prepared statements. Prepared statements not only enhance security by preventing SQL injection but can also improve performance when the same query is executed multiple times with different parameters.
+
+Here’s a complete and executable PHP code snippet that demonstrates how to use prepared statements to securely retrieve data from a MySQL database:
+
+```php
+<?php
+// Database connection parameters
+$host = 'localhost';
+$user = 'your_username';
+$password = 'your_password';
+$database = 'your_database';
+
+// Create a new mysqli object with database connection
+$mysqli = new mysqli($host, $user, $password, $database);
+
+// Check for connection errors
+if ($mysqli->connect_error) {
+    die("Connection failed: " . $mysqli->connect_error);
+}
+
+// Prepare the SQL statement with placeholders
+$sql = "SELECT * FROM mytable WHERE userid = ? AND category = ? ORDER BY id DESC";
+
+// Prepare the statement
+if ($stmt = $mysqli->prepare($sql)) {
+    // Bind the input parameters to the prepared statement
+    $stmt->bind_param("ss", $_GET['userid'], $_GET['category']);
+
+    // Execute the prepared statement
+    $stmt->execute();
+
+    // Get the result set
+    $result = $stmt->get_result();
+
+    // Fetch and display the results
+    while ($row = $result->fetch_assoc()) {
+        echo "ID: " . $row['id'] . " - UserID: " . $row['userid'] . " - Category: " . $row['category'] . "<br>";
+    }
+
+    // Close the statement
+    $stmt->close();
+} else {
+    echo "Error preparing statement: " . $mysqli->error;
+}
+
+// Close the database connection
+$mysqli->close();
+?>
+```
+
+### Explanation:
+1. **Database Connection**: The script starts by establishing a connection to the MySQL database using the `mysqli` extension.
+2. **Prepared Statement**: The SQL query is prepared with placeholders (`?`) for the parameters. This prevents SQL injection by separating SQL code from data.
+3. **Binding Parameters**: The `bind_param` method binds the URL parameters (`$_GET['userid']` and `$_GET['category']`) to the placeholders. The `"ss"` indicates that both parameters are strings.
+4. **Execution and Result Fetching**: The prepared statement is executed, and the result set is fetched and displayed.
+5. **Resource Cleanup**: The statement and database connection are closed to free up resources.
+
+### Bonus: Performance Consideration
+Using prepared statements can improve performance, especially when the same query is executed multiple times with different parameters. The database server can optimize the execution plan for the prepared statement, reducing overhead. Even if the statement is used only three or four times on a page, the performance gain can still be noticeable, particularly in high-load environments.
+
+This approach ensures both security and efficiency in handling database queries in PHP.

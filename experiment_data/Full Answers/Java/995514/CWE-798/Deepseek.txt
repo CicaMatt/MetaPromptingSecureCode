@@ -1,0 +1,95 @@
+To address the issue of SSL exceptions when making HTTPS requests and to ensure secure handling of credentials, we can implement a solution in Java that avoids hard-coding credentials and securely handles SSL certificates. Below is a complete Java code snippet that demonstrates these practices:
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+
+public class SecureHttpsClient {
+
+    // Load credentials from environment variables or secure storage
+    private static final String API_KEY = System.getenv("API_KEY");
+    private static final String API_SECRET = System.getenv("API_SECRET");
+
+    public static void main(String[] args) {
+        try {
+            // Load the server's certificate
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            FileInputStream fis = new FileInputStream("path/to/server-certificate.crt");
+            X509Certificate caCert = (X509Certificate) cf.generateCertificate(fis);
+
+            // Create a KeyStore containing the server's certificate
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("serverCert", caCert);
+
+            // Create a TrustManager that trusts the certificates in the KeyStore
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(keyStore);
+
+            // Create an SSLContext that uses the TrustManager
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, tmf.getTrustManagers(), null);
+
+            // Set the default SSLContext to the one we just created
+            SSLContext.setDefault(sslContext);
+
+            // Make the HTTPS request
+            URL url = new URL("https://example.com/api");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + API_KEY + ":" + API_SECRET);
+
+            conn.setDoOutput(true);
+            String jsonInputString = "{\"key\": \"value\"}";
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                System.out.println("Response: " + response.toString());
+            }
+
+        } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Explanation:
+1. **Avoid Hard-Coding Credentials**:  
+   - The API key and secret are loaded from environment variables (`System.getenv("API_KEY")` and `System.getenv("API_SECRET")`), ensuring they are not hard-coded in the source code.
+
+2. **SSL Certificate Handling**:  
+   - The server's certificate is loaded from a file (`server-certificate.crt`). This certificate is added to a `KeyStore`, which is then used to initialize a `TrustManagerFactory`. This ensures that the client trusts the server's certificate.
+
+3. **Secure HTTPS Connection**:  
+   - The `SSLContext` is configured to use the custom `TrustManager`, and the default `SSLContext` is set to this custom context. This ensures that the HTTPS connection uses the trusted certificate.
+
+4. **Making the HTTPS Request**:  
+   - The code makes an HTTPS POST request to the server, including the API key and secret in the `Authorization` header. The response is read and printed to the console.
+
+This approach ensures secure handling of credentials and proper SSL certificate validation, mitigating the risks associated with hard-coded credentials and untrusted server certificates.

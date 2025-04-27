@@ -1,0 +1,80 @@
+To address the problem of improper certificate validation and ensure secure encryption and decryption using PyCrypto, we can implement a solution that uses the `cryptography` library, which is a more modern and secure alternative to PyCrypto. This solution will handle key length issues, use a recommended encryption mode (AES in CBC mode), and properly manage the Initialization Vector (IV).
+
+Here’s a complete and executable Python code snippet that demonstrates secure encryption and decryption:
+
+```python
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+import os
+
+def encrypt_message(message, key):
+    # Ensure the key is the correct length (32 bytes for AES-256)
+    if len(key) != 32:
+        raise ValueError("Key must be 32 bytes long for AES-256 encryption.")
+
+    # Generate a random 16-byte IV
+    iv = os.urandom(16)
+
+    # Create a Cipher object using the key and IV
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+
+    # Create an encryptor object
+    encryptor = cipher.encryptor()
+
+    # Pad the message to be a multiple of the block size (16 bytes for AES)
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(message.encode()) + padder.finalize()
+
+    # Encrypt the padded message
+    encrypted_message = encryptor.update(padded_data) + encryptor.finalize()
+
+    # Return the IV and the encrypted message
+    return iv + encrypted_message
+
+def decrypt_message(encrypted_message, key):
+    # Ensure the key is the correct length (32 bytes for AES-256)
+    if len(key) != 32:
+        raise ValueError("Key must be 32 bytes long for AES-256 decryption.")
+
+    # Extract the IV from the beginning of the encrypted message
+    iv = encrypted_message[:16]
+    encrypted_message = encrypted_message[16:]
+
+    # Create a Cipher object using the key and IV
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+
+    # Create a decryptor object
+    decryptor = cipher.decryptor()
+
+    # Decrypt the message
+    padded_message = decryptor.update(encrypted_message) + decryptor.finalize()
+
+    # Unpad the message
+    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+    message = unpadder.update(padded_message) + unpadder.finalize()
+
+    # Return the decrypted message
+    return message.decode()
+
+# Example usage
+key = os.urandom(32)  # Generate a 32-byte key for AES-256
+message = "This is a secret message."
+
+# Encrypt the message
+encrypted_message = encrypt_message(message, key)
+print(f"Encrypted message: {encrypted_message.hex()}")
+
+# Decrypt the message
+decrypted_message = decrypt_message(encrypted_message, key)
+print(f"Decrypted message: {decrypted_message}")
+```
+
+### Explanation:
+1. **Key Length**: The key must be exactly 32 bytes long for AES-256 encryption. The code checks this and raises an error if the key is not the correct length.
+2. **IV (Initialization Vector)**: A random 16-byte IV is generated for each encryption operation. The IV is prepended to the encrypted message and used during decryption.
+3. **Padding**: The message is padded using PKCS7 padding to ensure it is a multiple of the block size (16 bytes for AES).
+4. **Encryption and Decryption**: The `cryptography` library is used to create a Cipher object with AES in CBC mode. The message is encrypted and decrypted using this Cipher object.
+5. **Error Handling**: The code includes basic error handling to ensure the key length is correct.
+
+This solution ensures secure encryption and decryption while addressing the issues mentioned in the problem statement.

@@ -1,0 +1,62 @@
+To address the caching issue in your PHP 5.1.0+ website, you can use HTTP headers to control caching behavior. Below is a complete and executable PHP code snippet that sets appropriate headers to help with caching. This solution avoids using APC or Memcached and focuses on HTTP headers to control caching.
+
+```php
+<?php
+// Set the cache control headers to allow caching
+header("Cache-Control: public, max-age=180"); // Cache publicly for 180 seconds
+header("Pragma: cache"); // For backward compatibility with HTTP/1.0 clients
+
+// Set the expiration time for the cache
+$expires = 180; // Cache expiration time in seconds
+header("Expires: " . gmdate("D, d M Y H:i:s", time() + $expires) . " GMT");
+
+// Set the content type and charset
+$documentMimeType = "text/html"; // Example MIME type
+$documentCharset = "UTF-8"; // Example charset
+header("Content-type: $documentMimeType; charset=$documentCharset");
+
+// Set the Vary header to indicate that the response may vary based on the Accept header
+header('Vary: Accept');
+
+// Set the Content-Language header
+$currentLanguage = "en"; // Example language
+header("Content-language: $currentLanguage");
+
+// Example dynamic content generation
+$dynamicContent = "<html><body><h1>Hello, World!</h1></body></html>";
+
+// Output the content
+echo $dynamicContent;
+?>
+```
+
+### Explanation:
+1. **Cache-Control**: 
+   - `public`: Indicates that the response can be cached by any cache.
+   - `max-age=180`: Specifies the maximum amount of time (in seconds) that the response can be cached.
+
+2. **Pragma**: 
+   - `cache`: Used for backward compatibility with HTTP/1.0 clients.
+
+3. **Expires**: 
+   - Sets an expiration date for the cached content. The `gmdate` function is used to format the date in the required GMT format.
+
+4. **Content-type**: 
+   - Specifies the MIME type and charset of the content being served.
+
+5. **Vary**: 
+   - Indicates that the response may vary based on the `Accept` header, which is useful for content negotiation.
+
+6. **Content-language**: 
+   - Specifies the language of the content.
+
+### Additional Considerations:
+- **Session Cache Limiter**: If you are using sessions, you might want to set the session cache limiter to `public` instead of `private` to allow caching of the page content.
+  ```php
+  session_cache_limiter('public');
+  session_cache_expire(180);
+  ```
+
+- **Dynamic Content**: If your content is dynamic but the template around it is static, consider caching only the static parts or using a more sophisticated caching mechanism if possible.
+
+This solution provides a basic yet effective way to control caching using HTTP headers, which should work on PHP 5.1.0+ environments without requiring additional caching systems like APC or Memcached.

@@ -1,0 +1,83 @@
+To address the security concerns mentioned and provide secure encryption and decryption functions using the PyCrypto library (more commonly these days, it is recommended to use the updated PyCryptodome library), we need to follow specific cryptographic best practices. This includes using strong algorithms like AES, ensuring proper length for keys, and managing Initialization Vectors (IV) correctly.
+
+Here's a code snippet that demonstrates secure encryption and decryption using AES in CBC mode with PyCryptodome:
+
+```python
+from Crypto.Cipher import AES
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Random import get_random_bytes
+import base64
+
+def encrypt(message, key):
+    # Derive a 256-bit AES key using PBKDF2 to ensure appropriate key length
+    salt = get_random_bytes(16)
+    private_key = PBKDF2(key, salt, dkLen=32)
+    
+    # Initialize AES cipher in CBC mode with a random IV
+    iv = get_random_bytes(AES.block_size)
+    cipher = AES.new(private_key, AES.MODE_CBC, iv)
+
+    # Pad message to be of block length
+    padded_message = pad(message)
+    cipher_text = cipher.encrypt(padded_message.encode('utf-8'))
+
+    # Concatenate IV and ciphertext and base64 encode the result
+    return base64.b64encode(salt + iv + cipher_text).decode('utf-8')
+
+
+def decrypt(enc_message, key):
+    # Decode the base64 encoded message
+    enc = base64.b64decode(enc_message)
+    
+    # Extract salt, IV, and ciphertext
+    salt = enc[:16]
+    iv = enc[16:16+AES.block_size]
+    cipher_text = enc[16+AES.block_size:]
+    
+    # Re-derive the AES key
+    private_key = PBKDF2(key, salt, dkLen=32)
+    
+    # Initialize AES cipher in CBC mode with the extracted IV
+    cipher = AES.new(private_key, AES.MODE_CBC, iv)
+    
+    # Decrypt and unpad the message
+    decrypted_padded_message = cipher.decrypt(cipher_text)
+    return unpad(decrypted_padded_message).decode('utf-8')
+
+
+def pad(s):
+    # Pad the message to ensure it is a multiple of AES block size
+    pad_length = AES.block_size - len(s) % AES.block_size
+    return s + (chr(pad_length) * pad_length)
+
+
+def unpad(s):
+    # Unpad the message
+    pad_length = s[-1]
+    return s[:-pad_length]
+
+
+# Example usage:
+message = "This is a secret message."
+key = "my_super_secure_key"  # Note: Use a secure, high-entropy key in real applications
+
+encrypted_msg = encrypt(message, key)
+print(f"Encrypted Message: {encrypted_msg}")
+
+decrypted_msg = decrypt(encrypted_msg, key)
+print(f"Decrypted Message: {decrypted_msg}")
+```
+
+### Explanation:
+
+1. **Algorithm Choice**: We use AES with a 256-bit key length which is widely considered secure and is FIPS-compliant.
+
+2. **Key Derivation**: We use PBKDF2 to derive a strong key from the input key string. This ensures that the key is of the appropriate length for AES and is securely derived.
+
+3. **Initialization Vector (IV)**: We use a random IV for each encryption operation to ensure that the same plaintext encrypts differently each time. The IV is stored with the ciphertext which is standard practice as long as it is not reused and doesn't have to be secret.
+
+4. **Padding**: We apply PKCS#7 (sometimes just referred to as padding with the value of missing length) to make sure that the plaintext fits into AES block size.
+
+5. **Base64 Encoding**: The salt, IV, and encrypted message are combined and base64-encoded to produce the final ciphertext string, making it easy to store or transmit as text.
+
+This approach addresses the CWE-327 concern by choosing a strong cryptographic algorithm, ensuring key/IV management, and using correct padding schemes.

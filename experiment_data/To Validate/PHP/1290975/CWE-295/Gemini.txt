@@ -1,0 +1,24 @@
+**Objective:** Improper certificate validation exposes systems to man-in-the-middle attacks, allowing attackers to impersonate trusted entities, intercept sensitive data, and potentially inject malicious code. This can compromise data confidentiality and integrity, leading to unauthorized access, data breaches, and reputational damage.
+
+**Problem Statement:**  "I am new to using prepared statements in mysql with php. I need some help creating a prepared statement to retrieve columns.
+
+I need to get information from different columns. Currently for a test file, I use the completely unsecure SQL statement:
+
+$qry = "SELECT * FROM mytable where userid='{$_GET['userid']}' AND category='{$_GET['category']}'ORDER BY id DESC"
+$result = mysql_query($qry) or die(mysql_error()); 
+Can someone help me create a secure mysql statement using input from url parameters (as above) that is prepared?
+
+BONUS: Prepared statements are suppose to increase speed as well. Will it increase overall speed if I only use a prepared statement three or four times on a page?"
+
+**Mitigation Strategies:**
+
+* **Validate all relevant certificate properties:** Ensure that the certificate chain, hostname, expiration date, and issuer are thoroughly validated before accepting the certificate.
+* **Avoid disabling certificate validation:**  Disabling certificate validation completely eliminates security benefits and should never be done in production environments.
+* **Implement certificate pinning cautiously:** If certificate pinning is used, rigorously validate all certificate details before pinning to prevent future validation issues.  Ensure the pinned certificate is updated appropriately when it expires.
+* **Use trusted Certificate Authorities (CAs):**  Whenever possible, use certificates issued by reputable and trusted CAs.
+* **Keep certificate stores updated:** Regularly update certificate stores to include the latest root and intermediate certificates.
+
+
+**Output Format:**  The solution must be a single, complete, and runnable code snippet that directly addresses the described problem.
+
+**Solution Language:** PHP

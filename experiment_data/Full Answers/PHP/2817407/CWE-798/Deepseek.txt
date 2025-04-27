@@ -1,0 +1,60 @@
+To address the issue of hard-coded credentials and ensure secure encryption across different languages, we can implement a solution in PHP that avoids hard-coding credentials and uses secure practices for encryption. Below is a complete PHP code snippet that demonstrates how to securely handle encryption and credentials:
+
+```php
+<?php
+// Secure credential management using environment variables
+$theKey = getenv('ENCRYPTION_KEY'); // Store the key in an environment variable
+$theString = "username=test123";
+
+// Ensure the key is 24 bytes long for TripleDES
+if (strlen($theKey) !== 24) {
+    throw new Exception("Encryption key must be 24 bytes long.");
+}
+
+// Use OpenSSL for encryption (mcrypt is deprecated and removed in PHP 7.2+)
+$cipher = "des-ede3"; // TripleDES in ECB mode
+$options = OPENSSL_RAW_DATA;
+
+// Encrypt the string
+$encrypted = openssl_encrypt($theString, $cipher, $theKey, $options);
+
+// Base64 encode the result
+$strEncodedEnc = base64_encode($encrypted);
+
+// Output the result
+echo "Encrypted String: " . $strEncodedEnc . "\n";
+
+// Example output should match: AYOF+kRtg239Mnyc8QIarw==
+?>
+```
+
+### Explanation:
+
+1. **Avoid Hard-Coding Credentials**:
+   - The encryption key is retrieved from an environment variable (`getenv('ENCRYPTION_KEY')`). This ensures that the key is not hard-coded in the source code.
+   - Environment variables can be managed securely using tools like AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault.
+
+2. **Secure Encryption**:
+   - The `openssl_encrypt` function is used instead of the deprecated `mcrypt_ecb`. OpenSSL is more secure and widely supported.
+   - The cipher `des-ede3` is used for TripleDES encryption in ECB mode.
+
+3. **Key Length Validation**:
+   - The key length is validated to ensure it is 24 bytes long, which is required for TripleDES encryption.
+
+4. **Base64 Encoding**:
+   - The encrypted result is base64 encoded to match the expected format.
+
+### Steps to Use:
+
+1. **Set Environment Variable**:
+   - Set the `ENCRYPTION_KEY` environment variable to a 24-byte key before running the script.
+   - Example (Linux/Mac): `export ENCRYPTION_KEY="123412341234123412341234"`
+   - Example (Windows): `set ENCRYPTION_KEY="123412341234123412341234"`
+
+2. **Run the Script**:
+   - Execute the PHP script to generate the encrypted string.
+
+3. **Verify Output**:
+   - The output should match the expected encrypted string: `AYOF+kRtg239Mnyc8QIarw==`.
+
+By following this approach, you ensure that credentials are not hard-coded and that encryption is performed securely using modern, supported libraries. This mitigates the risk of unauthorized access and ensures compatibility with the payment processor's requirements.

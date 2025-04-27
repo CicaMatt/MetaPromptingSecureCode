@@ -1,0 +1,58 @@
+```python
+import datetime as dt
+from enum import Enum
+
+import sqlalchemy as sa
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import ENUM
+from uuid import uuid4
+
+class Base(DeclarativeBase):
+    pass
+
+class CampaignStatus(Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+CampaignStatusType = sa.Enum(
+    CampaignStatus,
+    name="campaignstatus",
+    create_type=True,  # Important for SQLAlchemy 2.0
+    validate_strings=True,
+)
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[uuid4] = mapped_column(primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatusType] = mapped_column(nullable=False)
+
+
+# Example usage (requires a PostgreSQL database connection):
+engine = create_engine("postgresql://user:password@host:port/database")
+Base.metadata.create_all(engine)
+
+from sqlalchemy.orm import Session
+with Session(engine) as session:
+    new_campaign = Campaign(status=CampaignStatus.activated)
+    session.add(new_campaign)
+    session.commit()
+
+    retrieved_campaign = session.query(Campaign).first()
+    print(retrieved_campaign.status) # Output: CampaignStatus.activated
+
+```
+
+
+**Explanation of Changes:**
+
+1. **`create_type=True`:**  This is crucial in SQLAlchemy 2.0.  It instructs SQLAlchemy to create the enum type in the database if it doesn't exist. This addresses the core issue causing the `AttributeError`.  The older `metadata` argument is not required and should be removed.
+2. **Removed `str` inheritance:**  Inheriting from `str` in the enum is unnecessary and can cause confusion. SQLAlchemy handles the string conversion automatically.
+3. **`sa.Enum` instead of `pgEnum`:** Using `sa.Enum` directly is preferred, as it makes the code more database-agnostic if needed. `pgEnum` still works, but it's recommended to stick with the generic `sa.Enum` for better portability and maintainability.
+4. **Type Hinting Correction:** The type hint for `id` should be `uuid4` (the function) and not `UUID` (the type). This aligns with the `default=uuid4` setting.
+5. **Runnable Example:** The included example demonstrates how to create the table and interact with the enum values using a SQLAlchemy session.  Remember to replace the database connection string with your actual credentials.
+
+
+This revised code snippet demonstrates the correct way to use enums with `mapped_column` in SQLAlchemy 2.0, addressing the original error and incorporating best practices for type hinting and database interaction.  The added runnable example further clarifies the usage within a typical SQLAlchemy application.

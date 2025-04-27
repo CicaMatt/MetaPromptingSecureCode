@@ -1,0 +1,88 @@
+```php
+<?php
+
+$hostname = "localhost";
+$username = "root1"; // Incorrect username
+$password = "";
+$database = "php_thenewboston1"; // Incorrect database name
+
+class ServerException extends Exception {}
+class DatabaseException extends Exception {}
+class UsernameException extends Exception {}
+
+try {
+    $conn = mysqli_connect($hostname, $username, $password);
+
+    if (!$conn) {
+        throw new ServerException('Could not connect to server.');
+    }
+
+    if (mysqli_connect_errno() == 1045) {  // Access denied for user
+        throw new UsernameException("Access denied for user '$username'. Check username and password.");
+    }
+
+    $conn_db = mysqli_select_db($conn, $database);
+
+
+    if (!$conn_db) {
+        if (mysqli_errno($conn) == 1049) { // Unknown database
+            throw new DatabaseException("Unknown database '$database'.");
+        } else {
+            throw new DatabaseException('Could not connect to database: ' . mysqli_error($conn)); // Generic database error
+        }
+    }
+
+
+    echo "Connected.";
+
+    // ... your database operations ...
+
+
+} catch (ServerException $ex) {
+    echo "Error: " . $ex->getMessage();
+} catch (UsernameException $ex) {
+    echo "Error: " . $ex->getMessage();
+} catch (DatabaseException $ex) {
+    echo "Error: " . $ex->getMessage();
+} catch (Exception $ex) { // Catch any other unexpected exceptions
+    echo "An unexpected error occurred: " . $ex->getMessage();
+} finally {
+    if (isset($conn)) {
+        mysqli_close($conn); // Close the connection in the finally block to ensure it's always closed.
+    }
+}
+
+?>
+```
+
+
+**Explanation of Improvements and Mitigation Strategies:**
+
+1. **Specific Error Handling:** The code now uses `mysqli_connect_errno()` and `mysqli_errno($conn)` to check for specific error codes.  Error code 1045 indicates an access denied error (usually a username/password problem), and 1049 indicates an unknown database error. This allows for more precise error messages.
+
+2. **Username Exception:** A new `UsernameException` is introduced to handle incorrect username/password scenarios separately.
+
+3. **Generic Database Exception:**  The `DatabaseException` now also includes `mysqli_error($conn)` for any database-related errors other than the "unknown database" error. This provides more informative error messages for debugging.
+
+4. **Finally Block for Connection Closing:**  The `finally` block ensures that the database connection is closed even if an exception occurs. This is crucial for resource management.
+
+5. **General Exception Handling:** A general `catch (Exception $ex)` block is added to catch any unexpected exceptions that might occur.
+
+6. **Crypto Mitigation:** The original question mentioned cryptography, but the provided code doesn't use any cryptographic functions. If you were to implement cryptography in your project, you would apply the mitigation strategies by using well-vetted libraries like OpenSSL or Libsodium, avoiding custom cryptography, using strong key management practices, and keeping the libraries up-to-date.  Example (using password_hash for secure password storage - which is best practice):
+   ```php
+   // ... other code ...
+   $password = password_hash("user_password", PASSWORD_DEFAULT); // Use bcrypt by default
+   // ... store $password in the database ...
+
+   // ... later, to verify the password:
+   $hashed_password_from_db = // ... retrieve the hashed password from the database ...
+   if (password_verify("user_password", $hashed_password_from_db)) {
+       // Password is valid
+   } else {
+       // Password is invalid
+   }
+   ```
+
+
+
+This improved solution provides more specific error messages, handles different error scenarios, and manages resources more effectively. It also incorporates best practices for more robust exception handling, and demonstrates the correct approach for applying cryptographic principles if needed.

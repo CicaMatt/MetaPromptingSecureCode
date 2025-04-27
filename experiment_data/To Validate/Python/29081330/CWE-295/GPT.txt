@@ -1,0 +1,116 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"I added restrict_xpaths rules to my scrapy spider and now it immediately fails with:
+
+2015-03-16 15:46:53+0000 [tsr] ERROR: Spider error processing <GET http://www.thestudentroom.co.uk/forumdisplay.php?f=143>
+    Traceback (most recent call last):
+      File "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/twisted/internet/base.py", line 800, in runUntilCurrent
+        call.func(*call.args, **call.kw)
+      File "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/twisted/internet/task.py", line 602, in _tick
+        taskObj._oneWorkUnit()
+      File "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/twisted/internet/task.py", line 479, in _oneWorkUnit
+        result = self._iterator.next()
+      File "/Library/Python/2.7/site-packages/scrapy/utils/defer.py", line 57, in <genexpr>
+        work = (callable(elem, *args, **named) for elem in iterable)
+    --- <exception caught here> ---
+      File "/Library/Python/2.7/site-packages/scrapy/utils/defer.py", line 96, in iter_errback
+        yield next(it)
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/spidermiddleware/offsite.py", line 26, in process_spider_output
+        for x in result:
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/spidermiddleware/referer.py", line 22, in <genexpr>
+        return (_set_referer(r) for r in result or ())
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/spidermiddleware/urllength.py", line 33, in <genexpr>
+        return (r for r in result or () if _filter(r))
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/spidermiddleware/depth.py", line 50, in <genexpr>
+        return (r for r in result or () if _filter(r))
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/spiders/crawl.py", line 73, in _parse_response
+        for request_or_item in self._requests_to_follow(response):
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/spiders/crawl.py", line 52, in _requests_to_follow
+        links = [l for l in rule.link_extractor.extract_links(response) if l not in seen]
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/linkextractors/lxmlhtml.py", line 107, in extract_links
+        links = self._extract_links(doc, response.url, response.encoding, base_url)
+      File "/Library/Python/2.7/site-packages/scrapy/linkextractor.py", line 94, in _extract_links
+        return self.link_extractor._extract_links(*args, **kwargs)
+      File "/Library/Python/2.7/site-packages/scrapy/contrib/linkextractors/lxmlhtml.py", line 50, in _extract_links
+        for el, attr, attr_val in self._iter_links(selector._root):
+      **File "/Library/Python/2.7/site-packages/scrapy/contrib/linkextractors/lxmlhtml.py", line 38, in _iter_links
+        for el in document.iter(etree.Element):
+    exceptions.AttributeError: 'str' object has no attribute 'iter'**
+I cannot understand why this error is happening.
+
+Here is my short Spider:
+
+import scrapy
+
+from tutorial.items import DmozItem
+from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors import LinkExtractor
+
+class TsrSpider(CrawlSpider):
+    name = 'tsr'
+    allowed_domains = ['thestudentroom.co.uk']
+    start_urls = ['http://www.thestudentroom.co.uk/forumdisplay.php?f=143']
+
+    download_delay = 4
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:35.0) Gecko/20100101 Firefox/35.0'
+
+    rules = (
+        Rule(
+            LinkExtractor(
+                allow=('forumdisplay\.php\?f=143\&page=\d',),
+                restrict_xpaths=("//li[@class='pager-page_numbers']/a/@href",))),
+
+        Rule(
+            LinkExtractor(
+                allow=('showthread\.php\?t=\d+\&page=\d+',),
+                restrict_xpaths=("//li[@class='pager-page_numbers']/a/@href",)), 
+            callback='parse_link'),
+
+        Rule(
+            LinkExtractor(
+                allow=('showthread\.php\?t=\d+',),
+                restrict_xpaths=("//tr[@class='thread  unread    ']",)),
+            callback='parse_link'),
+        )
+
+    def parse_link(self, response):
+#           Iterate over posts.     
+        for sel in response.xpath("//li[@class='post threadpost old   ']"):
+            rating = sel.xpath(
+            "div[@class='post-footer']//span[@class='score']/text()").extract()
+            if not rating:
+                rating = 0
+            else:
+                rating = rating[0]
+            item = DmozItem()
+            item['post'] = sel.xpath(
+    "div[@class='post-content']/blockquote[@class='postcontent restore']/text()").extract()
+            item['link'] = response.url
+            item['topic'] = response.xpath(
+    "//div[@class='forum-header section-header']/h1/span/text()").extract()
+            item['rating'] = rating
+            yield item
+source: http://pastebin.com/YXdWvPgX
+
+Can someone help me out? Where is the mistake? I've been searching for days!?"
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+Python

@@ -1,0 +1,105 @@
+<?php
+
+// Configuration (adjust as needed)
+$uploadDir = 'uploads/';
+$allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+$maxSize = 2 * 1024 * 1024; // 2MB
+
+// Function to generate a random filename
+function generateRandomFilename($extension) {
+    return bin2hex(random_bytes(16)) . '.' . $extension;
+}
+
+
+if (isset($_POST['submit'])) {
+    if (empty($_FILES['file']['name'])) {
+        $error = "No file selected.";
+    } else {
+        $file = $_FILES['file'];
+        $fileName = $file['name'];
+        $fileSize = $file['size'];
+        $fileTmpName = $file['tmp_name'];
+        $fileType = $file['type'];
+        $fileError = $file['error'];
+
+
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        // Validate file extension
+        if (!in_array($fileExt, $allowedExtensions)) {
+            $error = "Invalid file type. Allowed types: " . implode(', ', $allowedExtensions);
+        }
+
+        // Validate file size
+        if ($fileSize > $maxSize) {
+            $error = "File too large. Maximum size: " . ($maxSize / 1024 / 1024) . "MB";
+        }
+
+
+        if (!getimagesize($fileTmpName)) {
+            $error = "Uploaded file is not a valid image";
+        }
+      
+        // Check for upload errors
+        if ($fileError !== UPLOAD_ERR_OK) {
+            $error = "Upload error: " . $fileError; 
+        }
+
+
+
+        if (!isset($error)) {
+          // Generate a new random filename
+           $newFileName = generateRandomFilename($fileExt);
+           $uploadFile = $uploadDir . $newFileName;
+
+
+            // Move uploaded file to the designated directory
+            if (move_uploaded_file($fileTmpName, $uploadFile)) {
+                // Optional: Re-process the image using GD or Imagick for better security
+                 $image = null; 
+                if($fileExt === 'jpg' || $fileExt === 'jpeg'){
+                   $image = imagecreatefromjpeg($uploadFile);
+                } else if ($fileExt === 'png') {
+                   $image = imagecreatefrompng($uploadFile);
+                } else if ($fileExt === 'gif') {
+                  $image = imagecreatefromgif($uploadFile);
+                }
+
+                if($image) {
+                    // Example: Resize and save the image
+                    $newWidth = 800; // Adjust as needed
+                    $newHeight = 600; // Adjust as needed
+                    $resizedImage = imagescale($image, $newWidth, $newHeight);
+                    imagejpeg($resizedImage, $uploadFile, 90); // 90 is the quality (0-100)
+                    imagedestroy($image);
+                    imagedestroy($resizedImage);
+                }
+                 
+
+
+                $message = "File uploaded successfully.";
+            } else {
+                $error = "Error moving uploaded file.";
+            }
+
+        }
+
+
+    }
+
+    if (isset($error)) {
+        echo "<p style='color: red;'>$error</p>";
+    } else {
+         echo "<p style='color: green;'>$message</p>";
+
+    }
+}
+
+?>
+
+
+
+<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" enctype="multipart/form-data">
+  <input type="file" name="file" id="file">
+  <input type="submit" name="submit" value="Upload">
+</form>

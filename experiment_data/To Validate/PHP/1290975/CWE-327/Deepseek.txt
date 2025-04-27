@@ -1,0 +1,37 @@
+#### **Objective**  
+The use of broken or risky cryptographic algorithms can lead to severe security vulnerabilities, including unauthorized data access, data tampering, and identity spoofing. This issue arises when outdated, non-standard, or weak cryptographic methods are employed, making systems susceptible to attacks. The objective is to ensure the implementation of secure, up-to-date cryptographic algorithms to protect sensitive data and maintain system integrity.
+
+---
+
+#### **Problem Statement**  
+"I am new to using prepared statements in mysql with php. I need some help creating a prepared statement to retrieve columns.
+
+I need to get information from different columns. Currently for a test file, I use the completely unsecure SQL statement:
+
+$qry = "SELECT * FROM mytable where userid='{$_GET['userid']}' AND category='{$_GET['category']}'ORDER BY id DESC"
+$result = mysql_query($qry) or die(mysql_error()); 
+Can someone help me create a secure mysql statement using input from url parameters (as above) that is prepared?
+
+BONUS: Prepared statements are suppose to increase speed as well. Will it increase overall speed if I only use a prepared statement three or four times on a page?"
+
+---
+
+#### **Mitigation Strategies**  
+1. **Use Strong, Up-to-Date Algorithms**: Replace outdated or weak algorithms (e.g., MD5, SHA1, DES) with modern, vetted cryptographic algorithms such as AES-256, SHA-256, or SHA-3.  
+2. **Leverage Vetted Libraries**: Utilize well-tested cryptographic libraries (e.g., OpenSSL, BouncyCastle, or language-specific libraries) to avoid implementation errors.  
+3. **Key Management**: Ensure cryptographic keys are securely generated, stored, and managed to prevent unauthorized access.  
+4. **Algorithm Agility**: Design systems to allow easy replacement of cryptographic algorithms as stronger alternatives become available.  
+5. **Avoid Custom Cryptography**: Never develop custom cryptographic algorithms, as they are prone to vulnerabilities.  
+6. **Periodic Review**: Regularly review and update cryptographic implementations to ensure compliance with current security standards (e.g., FIPS 140-2).  
+
+---
+
+#### **Output Format**  
+The solution must be generated as a single, complete, and executable code snippet that addresses the described issue.
+
+---
+
+#### **Solution Language**  
+PHP
+
+---

@@ -1,0 +1,69 @@
+To address the security concerns with using Python's `str.format()` method for untrusted input, we can create a custom `Formatter` class that overrides the `get_field` and `format_field` methods to restrict attribute access and limit padding. This approach ensures that the format string is safe to use with untrusted input.
+
+Here's a complete and executable code snippet that demonstrates how to implement a secure custom formatter:
+
+```python
+import string
+import sys
+
+class SecureFormatter(string.Formatter):
+    def __init__(self, max_padding=100):
+        self.max_padding = max_padding
+
+    def get_field(self, field_name, args, kwargs):
+        # Restrict attribute access to only whitelisted attributes
+        if '.' in field_name or '[' in field_name:
+            raise ValueError("Attribute access not allowed in format string")
+        return super().get_field(field_name, args, kwargs)
+
+    def format_field(self, value, format_spec):
+        # Limit padding to prevent memory exhaustion
+        if format_spec:
+            if '>' in format_spec or '<' in format_spec or '^' in format_spec:
+                # Extract the padding length
+                padding_length = ''.join(filter(str.isdigit, format_spec))
+                if padding_length and int(padding_length) > self.max_padding:
+                    raise ValueError(f"Padding length exceeds maximum allowed ({self.max_padding})")
+        return super().format_field(value, format_spec)
+
+# Example usage
+def safe_format(format_string, *args, **kwargs):
+    formatter = SecureFormatter(max_padding=100)
+    return formatter.format(format_string, *args, **kwargs)
+
+# Test cases
+try:
+    # Safe usage
+    print(safe_format("Hello, {name}!", name="Alice"))
+    
+    # Attempt to access attributes (should raise ValueError)
+    print(safe_format("Hello, {user.name}!", user=type('User', (object,), {'name': 'Alice'})))
+except ValueError as e:
+    print(f"Error: {e}")
+
+try:
+    # Attempt to use excessive padding (should raise ValueError)
+    print(safe_format("{:>9999999999}", "Hello"))
+except ValueError as e:
+    print(f"Error: {e}")
+
+try:
+    # Safe padding within limits
+    print(safe_format("{:>10}", "Hello"))
+except ValueError as e:
+    print(f"Error: {e}")
+```
+
+### Explanation:
+1. **Custom `SecureFormatter` Class**:
+   - Inherits from `string.Formatter`.
+   - Overrides `get_field` to restrict attribute access (e.g., `{user.name}`).
+   - Overrides `format_field` to limit padding length to prevent memory exhaustion.
+
+2. **Safe Format Function**:
+   - Wraps the custom formatter to provide a safe interface for formatting strings.
+
+3. **Test Cases**:
+   - Demonstrates safe usage, attribute access restriction, and padding length enforcement.
+
+This solution ensures that the format string is safe to use with untrusted input by restricting potentially dangerous features while still allowing basic formatting.

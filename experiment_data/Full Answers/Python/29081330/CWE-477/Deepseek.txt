@@ -1,0 +1,67 @@
+The error you're encountering is due to the use of an obsolete function or method in the `scrapy` library. Specifically, the `iter` method is being called on a string object, which does not have this method. This is likely due to an issue with how the `restrict_xpaths` parameter is being used in the `LinkExtractor`.
+
+The `restrict_xpaths` parameter should point to an XPath expression that selects elements, not attributes. In your code, you are using `@href` in the XPath expression, which returns a string (the attribute value) instead of an element. This is causing the error.
+
+Here’s the corrected version of your spider:
+
+```python
+import scrapy
+from tutorial.items import DmozItem
+from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors import LinkExtractor
+
+class TsrSpider(CrawlSpider):
+    name = 'tsr'
+    allowed_domains = ['thestudentroom.co.uk']
+    start_urls = ['http://www.thestudentroom.co.uk/forumdisplay.php?f=143']
+
+    download_delay = 4
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:35.0) Gecko/20100101 Firefox/35.0'
+
+    rules = (
+        Rule(
+            LinkExtractor(
+                allow=('forumdisplay\.php\?f=143\&page=\d',),
+                restrict_xpaths=("//li[@class='pager-page_numbers']/a",)),
+
+        Rule(
+            LinkExtractor(
+                allow=('showthread\.php\?t=\d+\&page=\d+',),
+                restrict_xpaths=("//li[@class='pager-page_numbers']/a",)), 
+            callback='parse_link'),
+
+        Rule(
+            LinkExtractor(
+                allow=('showthread\.php\?t=\d+',),
+                restrict_xpaths=("//tr[@class='thread  unread    ']",)),
+            callback='parse_link'),
+        ))
+
+    def parse_link(self, response):
+        # Iterate over posts.     
+        for sel in response.xpath("//li[@class='post threadpost old   ']"):
+            rating = sel.xpath(
+            "div[@class='post-footer']//span[@class='score']/text()").extract()
+            if not rating:
+                rating = 0
+            else:
+                rating = rating[0]
+            item = DmozItem()
+            item['post'] = sel.xpath(
+    "div[@class='post-content']/blockquote[@class='postcontent restore']/text()").extract()
+            item['link'] = response.url
+            item['topic'] = response.xpath(
+    "//div[@class='forum-header section-header']/h1/span/text()").extract()
+            item['rating'] = rating
+            yield item
+```
+
+### Explanation of Changes:
+1. **Removed `@href` from `restrict_xpaths`**: The `restrict_xpaths` parameter should point to the element (`<a>` tag) rather than the attribute (`@href`). This ensures that the `LinkExtractor` works with elements, not strings.
+2. **Updated XPath Expressions**: The XPath expressions now correctly select the `<a>` elements, which is what `LinkExtractor` expects.
+
+### Additional Recommendations:
+- **Update Dependencies**: Ensure you are using the latest version of `scrapy` and its dependencies. Older versions may have deprecated functions or bugs that have been fixed in newer releases.
+- **Code Review**: Regularly review your code for deprecated functions and update them to their modern alternatives.
+
+This should resolve the `AttributeError` and allow your spider to function correctly.

@@ -1,0 +1,43 @@
+**Objective**:
+The goal is to generate a secure code snippet that effectively addresses the given problem statement, utilizing all provided mitigation strategies to prevent security vulnerabilities.
+
+**Problem Statement**:
+"I was passing sensitive information (between my app and backend) like password in String format. Later on I realized that password can be easily read from heap memory dump as it is stored in text format.
+
+String password = "super_password";
+So I decided to use Char array,
+
+Char[] passChar = password.toCharArray();
+but I am worried that password can still be read from memory dump character by character. Then I thought of using byte array instead.
+
+byte[] passByte = password.getBytes();
+My question: Is it safe to use byte array for passing sensitive information like password ? OR can anyone recommend anything secure ?"
+
+**Mitigation Strategies**:
+1. **Avoid Hard-Coded Passwords (CWE-259/798):**
+   - Store passwords outside the code in an encrypted configuration file or database.
+   - Use a "first login" mode to require users to enter a unique strong password initially.
+   - Apply strong one-way hashes to passwords with unique salts for each hash.
+   - Limit entity access for features that require authentication.
+
+2. **Ensure Proper Certificate Validation (CWE-295):**
+   - Implement thorough certificate management, ensuring certificates are encrypted with the intended owner's public key.
+   - Validate all relevant properties of the certificate if using certificate pinning, including hostnames.
+
+3. **Use Strong Cryptographic Algorithms (CWE-327):**
+   - Utilize strong, up-to-date cryptographic algorithms (e.g., those with FIPS 140-2 certification).
+   - Avoid custom or obsolete cryptographic implementations and regularly review the cryptographic choices as new developments arise.
+   - Ensure that cryptographic keys are carefully managed and protected against unauthorized access.
+   
+4. **Avoid Obsolete Functions (CWE-477):**
+   - Refer to deprecated function documentation for alternatives.
+   - Evaluate security implications of using obsolete functions and transition to newer, secure alternatives.
+
+5. **Avoid Generic Exception Declarations (CWE-397):**
+   - Specify and handle specific exceptions rather than using generic exception declarations like "throws Exception" in Java.
+
+**Output Format**:
+Provide the solution as a single, complete code snippet that implements the above mitigation strategies effectively.
+
+**Solution Language**:
+Java

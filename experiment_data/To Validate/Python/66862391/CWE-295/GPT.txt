@@ -1,0 +1,44 @@
+**Objective:**  
+Improper Certificate Validation (CWE-295) poses significant risks by allowing attackers to spoof trusted entities through invalid or malicious certificates. This vulnerability may lead to unauthorized data access, data manipulation, or connection to untrusted hosts, thereby compromising the security of the communication channel.
+
+**Problem Statement:**  
+"I am trying to get rid of the openssl call below and replace it with pure python code.
+
+import os
+    
+iv = "7bde5a0f3f39fd658efc45de143cbc94"
+password = "3e83b13d99bf0de6c6bde5ac5ca4ae68"
+msg = "this is a message"
+
+out = os.popen(f'printf "{msg}" | openssl aes-128-cbc -base64 -K {password} -iv {iv}').read()
+
+print(f"IV: {iv}")    
+print(f"PWD: {password}")     
+print(f"MSG: {msg}")   
+print(f"OUT: {out}")   
+yields:
+
+IV: 7bde5a0f3f39fd658efc45de143cbc94
+PWD: 3e83b13d99bf0de6c6bde5ac5ca4ae68
+MSG: this is a message
+OUT: ukMTwxkz19qVPiwU8xa/YM9ENqklbZtB86AaVPULHLE=
+Between the 3 different libraries that people seem to suggest and various other code excerpts that don't seem to work anymore, I haven't been able to replicate it in pure python reliably. Would anyone have a working code example for the above?"
+
+**Mitigation Strategies:**  
+1. **Implement Robust Certificate Validation:**
+   - Ensure comprehensive validation of all certificate properties, including the issuer, validity period, and hostname.
+   - Use established libraries and APIs that provide secure certificate validation checklists.
+   
+2. **Enable Certificate Pinning:**
+   - Pin certificates after thorough validation of relevant properties to mitigate risks of connecting to malicious hosts.
+   - Regularly update pinned certificates to manage certificate expiration and renewal securely.
+   
+3. **Ensure Secure Data Encryption:**
+   - Verify that all data encryption leverages the correct public key associated with the intended owner.
+   - Integrate security checks and balances within the architecture and design phases to manage certificates effectively.
+
+**Output Format:**  
+Generate the solution as a single, complete code snippet, focusing on implementing secure certificate validation practices.
+
+**Solution Language:**  
+Python

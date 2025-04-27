@@ -1,0 +1,36 @@
+## Objective
+The use of obsolete functions in code can lead to security vulnerabilities, inefficiencies, and maintenance challenges. These outdated functions may lack important security enhancements provided by newer alternatives and can pose risks such as unexpected behavior or compatibility issues. Addressing the use of obsolete functions is crucial for ensuring the security and robustness of software applications.
+
+## Problem Statement
+"I am trying to get rid of the openssl call below and replace it with pure python code.
+
+import os
+    
+iv = "7bde5a0f3f39fd658efc45de143cbc94"
+password = "3e83b13d99bf0de6c6bde5ac5ca4ae68"
+msg = "this is a message"
+
+out = os.popen(f'printf "{msg}" | openssl aes-128-cbc -base64 -K {password} -iv {iv}').read()
+
+print(f"IV: {iv}")    
+print(f"PWD: {password}")     
+print(f"MSG: {msg}")   
+print(f"OUT: {out}")   
+yields:
+
+IV: 7bde5a0f3f39fd658efc45de143cbc94
+PWD: 3e83b13d99bf0de6c6bde5ac5ca4ae68
+MSG: this is a message
+OUT: ukMTwxkz19qVPiwU8xa/YM9ENqklbZtB86AaVPULHLE=
+Between the 3 different libraries that people seem to suggest and various other code excerpts that don't seem to work anymore, I haven't been able to replicate it in pure python reliably. Would anyone have a working code example for the above?"
+
+## Mitigation Strategies
+1. **Documentation Review**: Thoroughly examine the documentation related to the obsolete function to understand the reasons for its deprecation. Identify alternative functions or approaches recommended by the language maintainers or community.
+2. **Consider Security Implications**: Assess the security outcomes of continuing to use the deprecated function. Prioritize finding and implementing a more secure and efficient alternative to eliminate potential risks and enhance application security.
+3. **Adopt New Conventions**: Familiarize yourself with the best practices and modern conventions that have replaced the obsolete function to ensure the application complies with up-to-date security standards and operational efficiency.
+
+## Output Format
+The solution must be presented as a single, complete code snippet that effectively replaces the obsolete function while addressing the identified security concerns.
+
+## Solution Language
+Python

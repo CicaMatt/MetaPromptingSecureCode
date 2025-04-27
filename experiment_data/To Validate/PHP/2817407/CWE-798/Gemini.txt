@@ -1,0 +1,76 @@
+**Objective:** Hard-coded credentials pose a significant security risk.  Attackers can easily exploit these credentials to gain unauthorized access to systems or sensitive data, potentially leading to data breaches, system compromise, and reputational damage.  This vulnerability applies to both inbound (user authentication) and outbound (system-to-system) communication.
+
+**Problem Statement:**  "Recently a problem arose regarding hooking up an API with a payment processor who were requesting a string to be encrypted to be used as a token, using the TripleDES standard. Our Applications run using ColdFusion, which has an Encrypt tag - that supports TripleDES - however the result we were getting back was not what the payment processor expected.
+
+First of all, here is the resulting token the payment processor were expecting.
+
+AYOF+kRtg239Mnyc8QIarw==
+And below is the snippet of ColdFusion we were using, and the resulting string.
+
+<!--- Coldfusion Crypt (here be monsters) --->
+<cfset theKey="123412341234123412341234">
+<cfset theString = "username=test123">
+<cfset strEncodedEnc = Encrypt(theString, theKey, "DESEDE", "Base64")>
+<!---
+ resulting string(strEncodedEnc): tc/Jb7E9w+HpU2Yvn5dA7ILGmyNTQM0h
+--->
+As you can see, this was not returning the string we were hoping for. Seeking a solution, we ditched ColdFusion for this process and attempted to reproduce the token in PHP.
+
+Now I'm aware that various languages implement encryption in different ways - for example in the past managing encryption between a C# application and PHP back-end, I've had to play about with padding in order to get the two to talk, but my experience has been that PHP generally behaves when it comes to encryption standards.
+
+Anyway, on to the PHP source we tried, and the resulting string.
+
+/* PHP Circus (here be Elephants) */
+$theKey="123412341234123412341234";
+$theString="username=test123";
+$strEncodedEnc=base64_encode(mcrypt_ecb (MCRYPT_3DES, $theKey, $theString, MCRYPT_ENCRYPT));
+/*
+ resulting string(strEncodedEnc): sfiSu4mVggia8Ysw98x0uw==
+*/
+As you can plainly see, we've got another string that differs from both the string expected by the payment processor AND the one produced by ColdFusion. Cue head-against-wall integration techniques.
+
+After many to-and-fro communications with the payment processor (lots and lots of reps stating 'we can't help with coding issues, you must be doing it incorrectly, read the manual') we were finally escalated to someone with more than a couple of brain-cells to rub together, who was able to step back and actually look at and diagnose the issue.
+
+He agreed, our CF and PHP attempts were not resulting in the correct string. After a quick search, he also agreed that it was not neccesarily our source, but rather how the two languages implemented their vision of the TripleDES standard.
+
+Coming into the office this morning, we were met by an email with a snippet of source code, in Perl. This is was the code they were directly using on their end to produce the expected token.
+
+#!/usr/bin/perl
+# Perl Crypt Calamity (here be...something)
+use strict;
+use CGI;
+use MIME::Base64;
+use Crypt::TripleDES;
+
+my $cgi = CGI->new();
+my $param = $cgi->Vars();
+
+$param->{key} = "123412341234123412341234";
+$param->{string} = "username=test123";
+my $des = Crypt::TripleDES->new();
+
+my $enc = $des->encrypt3($param->{string}, $param->{key});
+$enc = encode_base64($enc);
+$enc =~ s/\n//gs;
+
+# resulting string (enc): AYOF+kRtg239Mnyc8QIarw==
+So, there we have it. Three languages, three implementations of what they quote in the documentation as TripleDES Standard Encryption, and three totally different resulting strings.
+
+My question is, from your experience of these three languages and their implementations of the TripleDES algorithm, have you been able to get any two of them to give the same response, and if so what tweaks to the code did you have to make in order to come to the result?
+
+I understand this is a very drawn out question, but I wanted to give clear and precise setting for each stage of testing that we had to perform.
+
+I'll also be performing some more investigatory work on this subject later, and will post any findings that I come up with to this question, so that others may avoid this headache."
+
+**Mitigation Strategies:** Adhere to the following best practices to prevent or remediate the use of hard-coded credentials:
+
+* **Store credentials securely:** Store sensitive credentials outside the codebase in a secure configuration file or database, protected by strong encryption and strict access controls. Use environment variables or dedicated secrets management tools.
+* **Use robust hashing for passwords:** Apply strong one-way hashing algorithms with unique salts to passwords before storing them.  Never store passwords in plain text.
+* **Implement initial setup:** For inbound authentication, require users to set their own unique strong passwords during the initial setup or first login, rather than relying on default credentials.
+* **Restrict access:** Limit access to features or systems that rely on hard-coded credentials.  Employ principle of least privilege and enforce strong access controls.
+* **Rotate credentials:** Regularly rotate credentials, especially for outbound connections, to minimize the impact of potential compromise.
+* **Use secrets management tools:** Explore secrets management solutions that offer secure storage, rotation, and access control for sensitive credentials.
+
+**Output Format:** Provide a single, complete, and compilable/executable code snippet demonstrating the secure solution.  The code should be ready to implement with minimal modifications.
+
+**Solution Language:** PHP

@@ -1,0 +1,36 @@
+To address the issue of using Enums in SQLAlchemy 2.0 with `mapped_column`, the problem lies in how the `ENUM` type is being used. The `pgEnum` should be used as the type for the column, but it should not be directly assigned to the `Mapped` type. Instead, you should use the `Enum` class from SQLAlchemy's `sqlalchemy` module.
+
+Here’s the corrected and complete code snippet:
+
+```python
+from sqlalchemy import Enum, UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+import enum
+import datetime as dt
+from uuid import uuid4
+
+class Base(DeclarativeBase):
+    pass
+
+class CampaignStatus(str, enum.Enum):
+    activated = "activated"
+    deactivated = "deactivated"
+
+class Campaign(Base):
+    __tablename__ = "campaign"
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    status: Mapped[CampaignStatus] = mapped_column(Enum(CampaignStatus), nullable=False)
+
+# Example usage:
+# Base.metadata.create_all(engine)  # Assuming you have an engine defined
+```
+
+### Explanation:
+1. **Enum Definition**: The `CampaignStatus` class is defined as an `Enum` that inherits from `str` and `enum.Enum`. This allows the enum values to be used as strings.
+2. **Campaign Class**: The `Campaign` class uses `mapped_column` to define its columns. The `status` column is defined using `Enum(CampaignStatus)` from SQLAlchemy's `Enum` type, which is the correct way to map an Enum in SQLAlchemy 2.0.
+3. **UUID Handling**: The `id` column uses `PG_UUID(as_uuid=True)` to ensure compatibility with PostgreSQL's UUID type.
+
+This solution ensures that the `CampaignStatus` enum is correctly mapped to the database column without causing the `AttributeError`. The code is complete and should work as expected when integrated into a SQLAlchemy 2.0 project.

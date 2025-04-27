@@ -1,0 +1,155 @@
+```java
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.AlgorithmParameters;
+import java.security.SecureRandom;
+import java.security.spec.KeySpec;
+import java.util.Base64;
+
+public class SecureHTMLAccess {
+
+    private static final String PASSWORD = System.getenv("HTML_ENCRYPTION_PASSWORD"); // From environment variable
+    private static final String SALT = System.getenv("HTML_ENCRYPTION_SALT"); // From environment variable
+    private static final int ITERATION_COUNT = 65536;
+    private static final int KEY_LENGTH = 256;
+    private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
+
+    public static void main(String[] args) throws Exception {
+        if (PASSWORD == null || SALT == null) {
+            System.err.println("Error: HTML_ENCRYPTION_PASSWORD and HTML_ENCRYPTION_SALT environment variables must be set.");
+            System.exit(1);
+        }
+
+        String htmlFolderPath = "html_files"; // Replace with your actual folder path
+        String encryptedFolderPath = "encrypted_html"; // Replace with your encrypted folder path
+
+        // Encrypt or decrypt based on command-line arguments
+        if (args.length > 0 && args[0].equals("encrypt")) {
+            encryptFolder(htmlFolderPath, encryptedFolderPath);
+        } else {
+            String htmlFileName = "index.html"; // Replace with the HTML file you want to access
+            String decryptedHTML = decryptFile(encryptedFolderPath + "/" + htmlFileName);
+            System.out.println(decryptedHTML); // Display the decrypted HTML.  Use in your Swing application
+        }
+    }
+
+
+    private static void encryptFolder(String sourceFolderPath, String destinationFolderPath) throws Exception {
+        Files.walk(Paths.get(sourceFolderPath))
+                .filter(Files::isRegularFile)
+                .forEach(sourceFile -> {
+                    try {
+                        byte[] encryptedData = encryptFile(sourceFile);
+                        Path destinationFile = Paths.get(destinationFolderPath, sourceFile.getFileName().toString());
+                        Files.createDirectories(destinationFile.getParent()); // Create directories if needed
+                        Files.write(destinationFile, encryptedData);
+                    } catch (Exception e) {
+                        System.err.println("Error encrypting file: " + sourceFile + ": " + e.getMessage());
+                    }
+                });
+    }
+
+
+    private static byte[] encryptFile(Path filePath) throws Exception {
+        byte[] fileContent = Files.readAllBytes(filePath);
+        return encrypt(fileContent);
+    }
+
+    private static String decryptFile(String encryptedFilePath) throws Exception {
+        byte[] encryptedContent = Files.readAllBytes(Paths.get(encryptedFilePath));
+        return decrypt(encryptedContent);
+
+    }
+
+
+
+    private static byte[] encrypt(byte[] data) throws Exception {
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(PASSWORD.toCharArray(), SALT.getBytes(), ITERATION_COUNT, KEY_LENGTH);
+        SecretKey tmp = factory.generateSecret(spec);
+        SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        AlgorithmParameters params = cipher.getParameters();
+        byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+        byte[] encryptedData = cipher.doFinal(data);
+        return Base64.getEncoder().encode(concatenate(iv, encryptedData));
+    }
+
+
+    private static String decrypt(byte[] encryptedData) throws Exception {
+
+        byte[] decodedData = Base64.getDecoder().decode(encryptedData);
+        byte[] iv = new byte[16];
+        byte[] ciphertext = new byte[decodedData.length - 16];
+        System.arraycopy(decodedData, 0, iv, 0, iv.length);
+        System.arraycopy(decodedData, iv.length, ciphertext, 0, ciphertext.length);
+
+
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(PASSWORD.toCharArray(), SALT.getBytes(), ITERATION_COUNT, KEY_LENGTH);
+        SecretKey tmp = factory.generateSecret(spec);
+        SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+        return new String(cipher.doFinal(ciphertext));
+    }
+
+
+    private static byte[] concatenate(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length + b.length];
+        System.arraycopy(a, 0, result, 0, a.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        return result;
+    }
+
+
+
+}
+
+```
+
+
+**Explanation and Key Improvements:**
+
+1. **Environment Variables for Credentials:**  The password and salt are now retrieved from environment variables (`HTML_ENCRYPTION_PASSWORD` and `HTML_ENCRYPTION_SALT`). This keeps them out of the codebase.  Set these environment variables on the machine where the application runs.
+
+2. **PBKDF2WithHmacSHA256 for Key Derivation:** A strong key derivation function (PBKDF2) is used to generate the encryption key from the password and salt.  This makes it computationally expensive for attackers to brute-force the password even if they obtain the encrypted files and salt.
+
+3. **AES Encryption with CBC Mode and PKCS5Padding:**  AES is a robust encryption algorithm. CBC mode provides better security than simpler modes like ECB. PKCS5Padding handles data that is not a multiple of the block size.
+
+4. **SecureRandom for IV Generation:** The initialization vector (IV) is crucial for CBC mode security. It is now generated using `SecureRandom`.  The IV is stored with the ciphertext (prepended, and then Base64 encoded).
+
+5. **Base64 Encoding:** The encrypted data (including the IV) is Base64 encoded to make it easier to handle as text.
+
+6. **File Handling:** The code provides methods to encrypt and decrypt individual files, catering to the requirement of updating individual files within the encrypted folder. It also includes functionality to encrypt an entire folder.
+
+7. **Error Handling:**  Basic error handling is added to catch exceptions during file operations.
+
+8. **Clear Separation of Concerns:** Encryption/decryption logic is separated into distinct, reusable methods.
+
+
+**How to Use:**
+
+1. **Set Environment Variables:** Set the `HTML_ENCRYPTION_PASSWORD` and `HTML_ENCRYPTION_SALT` environment variables on the machine where the application runs. Use strong, randomly generated values for both.
+2. **Compile:** `javac SecureHTMLAccess.java`
+3. **Encrypt:** `java SecureHTMLAccess encrypt`  (This encrypts the `html_files` folder)
+4. **Run (in your Swing app):**  Call `decryptFile()` with the path to the encrypted HTML file to get the decrypted HTML content. Display this content in your Swing application.
+
+
+**Important:**
+
+* **Secrets Management:**  For production environments, consider using dedicated secrets management tools (like HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault) instead of environment variables.
+* **Regularly Rotate Credentials:**  Change the password and salt periodically to enhance security.
+* **Least Privilege:** Ensure that the user running the Java application has only the necessary permissions to read the encrypted files and no direct access to the original HTML files.

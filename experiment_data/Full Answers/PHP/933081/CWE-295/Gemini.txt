@@ -1,0 +1,75 @@
+```php
+<?php
+
+try {
+    if (!isset($_FILES['file']['error']) || is_array($_FILES['file']['error'])) {
+        throw new RuntimeException('Invalid parameters.');
+    }
+
+    switch ($_FILES['file']['error']) {
+        case UPLOAD_ERR_OK:
+            break;
+        case UPLOAD_ERR_NO_FILE:
+            throw new RuntimeException('No file sent.');
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            throw new RuntimeException('Exceeded filesize limit.');
+        default:
+            throw new RuntimeException('Unknown errors.');
+    }
+
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    if (false === $ext = array_search(
+            $finfo->file($_FILES['file']['tmp_name']),
+            array(
+                'jpg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+            ),
+            true
+        )) {
+        throw new RuntimeException('Invalid file format.');
+    }
+
+    // Ensure uploads directory exists and is writable
+    $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
+    if (!is_dir($uploadDir) || !is_writable($uploadDir)) {
+        throw new RuntimeException('Upload directory inaccessible.');
+    }
+
+
+    $destination = sprintf('%s%s.%s',
+        $uploadDir,
+        sha1_file($_FILES['file']['tmp_name']), // Use a hash for the filename to prevent overwriting and potential security issues
+        $ext
+    );
+
+
+    if (!move_uploaded_file(
+        $_FILES['file']['tmp_name'],
+        $destination
+    )) {
+        throw new RuntimeException('Failed to move uploaded file.');
+    }
+
+    echo 'Upload Complete! File saved as: ' . $destination;
+
+} catch (RuntimeException $e) {
+    die("File upload failed: " . $e->getMessage());
+}
+
+?>
+```
+
+
+**Explanation and Improvements:**
+
+1. **Error Handling with Try-Catch:** The code is wrapped in a `try-catch` block.  The `try` block contains the file upload logic.  If any exception is thrown within the `try` block, execution jumps to the `catch` block.
+2. **More Robust Error Checking:**  The original code only checked if `move_uploaded_file` returned false. This improved version checks for a wider range of potential upload errors, including file size limits and missing files, based on the `$_FILES['file']['error']` value. It also validates the MIME type of the uploaded file to prevent potentially malicious uploads disguised as images.
+3. **Secure Filename Handling:** Instead of using the original filename, which could contain malicious characters or be used to overwrite existing files, the code now generates a unique filename using `sha1_file()` and appends the correct extension.  This significantly improves security.
+4. **Upload Directory Check:** The code verifies that the uploads directory exists and is writable before attempting the upload. This prevents errors and improves reliability.
+5. **Informative Error Messages:**  The `catch` block now displays a more informative error message, including the specific exception message, to aid in debugging.
+6. **RuntimeException:** The use of `RuntimeException` is appropriate for handling exceptional conditions that occur during runtime, like file upload failures.
+
+This revised solution is more robust, secure, and provides better error handling using the `try-catch` mechanism. It addresses the original problem while incorporating important security best practices.
