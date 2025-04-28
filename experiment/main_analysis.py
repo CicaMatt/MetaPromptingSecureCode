@@ -4,7 +4,7 @@ from analysis import calculate_ratios_per_question_multicolumn, calculate_mean, 
     calculate_ratios_per_question_single, wilcoxon_test_cross_model
 
 
-experiment_folder = "/Users/matteocicalese/PycharmProjects/MetaPromptingForSecureCode/data/experiment_results"
+experiment_folder = "/data/experiment_results"
 
 baseline = experiment_folder + "/Baseline.csv"
 
